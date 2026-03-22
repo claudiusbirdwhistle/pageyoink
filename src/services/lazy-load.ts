@@ -5,8 +5,8 @@ const MAX_SCROLL_TIME_MS = 15_000;
 
 /**
  * Scroll through the page to trigger lazy-loaded images,
- * then scroll back to top. Caps scrolling to avoid infinite
- * scroll traps (Reddit, Twitter, etc.).
+ * then scroll back to top and wait for all images to finish loading.
+ * Caps scrolling to avoid infinite scroll traps.
  *
  * @param maxScrollScreens - Max viewport heights to scroll (default 10)
  */
@@ -14,6 +14,7 @@ export async function triggerLazyImages(
   page: Page,
   maxScrollScreens: number = DEFAULT_MAX_SCROLL_SCREENS,
 ): Promise<void> {
+  // Phase 1: Scroll through the page to trigger lazy loading
   await page.evaluate(
     async (maxScreens: number, maxTimeMs: number) => {
       await new Promise<void>((resolve) => {
@@ -30,11 +31,6 @@ export async function triggerLazyImages(
           const elapsed = Date.now() - startTime;
           const scrollHeight = document.body.scrollHeight;
 
-          // Stop conditions:
-          // 1. Reached max scroll depth
-          // 2. Scrolled past the page content (non-infinite)
-          // 3. Scroll height hasn't changed for 3 checks (content done loading)
-          // 4. Time limit exceeded
           const atMaxDepth = currentPosition >= maxScrollPx;
           const pastContent = currentPosition >= scrollHeight;
           const timedOut = elapsed >= maxTimeMs;
@@ -45,12 +41,14 @@ export async function triggerLazyImages(
             stableCount = 0;
             lastScrollHeight = scrollHeight;
           }
-          const contentStable = stableCount >= 3 && currentPosition >= scrollHeight;
+          const contentStable =
+            stableCount >= 3 && currentPosition >= scrollHeight;
 
           if (atMaxDepth || pastContent || contentStable || timedOut) {
+            // Scroll back to top
             window.scrollTo(0, 0);
             clearInterval(interval);
-            setTimeout(resolve, 1500);
+            resolve();
             return;
           }
 
@@ -62,4 +60,29 @@ export async function triggerLazyImages(
     maxScrollScreens,
     MAX_SCROLL_TIME_MS,
   );
+
+  // Phase 2: Force-decode all images and wait for completion
+  await page.evaluate(async () => {
+    const images = Array.from(document.querySelectorAll("img"));
+    const promises = images
+      .filter((img) => img.src && !img.src.startsWith("data:") && !img.complete)
+      .map(
+        (img) =>
+          new Promise<void>((resolve) => {
+            img.addEventListener("load", () => resolve(), { once: true });
+            img.addEventListener("error", () => resolve(), { once: true });
+            // If already complete by the time we attach listeners
+            if (img.complete) resolve();
+          }),
+      );
+
+    // Wait for all pending images, with a timeout
+    await Promise.race([
+      Promise.all(promises),
+      new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+    ]);
+  });
+
+  // Phase 3: Wait for browser to finish painting
+  await new Promise((resolve) => setTimeout(resolve, 1000));
 }
