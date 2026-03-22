@@ -24,11 +24,16 @@ ENV PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev
+
+# Install all deps (including devDeps for TypeScript build)
+RUN npm ci
 
 COPY tsconfig.json ./
 COPY src/ ./src/
 RUN npm run build
+
+# Remove devDeps after build
+RUN npm prune --omit=dev
 
 RUN mkdir -p /app/data
 
