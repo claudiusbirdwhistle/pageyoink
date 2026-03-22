@@ -30,9 +30,14 @@ COPY tsconfig.json ./
 COPY src/ ./src/
 RUN npm run build
 
+RUN mkdir -p /app/data
+
 EXPOSE 3000
 
 ENV NODE_ENV=production
 ENV PORT=3000
+ENV DB_PATH=/app/data/pageyoink.db
+
+VOLUME ["/app/data"]
 
 CMD ["node", "dist/index.js"]

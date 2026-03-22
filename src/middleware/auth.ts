@@ -47,7 +47,8 @@ export const authMiddleware = fp(async function authMiddleware(
       }
 
       // Track usage for authenticated requests
-      trackUsage(apiKey as string);
+      const endpoint = request.url.split("?")[0];
+      trackUsage(apiKey as string, endpoint);
     },
   );
 });

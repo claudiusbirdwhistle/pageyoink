@@ -1,6 +1,8 @@
 import Fastify from "fastify";
 import cors from "@fastify/cors";
 import rateLimit from "@fastify/rate-limit";
+import swagger from "@fastify/swagger";
+import swaggerUi from "@fastify/swagger-ui";
 import { healthRoute } from "./routes/health.js";
 import { screenshotRoute } from "./routes/screenshot.js";
 import { pdfRoute } from "./routes/pdf.js";
@@ -24,6 +26,39 @@ export async function buildApp() {
         (request.query as Record<string, string>)?.api_key ||
         request.ip
       );
+    },
+  });
+
+  await app.register(swagger, {
+    openapi: {
+      info: {
+        title: "PageYoink API",
+        description:
+          "Yoink pages into screenshots, PDFs, and OG images. Fast, intelligent capture API.",
+        version: "0.1.0",
+      },
+      servers: [
+        { url: "http://localhost:3000", description: "Local development" },
+      ],
+      components: {
+        securitySchemes: {
+          apiKey: {
+            type: "apiKey",
+            name: "x-api-key",
+            in: "header",
+            description: "API key for authentication",
+          },
+        },
+      },
+      security: [{ apiKey: [] }],
+    },
+  });
+
+  await app.register(swaggerUi, {
+    routePrefix: "/docs",
+    uiConfig: {
+      docExpansion: "list",
+      deepLinking: true,
     },
   });
 

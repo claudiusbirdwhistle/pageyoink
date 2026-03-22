@@ -1,49 +1,45 @@
-// In-memory usage tracking for MVP
-// TODO: Replace with persistent storage (SQLite or Redis) for production
-
-interface UsageRecord {
-  count: number;
-  date: string; // YYYY-MM-DD
-}
-
-const usage = new Map<string, UsageRecord>();
+import { getDb } from "./database.js";
 
 function todayKey(): string {
   return new Date().toISOString().split("T")[0];
 }
 
-function getKey(apiKey: string): string {
-  return `${apiKey}:${todayKey()}`;
-}
+export function trackUsage(apiKey: string, endpoint: string = "unknown"): void {
+  const db = getDb();
+  const date = todayKey();
 
-export function trackUsage(apiKey: string): void {
-  const key = getKey(apiKey);
-  const record = usage.get(key);
-  if (record) {
-    record.count++;
-  } else {
-    usage.set(key, { count: 1, date: todayKey() });
-  }
+  db.prepare(`
+    INSERT INTO usage (api_key, date, endpoint, count)
+    VALUES (?, ?, ?, 1)
+    ON CONFLICT(api_key, date, endpoint)
+    DO UPDATE SET count = count + 1
+  `).run(apiKey, date, endpoint);
 }
 
 export function getUsage(apiKey: string): number {
-  const key = getKey(apiKey);
-  return usage.get(key)?.count || 0;
+  const db = getDb();
+  const date = todayKey();
+
+  const row = db
+    .prepare("SELECT SUM(count) as total FROM usage WHERE api_key = ? AND date = ?")
+    .get(apiKey, date) as { total: number | null } | undefined;
+
+  return row?.total || 0;
 }
 
 export function getUsageStats(): { totalKeys: number; totalRequests: number } {
-  let totalRequests = 0;
-  const keys = new Set<string>();
+  const db = getDb();
 
-  for (const [compositeKey, record] of usage.entries()) {
-    const apiKey = compositeKey.split(":")[0];
-    keys.add(apiKey);
-    totalRequests += record.count;
-  }
+  const row = db
+    .prepare(
+      "SELECT COUNT(DISTINCT api_key) as totalKeys, COALESCE(SUM(count), 0) as totalRequests FROM usage",
+    )
+    .get() as { totalKeys: number; totalRequests: number };
 
-  return { totalKeys: keys.size, totalRequests };
+  return row;
 }
 
 export function resetUsage(): void {
-  usage.clear();
+  const db = getDb();
+  db.prepare("DELETE FROM usage").run();
 }
