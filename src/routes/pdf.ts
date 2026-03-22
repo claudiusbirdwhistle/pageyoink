@@ -13,6 +13,7 @@ interface PdfQuery {
   timeout?: string;
   clean?: string;
   smart_wait?: string;
+  max_scroll?: string;
 }
 
 interface PdfBody {
@@ -29,6 +30,7 @@ interface PdfBody {
   timeout?: number;
   clean?: boolean;
   smartWait?: boolean;
+  maxScroll?: number;
 }
 
 export async function pdfRoute(app: FastifyInstance) {
@@ -52,12 +54,13 @@ export async function pdfRoute(app: FastifyInstance) {
             timeout: { type: "string" },
             clean: { type: "string" },
             smart_wait: { type: "string" },
+            max_scroll: { type: "string" },
           },
         },
       },
     },
     async (request, reply) => {
-      const { url, format, landscape, print_background, timeout, clean, smart_wait } =
+      const { url, format, landscape, print_background, timeout, clean, smart_wait, max_scroll } =
         request.query;
 
       // Validate URL
@@ -84,6 +87,7 @@ export async function pdfRoute(app: FastifyInstance) {
           timeout: timeout ? parseInt(timeout, 10) : undefined,
           clean: clean === "true",
           smartWait: smart_wait === "true",
+          maxScroll: max_scroll ? parseInt(max_scroll, 10) : undefined,
         });
 
         return reply
@@ -127,12 +131,13 @@ export async function pdfRoute(app: FastifyInstance) {
             timeout: { type: "number" },
             clean: { type: "boolean" },
             smartWait: { type: "boolean" },
+            maxScroll: { type: "number" },
           },
         },
       },
     },
     async (request, reply) => {
-      const { html, format, landscape, printBackground, margin, timeout, clean, smartWait } =
+      const { html, format, landscape, printBackground, margin, timeout, clean, smartWait, maxScroll } =
         request.body;
 
       try {
@@ -145,6 +150,7 @@ export async function pdfRoute(app: FastifyInstance) {
           timeout,
           clean: clean || false,
           smartWait: smartWait || false,
+          maxScroll,
         });
 
         return reply

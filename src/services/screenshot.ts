@@ -14,6 +14,7 @@ export interface ScreenshotOptions {
   timeout?: number;
   clean?: boolean;
   smartWait?: boolean;
+  maxScroll?: number;
 }
 
 export interface ScreenshotResult {
@@ -67,6 +68,7 @@ async function attemptScreenshot(
     timeout = DEFAULT_TIMEOUT,
     clean = false,
     smartWait = false,
+    maxScroll,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -88,7 +90,7 @@ async function attemptScreenshot(
 
     // Scroll through page to trigger lazy-loaded images
     if (fullPage || smartWait) {
-      await triggerLazyImages(page);
+      await triggerLazyImages(page, maxScroll);
     }
 
     if (smartWait) {

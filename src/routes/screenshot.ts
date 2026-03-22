@@ -12,6 +12,7 @@ interface ScreenshotQuery {
   timeout?: string;
   clean?: string;
   smart_wait?: string;
+  max_scroll?: string;
 }
 
 const screenshotQuerySchema = {
@@ -28,6 +29,7 @@ const screenshotQuerySchema = {
     timeout: { type: "string" as const },
     clean: { type: "string" as const },
     smart_wait: { type: "string" as const },
+    max_scroll: { type: "string" as const },
   },
 };
 
@@ -51,6 +53,7 @@ export async function screenshotRoute(app: FastifyInstance) {
         timeout,
         clean,
         smart_wait,
+        max_scroll,
       } = request.query;
 
       // Validate URL
@@ -81,6 +84,7 @@ export async function screenshotRoute(app: FastifyInstance) {
           timeout: timeout ? parseInt(timeout, 10) : undefined,
           clean: clean === "true",
           smartWait: smart_wait === "true",
+          maxScroll: max_scroll ? parseInt(max_scroll, 10) : undefined,
         });
 
         return reply

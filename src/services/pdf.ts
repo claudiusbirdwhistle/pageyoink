@@ -18,6 +18,7 @@ export interface PdfOptions {
   timeout?: number;
   clean?: boolean;
   smartWait?: boolean;
+  maxScroll?: number;
 }
 
 export interface PdfResult {
@@ -70,6 +71,7 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     timeout = DEFAULT_TIMEOUT,
     clean = false,
     smartWait = false,
+    maxScroll,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -91,7 +93,7 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     }
 
     // Scroll through page to trigger lazy-loaded images (PDFs always capture full page)
-    await triggerLazyImages(page);
+    await triggerLazyImages(page, maxScroll);
 
     if (smartWait) {
       await waitForPageReady(page, Math.min(effectiveTimeout, 10_000));
