@@ -4,13 +4,7 @@
 (none)
 
 ## Up Next (Priority Order) — Phase A: Foundation
-1. [ ] Initialize Node.js project with package.json, TypeScript config, and dependency installation
-2. [ ] Set up project directory structure (src/, tests/, etc.)
-3. [ ] Set up testing framework (Vitest or Jest)
-4. [ ] Set up linting (ESLint + Prettier)
-5. [ ] Create basic Fastify server with health endpoint
-6. [ ] Write first test (health endpoint returns correct response)
-7. [ ] Create Dockerfile for containerized deployment
+1. [ ] Create Dockerfile for containerized deployment
 
 ## Queued — Phase B: Core Feature
 1. [ ] Implement screenshot endpoint (URL → PNG/JPEG)
@@ -43,7 +37,12 @@
 5. [ ] Add content-aware PDF pagination (beta)
 
 ## Done
-(none yet)
+- [x] Initialize Node.js project with package.json, TypeScript config, and dependency installation (2026-03-22)
+- [x] Set up project directory structure (src/, tests/, etc.) (2026-03-22)
+- [x] Set up testing framework (Vitest) (2026-03-22)
+- [x] Set up linting (ESLint + Prettier) (2026-03-22)
+- [x] Create basic Fastify server with health endpoint (2026-03-22)
+- [x] Write first test (health endpoint returns correct response) (2026-03-22)
 
 ## Icebox
 - [ ] Custom font support for PDF/screenshot generation
