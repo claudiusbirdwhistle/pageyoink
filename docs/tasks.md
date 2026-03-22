@@ -39,13 +39,14 @@
 - [x] Add usage dashboard endpoint — GET /v1/usage (2026-03-22)
 - [x] Add graceful shutdown handler (2026-03-22)
 - [x] Add .env.example with all config vars (2026-03-22)
+- [x] Node.js SDK package — sdk/ directory (2026-03-22)
 
 ## Icebox
 - [ ] Custom font support for PDF/screenshot generation
 - [ ] Geo-distributed rendering (edge nodes in EU, Asia)
 - [ ] Screenshot comparison / visual diff API
 - [ ] Signed URL output (pre-signed S3 links for large files)
-- [ ] SDK packages for Node.js, Python, Go
+- [ ] SDK packages for Python, Go
 - [ ] Persistent batch job storage (SQLite)
 - [ ] Content-aware PDF pagination
 - [ ] Additional OG image templates (blog, product, event, etc.)
