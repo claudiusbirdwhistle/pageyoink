@@ -1,4 +1,3 @@
-import { Page } from "puppeteer";
 import { getBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady } from "./readiness.js";
@@ -67,17 +66,17 @@ export async function takeScreenshot(
       await cleanPage(page);
     }
 
-    const screenshotOptions: Parameters<Page["screenshot"]>[0] = {
+    const effectiveQuality =
+      format === "jpeg" && quality !== undefined
+        ? Math.min(Math.max(quality, 1), 100)
+        : undefined;
+
+    const buffer = (await page.screenshot({
       type: format,
       fullPage,
       encoding: "binary",
-    };
-
-    if (format === "jpeg" && quality !== undefined) {
-      screenshotOptions.quality = Math.min(Math.max(quality, 1), 100);
-    }
-
-    const buffer = (await page.screenshot(screenshotOptions)) as Buffer;
+      quality: effectiveQuality,
+    })) as Buffer;
 
     return {
       buffer,
