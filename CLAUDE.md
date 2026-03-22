@@ -1,12 +1,12 @@
-# SnapForge: Autonomous Agent Operating System
+# Pagerend: Autonomous Agent Operating System
 
 ## What This Project Is
 
-SnapForge is an autonomously-operated API service (screenshot, PDF, and OG image generation) built and maintained entirely by Claude via Ralph Loop. The service runs continuously; Claude wakes up on intervals to monitor, maintain, and improve it.
+Pagerend is an autonomously-operated API service (screenshot, PDF, and OG image generation) built and maintained entirely by Claude via Ralph Loop. The service runs continuously; Claude wakes up on intervals to monitor, maintain, and improve it.
 
 ## Repository
 
-- **GitHub:** github.com/ClaudiusBirdWhistle/snapforge
+- **GitHub:** github.com/claudiusbirdwhistle/pagerend
 - **CI/CD:** GitHub Actions → auto-deploy to cloud server on push to `main`
 
 ## The Prime Directive
@@ -24,7 +24,7 @@ SnapForge is an autonomously-operated API service (screenshot, PDF, and OG image
 ## Project Structure
 
 ```
-snapforge/
+pagerend/
   CLAUDE.md              ← You are here. Project overview and orientation.
   docs/
     agent-loop.md        ← HOW YOU OPERATE. Read first every cycle.

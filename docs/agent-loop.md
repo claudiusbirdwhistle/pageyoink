@@ -1,6 +1,6 @@
 # Agent Loop: How Claude Operates Autonomously
 
-This is the foundational document of the MoneyMaker project. It governs how Claude operates across Ralph Loop cycles, compensating for the fundamental constraint that each cycle starts with a fresh context and no memory of prior cycles.
+This is the foundational document of the Pagerend project. It governs how Claude operates across Ralph Loop cycles, compensating for the fundamental constraint that each cycle starts with a fresh context and no memory of prior cycles.
 
 ---
 
