@@ -1,4 +1,5 @@
 import { FastifyInstance } from "fastify";
+import { getUsageStats } from "../services/usage.js";
 
 const startTime = Date.now();
 
@@ -18,10 +19,12 @@ function formatUptime(ms: number): string {
 
 export async function healthRoute(app: FastifyInstance) {
   app.get("/internal/health", async () => {
+    const stats = getUsageStats();
     return {
       status: "ok",
       version: "0.1.0",
       uptime: formatUptime(Date.now() - startTime),
+      usage: stats,
     };
   });
 }

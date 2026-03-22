@@ -3,14 +3,9 @@
 ## In Progress
 (none)
 
-## Up Next (Priority Order) — Phase B: Core Feature
-1. [ ] Implement screenshot endpoint (URL → PNG/JPEG)
-2. [ ] Implement HTML-to-PDF endpoint (URL or HTML → PDF)
-3. [ ] Add input validation and error handling
-4. [ ] Add rate limiting (per API key)
-5. [ ] Add API key authentication
-6. [ ] Add usage tracking (requests per key per day)
-7. [ ] Write comprehensive tests for all endpoints
+## Up Next (Priority Order) — Phase B: Core Feature (remaining)
+1. [ ] Add usage tracking (requests per key per day)
+2. [ ] Write comprehensive tests for all endpoints
 
 ## Queued — Phase C: Deployment
 1. [ ] Configure hosting platform (human needed for account creation)
@@ -41,6 +36,11 @@
 - [x] Create basic Fastify server with health endpoint (2026-03-22)
 - [x] Write first test (health endpoint returns correct response) (2026-03-22)
 - [x] Create Dockerfile for containerized deployment (2026-03-22)
+- [x] Implement screenshot endpoint (URL → PNG/JPEG) (2026-03-22)
+- [x] Implement HTML-to-PDF endpoint (URL or HTML → PDF) (2026-03-22)
+- [x] Add input validation and error handling (2026-03-22)
+- [x] Add rate limiting (per API key) (2026-03-22)
+- [x] Add API key authentication (2026-03-22)
 
 ## Icebox
 - [ ] Custom font support for PDF/screenshot generation

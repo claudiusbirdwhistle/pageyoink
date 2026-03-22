@@ -26,5 +26,8 @@ describe("Health endpoint", () => {
     expect(body.status).toBe("ok");
     expect(body.version).toBe("0.1.0");
     expect(body.uptime).toBeDefined();
+    expect(body.usage).toBeDefined();
+    expect(body.usage.totalKeys).toBe(0);
+    expect(body.usage.totalRequests).toBe(0);
   });
 });

@@ -1,5 +1,6 @@
 import fp from "fastify-plugin";
 import { FastifyInstance, FastifyRequest, FastifyReply } from "fastify";
+import { trackUsage } from "../services/usage.js";
 
 // For MVP, API keys are stored in an environment variable (comma-separated)
 // Later this can be backed by a database
@@ -44,6 +45,9 @@ export const authMiddleware = fp(async function authMiddleware(
         });
         return;
       }
+
+      // Track usage for authenticated requests
+      trackUsage(apiKey as string);
     },
   );
 });
