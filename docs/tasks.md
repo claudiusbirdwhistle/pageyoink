@@ -3,11 +3,7 @@
 ## In Progress
 (none)
 
-## Up Next (Priority Order) — Phase B: Core Feature (remaining)
-1. [ ] Add usage tracking (requests per key per day)
-2. [ ] Write comprehensive tests for all endpoints
-
-## Queued — Phase C: Deployment
+## Up Next (Priority Order) — Phase C: Deployment
 1. [ ] Configure hosting platform (human needed for account creation)
 2. [ ] Set up auto-deploy pipeline from git push
 3. [ ] Verify health endpoint works in production
@@ -41,6 +37,8 @@
 - [x] Add input validation and error handling (2026-03-22)
 - [x] Add rate limiting (per API key) (2026-03-22)
 - [x] Add API key authentication (2026-03-22)
+- [x] Add usage tracking (requests per key per day) (2026-03-22)
+- [x] Write comprehensive tests for all endpoints (2026-03-22) — 19 tests across 4 test files
 
 ## Icebox
 - [ ] Custom font support for PDF/screenshot generation
