@@ -11,6 +11,7 @@ interface PdfQuery {
   margin_bottom?: string;
   margin_left?: string;
   timeout?: string;
+  clean?: string;
 }
 
 interface PdfBody {
@@ -25,6 +26,7 @@ interface PdfBody {
     left?: string;
   };
   timeout?: number;
+  clean?: boolean;
 }
 
 export async function pdfRoute(app: FastifyInstance) {
@@ -46,12 +48,13 @@ export async function pdfRoute(app: FastifyInstance) {
             margin_bottom: { type: "string" },
             margin_left: { type: "string" },
             timeout: { type: "string" },
+            clean: { type: "string" },
           },
         },
       },
     },
     async (request, reply) => {
-      const { url, format, landscape, print_background, timeout } =
+      const { url, format, landscape, print_background, timeout, clean } =
         request.query;
 
       // Validate URL
@@ -76,6 +79,7 @@ export async function pdfRoute(app: FastifyInstance) {
           printBackground: print_background !== "false",
           margin: buildMargin(request.query),
           timeout: timeout ? parseInt(timeout, 10) : undefined,
+          clean: clean === "true",
         });
 
         return reply
@@ -117,12 +121,13 @@ export async function pdfRoute(app: FastifyInstance) {
               },
             },
             timeout: { type: "number" },
+            clean: { type: "boolean" },
           },
         },
       },
     },
     async (request, reply) => {
-      const { html, format, landscape, printBackground, margin, timeout } =
+      const { html, format, landscape, printBackground, margin, timeout, clean } =
         request.body;
 
       try {
@@ -133,6 +138,7 @@ export async function pdfRoute(app: FastifyInstance) {
           printBackground: printBackground !== false,
           margin,
           timeout,
+          clean: clean || false,
         });
 
         return reply

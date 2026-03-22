@@ -1,4 +1,5 @@
 import { getBrowser } from "./browser.js";
+import { cleanPage } from "./cleanup.js";
 
 export interface PdfOptions {
   url?: string;
@@ -13,6 +14,7 @@ export interface PdfOptions {
     left?: string;
   };
   timeout?: number;
+  clean?: boolean;
 }
 
 export interface PdfResult {
@@ -31,6 +33,7 @@ export async function generatePdf(options: PdfOptions): Promise<PdfResult> {
     printBackground = true,
     margin,
     timeout = DEFAULT_TIMEOUT,
+    clean = false,
   } = options;
 
   if (!url && !html) {
@@ -53,6 +56,10 @@ export async function generatePdf(options: PdfOptions): Promise<PdfResult> {
         waitUntil: "networkidle2",
         timeout: effectiveTimeout,
       });
+    }
+
+    if (clean) {
+      await cleanPage(page);
     }
 
     const buffer = await page.pdf({
