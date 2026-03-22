@@ -5,6 +5,7 @@
 
 ## Up Next (Priority Order)
 (All autonomous tasks complete — remaining tasks require human action)
+(Next cycle: improve test coverage or pick from icebox if no human tasks unblocked)
 
 ## Blocked — Waiting on Human
 - [ ] Configure hosting platform — human needed for account creation (Phase C)
@@ -33,6 +34,8 @@
 - [x] Add OG image template endpoint — GET + POST /v1/og-image (2026-03-22)
 - [x] Add batch processing endpoint with webhook — POST /v1/batch (2026-03-22)
 - [x] Build landing page (2026-03-22)
+- [x] Add Swagger/OpenAPI docs at /docs (2026-03-22)
+- [x] Persistent usage storage with SQLite (2026-03-22)
 
 ## Icebox
 - [ ] Custom font support for PDF/screenshot generation
@@ -40,7 +43,6 @@
 - [ ] Screenshot comparison / visual diff API
 - [ ] Signed URL output (pre-signed S3 links for large files)
 - [ ] SDK packages for Node.js, Python, Go
-- [ ] Persistent usage/job storage (SQLite or Redis)
+- [ ] Persistent batch job storage (SQLite)
 - [ ] Content-aware PDF pagination
 - [ ] Additional OG image templates (blog, product, event, etc.)
-- [ ] API documentation page (Swagger/OpenAPI)
