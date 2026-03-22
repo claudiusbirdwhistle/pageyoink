@@ -34,6 +34,18 @@ export function getDb(): Database.Database {
     );
 
     CREATE INDEX IF NOT EXISTS idx_usage_key_date ON usage(api_key, date);
+
+    CREATE TABLE IF NOT EXISTS batch_jobs (
+      id TEXT PRIMARY KEY,
+      status TEXT NOT NULL DEFAULT 'processing',
+      created_at TEXT NOT NULL,
+      completed_at TEXT,
+      total INTEGER NOT NULL,
+      completed INTEGER NOT NULL DEFAULT 0,
+      results TEXT
+    );
+
+    CREATE INDEX IF NOT EXISTS idx_batch_status ON batch_jobs(status);
   `);
 
   return db;

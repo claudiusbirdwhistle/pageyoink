@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { generatePdf } from "../services/pdf.js";
+import { getDb } from "../services/database.js";
 import crypto from "crypto";
 
 interface BatchItem {
@@ -29,20 +30,69 @@ interface BatchResultItem {
   error?: string;
 }
 
-interface BatchJob {
-  id: string;
-  status: "processing" | "complete" | "failed";
-  createdAt: string;
-  completedAt?: string;
-  results: BatchResultItem[];
-  total: number;
-  completed: number;
+const MAX_BATCH_SIZE = 50;
+
+// --- SQLite-backed job storage ---
+
+function createJob(id: string, total: number): void {
+  const db = getDb();
+  db.prepare(
+    `INSERT INTO batch_jobs (id, status, created_at, total, completed, results)
+     VALUES (?, 'processing', ?, ?, 0, '[]')`,
+  ).run(id, new Date().toISOString(), total);
 }
 
-// In-memory job storage (replace with persistent storage for production)
-const jobs = new Map<string, BatchJob>();
+function getJob(id: string) {
+  const db = getDb();
+  const row = db.prepare("SELECT * FROM batch_jobs WHERE id = ?").get(id) as
+    | {
+        id: string;
+        status: string;
+        created_at: string;
+        completed_at: string | null;
+        total: number;
+        completed: number;
+        results: string;
+      }
+    | undefined;
 
-const MAX_BATCH_SIZE = 50;
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    status: row.status,
+    createdAt: row.created_at,
+    completedAt: row.completed_at,
+    total: row.total,
+    completed: row.completed,
+    results: JSON.parse(row.results) as BatchResultItem[],
+  };
+}
+
+function updateJobProgress(
+  id: string,
+  completed: number,
+  results: BatchResultItem[],
+): void {
+  const db = getDb();
+  db.prepare(
+    "UPDATE batch_jobs SET completed = ?, results = ? WHERE id = ?",
+  ).run(completed, JSON.stringify(results), id);
+}
+
+function completeJob(
+  id: string,
+  status: "complete" | "failed",
+  results: BatchResultItem[],
+  completed: number,
+): void {
+  const db = getDb();
+  db.prepare(
+    "UPDATE batch_jobs SET status = ?, completed_at = ?, completed = ?, results = ? WHERE id = ?",
+  ).run(status, new Date().toISOString(), completed, JSON.stringify(results), id);
+}
+
+// --- Route ---
 
 export async function batchRoute(app: FastifyInstance) {
   // POST: Submit a batch job
@@ -118,21 +168,12 @@ export async function batchRoute(app: FastifyInstance) {
       }
 
       const jobId = crypto.randomUUID();
-      const job: BatchJob = {
-        id: jobId,
-        status: "processing",
-        createdAt: new Date().toISOString(),
-        results: [],
-        total: items.length,
-        completed: 0,
-      };
-
-      jobs.set(jobId, job);
+      createJob(jobId, items.length);
 
       // Process in background
-      processBatch(job, items, webhook, request.log).catch((err) => {
+      processBatch(jobId, items, webhook, request.log).catch((err) => {
         request.log.error({ err, jobId }, "Batch processing failed");
-        job.status = "failed";
+        completeJob(jobId, "failed", [], 0);
       });
 
       return reply.status(202).send({
@@ -149,7 +190,7 @@ export async function batchRoute(app: FastifyInstance) {
     "/v1/batch/:jobId",
     async (request, reply) => {
       const { jobId } = request.params;
-      const job = jobs.get(jobId);
+      const job = getJob(jobId);
 
       if (!job) {
         return reply.status(404).send({ error: "Job not found" });
@@ -162,22 +203,21 @@ export async function batchRoute(app: FastifyInstance) {
         completed: job.completed,
         createdAt: job.createdAt,
         completedAt: job.completedAt,
-        results:
-          job.status === "complete"
-            ? job.results
-            : undefined,
+        results: job.status === "complete" ? job.results : undefined,
       };
     },
   );
 }
 
 async function processBatch(
-  job: BatchJob,
+  jobId: string,
   items: BatchItem[],
   webhook: string | undefined,
   log: { error: (...args: unknown[]) => void },
 ): Promise<void> {
-  // Process items sequentially to avoid overwhelming the browser
+  const results: BatchResultItem[] = [];
+  let completed = 0;
+
   for (const item of items) {
     const type = item.type || "screenshot";
     const resultItem: BatchResultItem = {
@@ -215,12 +255,12 @@ async function processBatch(
         err instanceof Error ? err.message : "Processing failed";
     }
 
-    job.results.push(resultItem);
-    job.completed++;
+    results.push(resultItem);
+    completed++;
+    updateJobProgress(jobId, completed, results);
   }
 
-  job.status = "complete";
-  job.completedAt = new Date().toISOString();
+  completeJob(jobId, "complete", results, completed);
 
   // Fire webhook if configured
   if (webhook) {
@@ -229,11 +269,11 @@ async function processBatch(
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          jobId: job.id,
+          jobId,
           status: "complete",
-          total: job.total,
-          completed: job.completed,
-          results: job.results,
+          total: items.length,
+          completed,
+          results,
         }),
       });
     } catch (err) {
