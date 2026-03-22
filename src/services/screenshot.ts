@@ -1,6 +1,7 @@
 import { getBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady } from "./readiness.js";
+import { triggerLazyImages } from "./lazy-load.js";
 
 export interface ScreenshotOptions {
   url: string;
@@ -84,6 +85,11 @@ async function attemptScreenshot(
       waitUntil: "networkidle2",
       timeout: effectiveTimeout,
     });
+
+    // Scroll through page to trigger lazy-loaded images
+    if (fullPage || smartWait) {
+      await triggerLazyImages(page);
+    }
 
     if (smartWait) {
       await waitForPageReady(page, Math.min(effectiveTimeout, 10_000));

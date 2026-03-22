@@ -1,6 +1,7 @@
 import { getBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady } from "./readiness.js";
+import { triggerLazyImages } from "./lazy-load.js";
 
 export interface PdfOptions {
   url?: string;
@@ -88,6 +89,9 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
         timeout: effectiveTimeout,
       });
     }
+
+    // Scroll through page to trigger lazy-loaded images (PDFs always capture full page)
+    await triggerLazyImages(page);
 
     if (smartWait) {
       await waitForPageReady(page, Math.min(effectiveTimeout, 10_000));

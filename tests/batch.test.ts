@@ -71,8 +71,8 @@ describe("Batch endpoint", () => {
 
     const { jobId } = submitResponse.json();
 
-    // Wait for processing
-    await new Promise((resolve) => setTimeout(resolve, 5000));
+    // Wait for processing (includes lazy-load scrolling time)
+    await new Promise((resolve) => setTimeout(resolve, 10000));
 
     // Check status
     const statusResponse = await app.inject({
