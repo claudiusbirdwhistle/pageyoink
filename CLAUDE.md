@@ -1,12 +1,12 @@
-# Pagerend: Autonomous Agent Operating System
+# PageYoink: Autonomous Agent Operating System
 
 ## What This Project Is
 
-Pagerend is an autonomously-operated API service (screenshot, PDF, and OG image generation) built and maintained entirely by Claude via Ralph Loop. The service runs continuously; Claude wakes up on intervals to monitor, maintain, and improve it.
+PageYoink is an autonomously-operated API service (screenshot, PDF, and OG image generation) built and maintained entirely by Claude via Ralph Loop. The service runs continuously; Claude wakes up on intervals to monitor, maintain, and improve it.
 
 ## Repository
 
-- **GitHub:** github.com/claudiusbirdwhistle/pagerend
+- **GitHub:** github.com/claudiusbirdwhistle/pageyoink
 - **CI/CD:** GitHub Actions → auto-deploy to cloud server on push to `main`
 
 ## The Prime Directive
@@ -24,7 +24,7 @@ Pagerend is an autonomously-operated API service (screenshot, PDF, and OG image 
 ## Project Structure
 
 ```
-pagerend/
+pageyoink/
   CLAUDE.md              ← You are here. Project overview and orientation.
   docs/
     agent-loop.md        ← HOW YOU OPERATE. Read first every cycle.

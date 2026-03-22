@@ -1,6 +1,6 @@
 # Operational Runbook
 
-This document contains procedures for operating the Pagerend API service. Update this as new procedures are discovered.
+This document contains procedures for operating the PageYoink API service. Update this as new procedures are discovered.
 
 ---
 
@@ -98,7 +98,7 @@ Expected response:
 | RapidAPI | API marketplace listing | Not created |
 | Stripe | Direct payment processing | Not created |
 | Domain registrar | Custom domain (optional) | Not created |
-| GitHub | Repository hosting | Created — claudiusbirdwhistle/pagerend |
+| GitHub | Repository hosting | Created — claudiusbirdwhistle/pageyoink |
 
 ---
 
