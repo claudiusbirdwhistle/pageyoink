@@ -1,7 +1,7 @@
 # Project Status
 
 ## Last Updated
-2026-03-22 — Phase B complete, ready for Phase C (Deployment)
+2026-03-22 — Phase E tasks 1-2 complete (clean mode + smart wait)
 
 ## System State
 - Deployed: no
@@ -11,18 +11,18 @@
 - Monthly revenue: $0
 
 ## What Just Happened
-- Phase B fully complete: screenshot, PDF, auth, rate limiting, usage tracking
-- All 19 tests passing
-- Ready for deployment (Phase C)
+- Added clean mode: cookie banner, popup, and chat widget removal via blocklists
+- Added smart readiness detection: DOM stability + fonts + images + animations
+- Both features available as query params (?clean=true, ?smart_wait=true)
 
 ## Current Phase
-Phase C: Deployment
+Working across Phase C (blocked on hosting account) and Phase E (differentiation features)
 
 ## Current Blockers
-- Phase C requires human to create an account on a hosting platform (Railway, Render, or Fly.io)
-- Need to determine which hosting platform to use
+- Phase C: Human needs to create hosting account (Railway/Render/Fly.io)
+- Phase D: Human needs to create RapidAPI and Stripe accounts
 
 ## Warnings
-- Node.js installed via nvm. Source nvm before using npm/node:
+- Node.js installed via nvm. Source nvm before using:
   `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"`
-- Usage tracking is in-memory only — will reset on restart. Need persistent storage before production.
+- Usage tracking is in-memory only — needs persistent storage before production
