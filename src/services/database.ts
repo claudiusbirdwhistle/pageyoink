@@ -4,15 +4,19 @@ import { existsSync, mkdirSync } from "fs";
 
 let db: Database.Database | null = null;
 
-const DB_PATH = process.env.DB_PATH || path.join(process.cwd(), "data", "pageyoink.db");
+const DB_PATH = process.env.NODE_ENV === "test"
+  ? ":memory:"
+  : (process.env.DB_PATH || path.join(process.cwd(), "data", "pageyoink.db"));
 
 export function getDb(): Database.Database {
   if (db) return db;
 
-  // Ensure data directory exists
-  const dir = path.dirname(DB_PATH);
-  if (!existsSync(dir)) {
-    mkdirSync(dir, { recursive: true });
+  if (DB_PATH !== ":memory:") {
+    // Ensure data directory exists
+    const dir = path.dirname(DB_PATH);
+    if (!existsSync(dir)) {
+      mkdirSync(dir, { recursive: true });
+    }
   }
 
   db = new Database(DB_PATH);
