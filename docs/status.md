@@ -40,4 +40,3 @@ Infrastructure:
 
 ## Warnings
 - nvm required: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"`
-- Batch job results are still in-memory (could add to SQLite in future)

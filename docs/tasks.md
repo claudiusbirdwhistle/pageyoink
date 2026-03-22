@@ -40,6 +40,7 @@
 - [x] Add graceful shutdown handler (2026-03-22)
 - [x] Add .env.example with all config vars (2026-03-22)
 - [x] Node.js SDK package — sdk/ directory (2026-03-22)
+- [x] Persistent batch job storage in SQLite (2026-03-22)
 
 ## Icebox
 - [ ] Custom font support for PDF/screenshot generation
@@ -47,6 +48,6 @@
 - [ ] Screenshot comparison / visual diff API
 - [ ] Signed URL output (pre-signed S3 links for large files)
 - [ ] SDK packages for Python, Go
-- [ ] Persistent batch job storage (SQLite)
+
 - [ ] Content-aware PDF pagination
 - [ ] Additional OG image templates (blog, product, event, etc.)
