@@ -3,10 +3,7 @@
 ## In Progress
 (none)
 
-## Up Next (Priority Order) — Phase A: Foundation
-1. [ ] Create Dockerfile for containerized deployment
-
-## Queued — Phase B: Core Feature
+## Up Next (Priority Order) — Phase B: Core Feature
 1. [ ] Implement screenshot endpoint (URL → PNG/JPEG)
 2. [ ] Implement HTML-to-PDF endpoint (URL or HTML → PDF)
 3. [ ] Add input validation and error handling
@@ -43,6 +40,7 @@
 - [x] Set up linting (ESLint + Prettier) (2026-03-22)
 - [x] Create basic Fastify server with health endpoint (2026-03-22)
 - [x] Write first test (health endpoint returns correct response) (2026-03-22)
+- [x] Create Dockerfile for containerized deployment (2026-03-22)
 
 ## Icebox
 - [ ] Custom font support for PDF/screenshot generation
