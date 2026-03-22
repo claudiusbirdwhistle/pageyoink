@@ -24,8 +24,35 @@ const DEFAULT_WIDTH = 1280;
 const DEFAULT_HEIGHT = 720;
 const DEFAULT_TIMEOUT = 30_000;
 const MAX_TIMEOUT = 60_000;
+const MAX_RETRIES = 1;
 
 export async function takeScreenshot(
+  options: ScreenshotOptions,
+): Promise<ScreenshotResult> {
+  let lastError: Error | undefined;
+
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await attemptScreenshot(options);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      // Only retry on transient errors (connection closed, crashed, etc.)
+      const isTransient =
+        lastError.message.includes("Connection closed") ||
+        lastError.message.includes("crashed") ||
+        lastError.message.includes("disconnected") ||
+        lastError.message.includes("Target closed");
+
+      if (!isTransient || attempt === MAX_RETRIES) {
+        throw lastError;
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+async function attemptScreenshot(
   options: ScreenshotOptions,
 ): Promise<ScreenshotResult> {
   const {

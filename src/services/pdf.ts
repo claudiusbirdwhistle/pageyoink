@@ -25,8 +25,40 @@ export interface PdfResult {
 
 const DEFAULT_TIMEOUT = 30_000;
 const MAX_TIMEOUT = 60_000;
+const MAX_RETRIES = 1;
 
 export async function generatePdf(options: PdfOptions): Promise<PdfResult> {
+  if (!options.url && !options.html) {
+    throw new Error("Either url or html must be provided");
+  }
+
+  // Only retry for URL-based PDFs (HTML content won't have transient failures)
+  if (!options.url) {
+    return attemptPdf(options);
+  }
+
+  let lastError: Error | undefined;
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      return await attemptPdf(options);
+    } catch (err) {
+      lastError = err instanceof Error ? err : new Error(String(err));
+      const isTransient =
+        lastError.message.includes("Connection closed") ||
+        lastError.message.includes("crashed") ||
+        lastError.message.includes("disconnected") ||
+        lastError.message.includes("Target closed");
+
+      if (!isTransient || attempt === MAX_RETRIES) {
+        throw lastError;
+      }
+    }
+  }
+
+  throw lastError;
+}
+
+async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
   const {
     url,
     html,
@@ -38,10 +70,6 @@ export async function generatePdf(options: PdfOptions): Promise<PdfResult> {
     clean = false,
     smartWait = false,
   } = options;
-
-  if (!url && !html) {
-    throw new Error("Either url or html must be provided");
-  }
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
 
