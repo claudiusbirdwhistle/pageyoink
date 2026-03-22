@@ -3,9 +3,26 @@
 ## In Progress
 (none)
 
-## Up Next (Priority Order)
-(All autonomous tasks complete — remaining tasks require human action)
-(Next cycle: improve test coverage or pick from icebox if no human tasks unblocked)
+## Up Next — Phase F: Competitive Parity (Pre-Launch)
+
+These features are needed before public launch. Every serious competitor has them.
+See `docs/competitive-analysis.md` for full details.
+
+### Priority 1 (Must have)
+1. [ ] CSS injection — accept `css` param to inject custom CSS before capture
+2. [ ] JS injection — accept `js` param to execute custom JavaScript before capture
+3. [ ] Custom headers — accept `headers` param for HTTP request headers
+4. [ ] Custom cookies — accept `cookies` param for pre-set cookies
+5. [ ] Custom user-agent — accept `user_agent` param
+
+### Priority 2 (Should have)
+6. [ ] Element capture — accept `selector` param to capture a specific DOM element
+7. [ ] Caching with TTL — cache screenshots/PDFs, return cached version on repeated requests (don't count against quota)
+8. [ ] Print-mode CSS injection for PDFs — auto-convert horizontal carousels to wrapped layouts to fix missing images in Chrome print renderer
+
+### Priority 3 (Nice to have before launch)
+9. [ ] Ad blocking via blocklist (similar to clean mode approach)
+10. [ ] Transparent background support for PNG screenshots
 
 ## Blocked — Waiting on Human
 - [ ] Configure hosting platform — human needed for account creation (Phase C)
@@ -15,39 +32,65 @@
 - [ ] Set up Stripe for direct sales — human needed for account creation (Phase D)
 
 ## Done
-- [x] Initialize Node.js project (2026-03-22)
-- [x] Set up project directory structure (2026-03-22)
-- [x] Set up testing framework — Vitest (2026-03-22)
-- [x] Set up linting — ESLint + Prettier (2026-03-22)
-- [x] Create Fastify server with health endpoint (2026-03-22)
-- [x] Write first test (2026-03-22)
-- [x] Create Dockerfile (2026-03-22)
-- [x] Implement screenshot endpoint — GET /v1/screenshot (2026-03-22)
-- [x] Implement PDF endpoints — GET + POST /v1/pdf (2026-03-22)
-- [x] Add input validation and error handling (2026-03-22)
-- [x] Add rate limiting per API key (2026-03-22)
-- [x] Add API key authentication (2026-03-22)
-- [x] Add usage tracking per key per day (2026-03-22)
-- [x] Set up GitHub Actions CI pipeline (2026-03-22)
-- [x] Add cookie banner / popup removal — clean mode (2026-03-22)
-- [x] Add smart readiness detection — smart_wait mode (2026-03-22)
-- [x] Add OG image template endpoint — GET + POST /v1/og-image (2026-03-22)
-- [x] Add batch processing endpoint with webhook — POST /v1/batch (2026-03-22)
-- [x] Build landing page (2026-03-22)
-- [x] Add Swagger/OpenAPI docs at /docs (2026-03-22)
-- [x] Persistent usage storage with SQLite (2026-03-22)
-- [x] Add usage dashboard endpoint — GET /v1/usage (2026-03-22)
-- [x] Add graceful shutdown handler (2026-03-22)
-- [x] Add .env.example with all config vars (2026-03-22)
-- [x] Node.js SDK package — sdk/ directory (2026-03-22)
-- [x] Persistent batch job storage in SQLite (2026-03-22)
 
-## Icebox
-- [ ] Custom font support for PDF/screenshot generation
-- [ ] Geo-distributed rendering (edge nodes in EU, Asia)
+### Phase A: Foundation (2026-03-22)
+- [x] Initialize Node.js project with TypeScript
+- [x] Set up project directory structure
+- [x] Set up testing framework (Vitest)
+- [x] Set up linting (ESLint + Prettier)
+- [x] Create Fastify server with health endpoint
+- [x] Write first test
+- [x] Create Dockerfile with Chromium
+
+### Phase B: Core Features (2026-03-22)
+- [x] Screenshot endpoint — GET /v1/screenshot (PNG/JPEG, viewport, quality, full page)
+- [x] PDF endpoints — GET /v1/pdf (URL→PDF) + POST /v1/pdf (HTML→PDF)
+- [x] Input validation and error handling
+- [x] Rate limiting per API key
+- [x] API key authentication (x-api-key header + api_key query param)
+- [x] Usage tracking per key per day (SQLite-backed)
+
+### Phase E: Differentiation (2026-03-22)
+- [x] Cookie banner / popup removal — 4-phase clean mode (selector, text-content, z-index, backdrop)
+- [x] Chat widget removal — Intercom, Drift, HubSpot, Crisp, Zendesk, Tawk, Tidio, etc.
+- [x] Smart readiness detection — DOM stability + fonts + images + animations
+- [x] Lazy-load image scrolling with max_scroll cap (prevents infinite scroll traps)
+- [x] Event-based image wait — attaches load/error listeners to pending images
+- [x] OG image template endpoint — GET + POST /v1/og-image (light/dark/gradient themes)
+- [x] Batch processing — POST /v1/batch with job tracking + webhook delivery
+- [x] Automatic retry on transient Chrome crashes (Connection closed, Target closed)
+
+### Infrastructure & DX (2026-03-22)
+- [x] GitHub Actions CI pipeline (test + build + Docker)
+- [x] Swagger/OpenAPI docs at /docs
+- [x] Usage dashboard endpoint — GET /v1/usage (per-key, per-endpoint, daily)
+- [x] Landing page at /
+- [x] Graceful shutdown handler (SIGTERM/SIGINT)
+- [x] .env.example with all config vars
+- [x] Node.js SDK (zero dependencies, full TypeScript types)
+- [x] Persistent storage — SQLite for usage + batch jobs
+- [x] Deployment guide (Railway, Render, Fly.io)
+- [x] Competitive analysis document
+
+### Bug Fixes & Quality (2026-03-22)
+- [x] Fix TypeScript readonly property error in CI
+- [x] Fix Docker build — install devDeps for tsc, then prune
+- [x] Fix Fastify plugin encapsulation for auth middleware
+- [x] Fix test isolation — in-memory SQLite for NODE_ENV=test
+- [x] Fix __name decorator leak in page.evaluate callbacks
+- [x] Overhaul clean mode — verified against HubSpot, BBC, Intercom (not just example.com)
+
+## Icebox (Post-Launch)
+- [ ] Proxy support (BYO proxy)
+- [ ] Geolocation spoofing
+- [ ] PDF encryption and password protection
+- [ ] PDF headers/footers with template variables
+- [ ] PDF watermarks (text + image)
+- [ ] S3 export (direct upload to customer's bucket)
+- [ ] Video capture (scrolling MP4/GIF)
+- [ ] Click automation (click a selector before capture)
+- [ ] Custom font support
 - [ ] Screenshot comparison / visual diff API
-- [ ] Signed URL output (pre-signed S3 links for large files)
 - [ ] SDK packages for Python, Go
-
-- [ ] Content-aware PDF pagination
-- [ ] Additional OG image templates (blog, product, event, etc.)
+- [ ] Additional OG image templates
+- [ ] Geo-distributed rendering (edge nodes)

@@ -32,7 +32,7 @@ Before doing any planned work, check system health:
 ```
 1. Is the service deployed?
    - If yes: Hit the health endpoint. Check response.
-   - If no:  This is the top priority unless blocked.
+   - If no:  Check if deployment blockers have been resolved.
 
 2. Are there errors?
    - Check application logs (method defined in docs/runbook.md).
@@ -68,7 +68,9 @@ Priority 5: No tasks remain                  → Improve test coverage,
 2. **Write tests first** for any new functionality (or at minimum, alongside).
 3. **Make the change.** Keep commits small and atomic.
 4. **Run the full test suite.** Do not commit if tests fail.
-5. **If deploying:** Follow the deployment procedure in `docs/runbook.md`.
+5. **Test against real-world sites** (not just example.com) when modifying screenshot/PDF/clean features.
+6. **Save sample output** to `samples/` for human review when relevant.
+7. **If deploying:** Follow the deployment procedure in `docs/runbook.md`.
 
 ### Phase 5: Record (Write it down for future-you)
 
@@ -97,76 +99,37 @@ This phase is **mandatory.** Never skip it.
 
 ---
 
-## Status File Format
+## Key Reference Documents
 
-`docs/status.md` is the most important file in the project. It is the primary channel of communication between past-Claude and future-Claude. It must always reflect ground truth.
-
-```markdown
-# Project Status
-
-## Last Updated
-YYYY-MM-DD HH:MM (by which cycle / what was done)
-
-## System State
-- Deployed: yes/no
-- Health: healthy / degraded / down
-- Last known error rate: X%
-- Paying customers: N
-- Monthly revenue: $X
-
-## What Just Happened
-(Brief description of the most recent work completed)
-
-## Current Blockers
-(Anything preventing progress. Include specifics — error messages,
-URLs, exact symptoms.)
-
-## Warnings
-(Things that aren't broken yet but might be soon — usage approaching
-limits, dependencies with known vulnerabilities, etc.)
-```
+| Document | Purpose |
+|----------|---------|
+| `docs/status.md` | Current project state — what's done, what's next, what's broken |
+| `docs/tasks.md` | Prioritized work queue |
+| `docs/decisions.md` | Why we made key choices (prevents re-litigating) |
+| `docs/runbook.md` | Operational procedures |
+| `docs/competitive-analysis.md` | Feature comparison vs competitors — read before adding features |
+| `docs/DEPLOY.md` | Step-by-step deployment guide (Railway, Render, Fly.io) |
 
 ---
 
-## Task File Format
+## Testing Standards
 
-`docs/tasks.md` is the prioritized work queue. Keep it honest — only tasks that actually need doing.
+**Never test only against example.com.** It's a trivially simple page that doesn't exercise real-world edge cases.
 
-```markdown
-# Task Queue
+When modifying screenshot, PDF, or clean mode features, test against:
+- A JS-heavy site (e.g., github.com, stripe.com/docs)
+- A content-heavy news site (e.g., bbc.com, nytimes.com)
+- A site with known cookie banners (e.g., hubspot.com)
+- A simple site for baseline (e.g., example.com, news.ycombinator.com)
 
-## In Progress
-- [ ] Task description (started YYYY-MM-DD, context: brief note)
+Save output to `samples/` for human review. Compare before/after when fixing rendering issues.
 
-## Up Next (Priority Order)
-1. [ ] Highest priority task
-2. [ ] Second priority task
-3. [ ] Third priority task
+**Known rendering issues:**
+- BBC "Weekend Reads" horizontal carousel: images don't render in Chrome's PDF engine due to CSS layout incompatibility with print rendering. This is a Chromium limitation, not a PageYoink bug. Affects all Chrome-based PDF tools.
+- NYTimes: first screenshot attempt may fail with "Connection closed" — retry logic handles this.
+- Stripe Docs: slow renders (~17s) due to long-running network requests.
 
-## Done
-- [x] Completed task (YYYY-MM-DD)
-- [x] Another completed task (YYYY-MM-DD)
-
-## Icebox (Nice to have, not now)
-- [ ] Future idea
-- [ ] Another future idea
-```
-
----
-
-## Decision Log Format
-
-`docs/decisions.md` prevents future-Claude from re-litigating settled questions.
-
-```markdown
-## YYYY-MM-DD: Decision Title
-
-**Context:** What situation prompted this decision?
-**Decision:** What was decided?
-**Rationale:** Why this and not alternatives?
-**Alternatives considered:** What else was on the table?
-**Status:** Active / Superseded by [link]
-```
+**TypeScript gotcha:** Never declare named functions inside `page.evaluate()` callbacks — TypeScript's decorator transform adds `__name` which doesn't exist in the browser context. Use anonymous arrow functions or `setInterval` instead.
 
 ---
 
@@ -182,6 +145,7 @@ limits, dependencies with known vulnerabilities, etc.)
 - Add features from the task queue
 - Refactor code for maintainability
 - Respond to errors visible in logs
+- Generate sample output for human review
 
 ### What Requires Human Intervention
 - Creating accounts (RapidAPI, hosting platform, Stripe, domain registrar)
@@ -202,51 +166,19 @@ limits, dependencies with known vulnerabilities, etc.)
 
 ---
 
-## Bootstrapping Sequence
-
-When the project is brand new (nothing built yet), follow this sequence:
+## Project Phases (Historical + Current)
 
 ```
-Phase A: Foundation
-  1. Initialize Node.js project
-  2. Set up project structure
-  3. Set up testing framework
-  4. Set up linting
-  5. Create basic Express/Fastify server with health endpoint
-  6. Write first test
-  7. Commit everything
-
-Phase B: Core Feature
-  1. Implement screenshot endpoint (URL → PNG)
-  2. Implement HTML-to-PDF endpoint
-  3. Add input validation and error handling
-  4. Add rate limiting
-  5. Add API key authentication
-  6. Write comprehensive tests
-  7. Commit and verify
-
-Phase C: Deployment
-  1. Containerize with Docker
-  2. Configure hosting platform (needs human for account setup)
-  3. Set up auto-deploy from git push
-  4. Verify health endpoint works in production
-  5. Document deployment in runbook
-
-Phase D: Monetization
-  1. List on RapidAPI (needs human for account setup)
-  2. Configure pricing tiers
-  3. Add usage tracking
-  4. Set up Stripe for direct sales (needs human for account setup)
-
-Phase E: Differentiation
-  1. Add cookie banner / popup removal
-  2. Add smart readiness detection
-  3. Add OG image template support
-  4. Add batch processing with webhooks
-  5. Content-aware PDF pagination
+Phase A: Foundation                    ✅ COMPLETE
+Phase B: Core Features                 ✅ COMPLETE
+Phase C: Deployment                    🔲 BLOCKED (needs hosting account)
+Phase D: Monetization                  🔲 BLOCKED (needs RapidAPI + Stripe)
+Phase E: Differentiation              ✅ COMPLETE (clean, smart wait, OG, batch)
+Phase F: Competitive Parity            🔲 IN PROGRESS (CSS/JS injection, headers, etc.)
+Phase G: Post-Launch Iteration         🔲 FUTURE (based on customer feedback)
 ```
 
-Each phase is a series of tasks that get added to `docs/tasks.md` when the prior phase is complete. Do not load all phases into the task queue at once — focus on the current phase.
+Phase F was identified through competitive analysis (see docs/competitive-analysis.md). It covers features that all serious competitors have and we need before launch.
 
 ---
 
@@ -278,6 +210,10 @@ These are mistakes that autonomous Claude is prone to. Watch for them.
 **Scope creep:** "While I'm in here, I might as well..." No. Finish the task you started, commit it, then start a new task if time permits.
 
 **Doc rot:** Updating code but not docs. The docs ARE your memory. If they're wrong, future-you is lost.
+
+**Testing against example.com only:** A trivially simple page proves nothing. Always test rendering changes against real-world complex sites. See Testing Standards above.
+
+**Spinning on blocked tasks:** If all remaining tasks require human action, do meaningful work from the icebox or improve test coverage. If nothing productive remains, say so clearly rather than doing busywork.
 
 ---
 
