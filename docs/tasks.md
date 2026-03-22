@@ -4,10 +4,8 @@
 (none)
 
 ## Up Next (Priority Order)
-1. [ ] Add OG image template endpoint with pre-built templates (Phase E)
-2. [ ] Add batch processing endpoint with webhook delivery (Phase E)
-3. [ ] Add content-aware PDF pagination beta (Phase E)
-4. [ ] Build simple landing page (Phase D)
+1. [ ] Add content-aware PDF pagination beta (Phase E — last differentiation feature)
+2. [ ] Build simple landing page (Phase D)
 
 ## Blocked — Waiting on Human
 - [ ] Configure hosting platform — human needed for account creation (Phase C)
@@ -32,6 +30,8 @@
 - [x] Set up GitHub Actions CI pipeline (2026-03-22)
 - [x] Add cookie banner / popup removal — clean mode (2026-03-22)
 - [x] Add smart readiness detection — smart_wait mode (2026-03-22)
+- [x] Add OG image template endpoint — GET + POST /v1/og-image (2026-03-22)
+- [x] Add batch processing endpoint with webhook — POST /v1/batch (2026-03-22)
 
 ## Icebox
 - [ ] Custom font support for PDF/screenshot generation
@@ -39,4 +39,5 @@
 - [ ] Screenshot comparison / visual diff API
 - [ ] Signed URL output (pre-signed S3 links for large files)
 - [ ] SDK packages for Node.js, Python, Go
-- [ ] Persistent usage storage (SQLite or Redis)
+- [ ] Persistent usage/job storage (SQLite or Redis)
+- [ ] Content-aware PDF pagination (moved from up next — complex, do after launch)
