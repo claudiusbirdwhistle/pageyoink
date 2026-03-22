@@ -1,0 +1,18 @@
+{
+  "name": "pageyoink",
+  "version": "0.1.0",
+  "description": "Node.js SDK for the PageYoink screenshot, PDF, and OG image API",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": ["screenshot", "pdf", "og-image", "api", "puppeteer", "pageyoink"],
+  "license": "MIT",
+  "files": ["dist/"],
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
