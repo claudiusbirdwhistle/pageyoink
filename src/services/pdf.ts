@@ -1,5 +1,6 @@
 import { getBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
+import { waitForPageReady } from "./readiness.js";
 
 export interface PdfOptions {
   url?: string;
@@ -15,6 +16,7 @@ export interface PdfOptions {
   };
   timeout?: number;
   clean?: boolean;
+  smartWait?: boolean;
 }
 
 export interface PdfResult {
@@ -34,6 +36,7 @@ export async function generatePdf(options: PdfOptions): Promise<PdfResult> {
     margin,
     timeout = DEFAULT_TIMEOUT,
     clean = false,
+    smartWait = false,
   } = options;
 
   if (!url && !html) {
@@ -56,6 +59,10 @@ export async function generatePdf(options: PdfOptions): Promise<PdfResult> {
         waitUntil: "networkidle2",
         timeout: effectiveTimeout,
       });
+    }
+
+    if (smartWait) {
+      await waitForPageReady(page, Math.min(effectiveTimeout, 10_000));
     }
 
     if (clean) {

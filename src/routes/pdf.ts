@@ -12,6 +12,7 @@ interface PdfQuery {
   margin_left?: string;
   timeout?: string;
   clean?: string;
+  smart_wait?: string;
 }
 
 interface PdfBody {
@@ -27,6 +28,7 @@ interface PdfBody {
   };
   timeout?: number;
   clean?: boolean;
+  smartWait?: boolean;
 }
 
 export async function pdfRoute(app: FastifyInstance) {
@@ -49,12 +51,13 @@ export async function pdfRoute(app: FastifyInstance) {
             margin_left: { type: "string" },
             timeout: { type: "string" },
             clean: { type: "string" },
+            smart_wait: { type: "string" },
           },
         },
       },
     },
     async (request, reply) => {
-      const { url, format, landscape, print_background, timeout, clean } =
+      const { url, format, landscape, print_background, timeout, clean, smart_wait } =
         request.query;
 
       // Validate URL
@@ -80,6 +83,7 @@ export async function pdfRoute(app: FastifyInstance) {
           margin: buildMargin(request.query),
           timeout: timeout ? parseInt(timeout, 10) : undefined,
           clean: clean === "true",
+          smartWait: smart_wait === "true",
         });
 
         return reply
@@ -122,12 +126,13 @@ export async function pdfRoute(app: FastifyInstance) {
             },
             timeout: { type: "number" },
             clean: { type: "boolean" },
+            smartWait: { type: "boolean" },
           },
         },
       },
     },
     async (request, reply) => {
-      const { html, format, landscape, printBackground, margin, timeout, clean } =
+      const { html, format, landscape, printBackground, margin, timeout, clean, smartWait } =
         request.body;
 
       try {
@@ -139,6 +144,7 @@ export async function pdfRoute(app: FastifyInstance) {
           margin,
           timeout,
           clean: clean || false,
+          smartWait: smartWait || false,
         });
 
         return reply

@@ -1,6 +1,7 @@
 import { Page } from "puppeteer";
 import { getBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
+import { waitForPageReady } from "./readiness.js";
 
 export interface ScreenshotOptions {
   url: string;
@@ -12,6 +13,7 @@ export interface ScreenshotOptions {
   deviceScaleFactor?: number;
   timeout?: number;
   clean?: boolean;
+  smartWait?: boolean;
 }
 
 export interface ScreenshotResult {
@@ -37,6 +39,7 @@ export async function takeScreenshot(
     deviceScaleFactor = 1,
     timeout = DEFAULT_TIMEOUT,
     clean = false,
+    smartWait = false,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -55,6 +58,10 @@ export async function takeScreenshot(
       waitUntil: "networkidle2",
       timeout: effectiveTimeout,
     });
+
+    if (smartWait) {
+      await waitForPageReady(page, Math.min(effectiveTimeout, 10_000));
+    }
 
     if (clean) {
       await cleanPage(page);
