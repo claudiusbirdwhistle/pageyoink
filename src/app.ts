@@ -9,6 +9,7 @@ import { pdfRoute } from "./routes/pdf.js";
 import { ogImageRoute } from "./routes/og-image.js";
 import { batchRoute } from "./routes/batch.js";
 import { landingRoute } from "./routes/landing.js";
+import { usageRoute } from "./routes/usage.js";
 import { authMiddleware } from "./middleware/auth.js";
 
 export async function buildApp() {
@@ -69,6 +70,7 @@ export async function buildApp() {
   await app.register(ogImageRoute);
   await app.register(batchRoute);
   await app.register(landingRoute);
+  await app.register(usageRoute);
 
   return app;
 }
