@@ -1,7 +1,7 @@
 # Project Status
 
 ## Last Updated
-2026-03-22 — Phase A+B complete, Phase E nearly complete
+2026-03-22 — All autonomous work complete. Waiting on human for deployment + marketplace accounts.
 
 ## System State
 - Deployed: no
@@ -10,30 +10,32 @@
 - Paying customers: 0
 - Monthly revenue: $0
 
-## What Just Happened
-- Built full API: screenshot, PDF, OG image, and batch endpoints
-- Added clean mode (cookie/popup removal) and smart readiness detection
-- Batch processing with async job tracking and webhook delivery
-- CI pipeline running on GitHub Actions
-- 29 tests all passing
-
-## Endpoints Available
+## What's Built
+Full API with 8 endpoints:
 - GET /internal/health — health check + usage stats
-- GET /v1/screenshot — URL to PNG/JPEG
-- GET /v1/pdf — URL to PDF
+- GET /v1/screenshot — URL to PNG/JPEG (with clean mode + smart wait)
+- GET /v1/pdf — URL to PDF (with clean mode + smart wait)
 - POST /v1/pdf — HTML to PDF
-- GET /v1/og-image — template-based OG image (query params)
-- POST /v1/og-image — template-based OG image (JSON body)
-- POST /v1/batch — async batch processing
+- GET /v1/og-image — template-based social images (query params)
+- POST /v1/og-image — template-based social images (JSON body)
+- POST /v1/batch — async batch processing (up to 50 URLs)
 - GET /v1/batch/:jobId — check batch job status
+- GET / — landing page
 
-## Current Phase
-Phase E: Differentiation (4 of 5 tasks done)
+Infrastructure:
+- API key auth (x-api-key header or api_key query param)
+- Rate limiting (configurable per minute)
+- Usage tracking per API key per day
+- GitHub Actions CI (test + build + Docker)
+- Dockerfile with Chromium for Puppeteer
+- Landing page with pricing tiers
 
-## Current Blockers
-- Phase C: Human needs to create hosting account (Railway/Render/Fly.io)
-- Phase D: Human needs to create RapidAPI and Stripe accounts
+## What's Needed From Human
+1. Create hosting account (Railway, Render, or Fly.io) and connect GitHub repo
+2. Create RapidAPI account and list the API
+3. Create Stripe account for direct sales
+4. Set environment variables: API_KEYS, PORT, RATE_LIMIT_PER_MINUTE
 
 ## Warnings
 - nvm required: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"`
-- Usage tracking and batch jobs are in-memory only — will reset on restart
+- Usage tracking and batch jobs are in-memory — need persistent storage for production

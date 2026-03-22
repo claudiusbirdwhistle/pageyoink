@@ -4,13 +4,13 @@
 (none)
 
 ## Up Next (Priority Order)
-1. [ ] Add content-aware PDF pagination beta (Phase E — last differentiation feature)
-2. [ ] Build simple landing page (Phase D)
+(All autonomous tasks complete — remaining tasks require human action)
 
 ## Blocked — Waiting on Human
 - [ ] Configure hosting platform — human needed for account creation (Phase C)
 - [ ] Set up auto-deploy pipeline from git push (Phase C — depends on hosting)
 - [ ] Create RapidAPI listing — human needed for account creation (Phase D)
+- [ ] Configure pricing tiers on RapidAPI (Phase D — depends on listing)
 - [ ] Set up Stripe for direct sales — human needed for account creation (Phase D)
 
 ## Done
@@ -32,6 +32,7 @@
 - [x] Add smart readiness detection — smart_wait mode (2026-03-22)
 - [x] Add OG image template endpoint — GET + POST /v1/og-image (2026-03-22)
 - [x] Add batch processing endpoint with webhook — POST /v1/batch (2026-03-22)
+- [x] Build landing page (2026-03-22)
 
 ## Icebox
 - [ ] Custom font support for PDF/screenshot generation
@@ -40,4 +41,6 @@
 - [ ] Signed URL output (pre-signed S3 links for large files)
 - [ ] SDK packages for Node.js, Python, Go
 - [ ] Persistent usage/job storage (SQLite or Redis)
-- [ ] Content-aware PDF pagination (moved from up next — complex, do after launch)
+- [ ] Content-aware PDF pagination
+- [ ] Additional OG image templates (blog, product, event, etc.)
+- [ ] API documentation page (Swagger/OpenAPI)
