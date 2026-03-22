@@ -1,17 +1,17 @@
 # Project Status
 
 ## Last Updated
-2026-03-22 — Added Swagger API docs + SQLite persistent storage
+2026-03-22 — Added usage dashboard endpoint, graceful shutdown, .env.example
 
 ## System State
 - Deployed: no
-- Health: runs locally, 29 tests pass across 6 test files
+- Health: runs locally, 33 tests pass across 7 test files
 - Last known error rate: n/a
 - Paying customers: 0
 - Monthly revenue: $0
 
 ## What's Built
-Full API with 9 endpoints + docs:
+Full API with 10 endpoints + docs:
 - GET / — landing page
 - GET /docs — interactive Swagger UI API documentation
 - GET /internal/health — health check + usage stats
@@ -22,6 +22,7 @@ Full API with 9 endpoints + docs:
 - POST /v1/og-image — template-based social images (JSON body)
 - POST /v1/batch — async batch processing (up to 50 URLs)
 - GET /v1/batch/:jobId — check batch job status
+- GET /v1/usage — usage dashboard (per-key, per-endpoint, daily breakdown)
 
 Infrastructure:
 - API key auth (x-api-key header or api_key query param)

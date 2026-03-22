@@ -36,6 +36,9 @@
 - [x] Build landing page (2026-03-22)
 - [x] Add Swagger/OpenAPI docs at /docs (2026-03-22)
 - [x] Persistent usage storage with SQLite (2026-03-22)
+- [x] Add usage dashboard endpoint — GET /v1/usage (2026-03-22)
+- [x] Add graceful shutdown handler (2026-03-22)
+- [x] Add .env.example with all config vars (2026-03-22)
 
 ## Icebox
 - [ ] Custom font support for PDF/screenshot generation
