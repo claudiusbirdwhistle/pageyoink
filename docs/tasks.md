@@ -12,7 +12,7 @@ See `docs/competitive-analysis.md` for full details.
 All complete.
 
 ### Priority 2 (Should have)
-6. [ ] Element capture — accept `selector` param to capture a specific DOM element
+6. [x] Element capture — `selector` param captures specific DOM element (done 2026-03-22)
 7. [ ] Caching with TTL — cache screenshots/PDFs, return cached version on repeated requests (don't count against quota)
 8. [ ] Print-mode CSS injection for PDFs — auto-convert horizontal carousels to wrapped layouts to fix missing images in Chrome print renderer
 
@@ -74,6 +74,7 @@ All complete.
 - [x] Custom headers — headers param (POST body) for HTTP request headers
 - [x] Custom cookies — cookies param (POST body) with auto domain detection
 - [x] Custom user-agent — user_agent param
+- [x] Element capture — selector param, uses element.screenshot() for pixel-perfect extraction
 
 ### Bug Fixes & Quality (2026-03-22)
 - [x] Fix TypeScript readonly property error in CI
