@@ -92,8 +92,6 @@ All complete.
 
 ## Icebox (Post-Launch)
 - [ ] PDF encryption and password protection
-- [ ] PDF watermarks (text + image)
-- [ ] S3 export (direct upload to customer's bucket)
 - [ ] Video capture (scrolling MP4/GIF)
 - [ ] Screenshot comparison / visual diff API
 - [ ] SDK package for Go
@@ -107,3 +105,5 @@ All complete.
 - [x] Geolocation spoofing — latitude, longitude, accuracy, timezone (2026-03-23)
 - [x] Python SDK — full-featured client with httpx (2026-03-23)
 - [x] Custom font loading — fonts param, @import + document.fonts.ready (2026-03-23)
+- [x] PDF watermarks — text watermark via pdf-lib, position/color/opacity/rotation (2026-03-23)
+- [x] S3 export service — exportToS3() for AWS/Wasabi/MinIO/DO Spaces (2026-03-23)
