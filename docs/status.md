@@ -7,7 +7,7 @@
 - **Deployed:** Yes — Google Cloud Run (us-east1)
 - **URL:** https://pageyoink-1085551159615.us-east1.run.app
 - **CI:** Cloud Build auto-deploy on push to main (trigger may need setup — check console)
-- **Health:** Running, 28 tests passing
+- **Health:** Running, 34 tests passing
 - **Paying customers:** 0
 - **Monthly revenue:** $0
 
@@ -43,7 +43,8 @@ proxy, geolocation, timezone
 
 ### PDF Parameters (POST body)
 All screenshot params plus: html, headers, cookies, headerTemplate, footerTemplate,
-displayHeaderFooter, pageRanges, watermark, landscape, margin, printBackground
+displayHeaderFooter, pageRanges, watermark, landscape, margin, printBackground,
+scale (0.1-2.0), maxPages (truncate output)
 
 ### Key Features
 - **4-phase clean mode** — selector blocklist + text-content scanning + z-index overlay + backdrop removal. Handles cookie banners, fundraising popups (Wikipedia, Guardian), chat widgets (Intercom, HubSpot, Drift, Zendesk, etc.)
@@ -72,7 +73,6 @@ displayHeaderFooter, pageRanges, watermark, landscape, margin, printBackground
 All 18 tasks from docs/tasks.md are done. Remaining work is in the Ice Box (requires human review):
 - WebP output, video capture, CDN caching, anti-bot stealth, AI extraction, MCP server, PDF encryption
 - See docs/competitive-analysis.md for full landscape analysis
-- Add zoom and max_pages to API
 
 ### Blocked on Human
 - [ ] Set API_KEYS environment variable in Cloud Run (currently auth disabled)
