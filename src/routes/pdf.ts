@@ -14,6 +14,7 @@ interface PdfQuery {
   clean?: string;
   smart_wait?: string;
   max_scroll?: string;
+  block_ads?: string;
 }
 
 interface PdfBody {
@@ -31,6 +32,7 @@ interface PdfBody {
   clean?: boolean;
   smartWait?: boolean;
   maxScroll?: number;
+  blockAds?: boolean;
 }
 
 export async function pdfRoute(app: FastifyInstance) {
@@ -55,12 +57,13 @@ export async function pdfRoute(app: FastifyInstance) {
             clean: { type: "string" },
             smart_wait: { type: "string" },
             max_scroll: { type: "string" },
+            block_ads: { type: "string" },
           },
         },
       },
     },
     async (request, reply) => {
-      const { url, format, landscape, print_background, timeout, clean, smart_wait, max_scroll } =
+      const { url, format, landscape, print_background, timeout, clean, smart_wait, max_scroll, block_ads } =
         request.query;
 
       // Validate URL
@@ -88,6 +91,7 @@ export async function pdfRoute(app: FastifyInstance) {
           clean: clean === "true",
           smartWait: smart_wait === "true",
           maxScroll: max_scroll ? parseInt(max_scroll, 10) : undefined,
+          blockAds: block_ads === "true",
         });
 
         return reply
@@ -132,12 +136,13 @@ export async function pdfRoute(app: FastifyInstance) {
             clean: { type: "boolean" },
             smartWait: { type: "boolean" },
             maxScroll: { type: "number" },
+            blockAds: { type: "boolean" },
           },
         },
       },
     },
     async (request, reply) => {
-      const { html, format, landscape, printBackground, margin, timeout, clean, smartWait, maxScroll } =
+      const { html, format, landscape, printBackground, margin, timeout, clean, smartWait, maxScroll, blockAds } =
         request.body;
 
       try {
@@ -151,6 +156,7 @@ export async function pdfRoute(app: FastifyInstance) {
           clean: clean || false,
           smartWait: smartWait || false,
           maxScroll,
+          blockAds: blockAds || false,
         });
 
         return reply

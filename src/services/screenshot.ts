@@ -2,6 +2,7 @@ import { getBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
+import { enableAdBlocking } from "./adblock.js";
 
 export interface ScreenshotOptions {
   url: string;
@@ -15,6 +16,7 @@ export interface ScreenshotOptions {
   clean?: boolean;
   smartWait?: boolean;
   maxScroll?: number;
+  blockAds?: boolean;
 }
 
 export interface ScreenshotResult {
@@ -69,6 +71,7 @@ async function attemptScreenshot(
     clean = false,
     smartWait = false,
     maxScroll,
+    blockAds = false,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -77,6 +80,10 @@ async function attemptScreenshot(
   const page = await browser.newPage();
 
   try {
+    if (blockAds) {
+      await enableAdBlocking(page);
+    }
+
     await page.setViewport({
       width,
       height,
