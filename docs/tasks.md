@@ -9,11 +9,7 @@ These features are needed before public launch. Every serious competitor has the
 See `docs/competitive-analysis.md` for full details.
 
 ### Priority 1 (Must have)
-1. [ ] CSS injection — accept `css` param to inject custom CSS before capture
-2. [ ] JS injection — accept `js` param to execute custom JavaScript before capture
-3. [ ] Custom headers — accept `headers` param for HTTP request headers
-4. [ ] Custom cookies — accept `cookies` param for pre-set cookies
-5. [ ] Custom user-agent — accept `user_agent` param
+All complete.
 
 ### Priority 2 (Should have)
 6. [ ] Element capture — accept `selector` param to capture a specific DOM element
@@ -73,6 +69,11 @@ See `docs/competitive-analysis.md` for full details.
 
 ### Phase F: Competitive Parity (2026-03-22)
 - [x] Ad blocking via @ghostery/adblocker-puppeteer — block_ads=true (uBlock/EasyList compatible)
+- [x] CSS injection — css param, injected via addStyleTag after page load
+- [x] JS injection — js param, executed as sandboxed IIFE in page context
+- [x] Custom headers — headers param (POST body) for HTTP request headers
+- [x] Custom cookies — cookies param (POST body) with auto domain detection
+- [x] Custom user-agent — user_agent param
 
 ### Bug Fixes & Quality (2026-03-22)
 - [x] Fix TypeScript readonly property error in CI
