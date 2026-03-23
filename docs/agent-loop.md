@@ -172,9 +172,9 @@ Save output to `samples/` for human review. Compare before/after when fixing ren
 ```
 Phase A: Foundation                    ✅ COMPLETE
 Phase B: Core Features                 ✅ COMPLETE
-Phase C: Deployment                    🔲 BLOCKED (needs hosting account)
+Phase C: Deployment                    ✅ COMPLETE
 Phase D: Monetization                  🔲 BLOCKED (needs RapidAPI + Stripe)
-Phase E: Differentiation              ✅ COMPLETE (clean, smart wait, OG, batch)
+Phase E: Differentiation               🔲 IN PROGRESS
 Phase F: Competitive Parity            🔲 IN PROGRESS (CSS/JS injection, headers, etc.)
 Phase G: Post-Launch Iteration         🔲 FUTURE (based on customer feedback)
 ```

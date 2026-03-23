@@ -68,11 +68,11 @@ displayHeaderFooter, pageRanges, watermark, landscape, margin, printBackground
 
 ## What's NOT Done Yet
 
-### Next Priority: Trial Page Improvements
-See `docs/trial-improvements.md` — 15 tasks including:
-- Remove smart wait from trial UI
-- Clarify clean mode labeling
+### Next Priority: PDF Options in Trial UI
+See `docs/tasks.md` — remaining tasks include:
 - Add PDF options to trial (page size, orientation, margins, headers/footers, watermark)
+- Add zoom and max_pages to API
+- Collapse PDF options into expandable panel
 - Add zoom and max_pages to API
 
 ### Blocked on Human

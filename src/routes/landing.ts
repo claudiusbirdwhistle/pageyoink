@@ -88,11 +88,7 @@ const LANDING_HTML = `<!DOCTYPE html>
       <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
         <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;">
           <input type="checkbox" id="trial-clean" checked style="accent-color:var(--brand);width:16px;height:16px;">
-          Clean <span style="color:#555;font-size:12px;">(remove popups)</span>
-        </label>
-        <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;">
-          <input type="checkbox" id="trial-smart-wait" style="accent-color:var(--brand);width:16px;height:16px;">
-          Smart Wait <span style="color:#555;font-size:12px;">(wait for JS)</span>
+          Remove Overlays <span style="color:#555;font-size:12px;">(cookie banners, popups, chat widgets)</span>
         </label>
         <div style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;">
           <span>Ad Block:</span>
@@ -120,7 +116,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         const url = document.getElementById('trial-url').value.trim();
         if (!url) return;
         const clean = document.getElementById('trial-clean').checked;
-        const smartWait = document.getElementById('trial-smart-wait').checked;
         const adblock = document.getElementById('trial-adblock').value;
         const status = document.getElementById('trial-status');
         const result = document.getElementById('trial-result');
@@ -133,7 +128,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         const fullUrl = url.match(/^https?:\\/\\//) ? url : 'https://' + url;
         let params = 'url=' + encodeURIComponent(fullUrl);
         if (clean) params += '&clean=true';
-        if (smartWait) params += '&smart_wait=true';
         if (adblock) params += '&block_ads=' + adblock;
         try {
           const resp = await fetch('/trial/' + type + '?' + params);
