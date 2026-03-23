@@ -13,6 +13,7 @@ interface OgImageQuery {
   theme?: "light" | "dark" | "gradient";
   brand_color?: string;
   font_size?: "small" | "medium" | "large";
+  template?: "default" | "split" | "minimal" | "bold";
   format?: "png" | "jpeg";
   quality?: string;
 }
@@ -39,6 +40,7 @@ export async function ogImageRoute(app: FastifyInstance) {
             theme: { type: "string", enum: ["light", "dark", "gradient"] },
             brand_color: { type: "string" },
             font_size: { type: "string", enum: ["small", "medium", "large"] },
+            template: { type: "string", enum: ["default", "split", "minimal", "bold"] },
             format: { type: "string", enum: ["png", "jpeg"] },
             quality: { type: "string" },
           },
@@ -54,6 +56,7 @@ export async function ogImageRoute(app: FastifyInstance) {
         theme,
         brand_color,
         font_size,
+        template,
         format = "png",
         quality,
       } = request.query;
@@ -68,6 +71,7 @@ export async function ogImageRoute(app: FastifyInstance) {
             theme,
             brandColor: brand_color,
             fontSize: font_size,
+            template,
           },
           format,
           quality ? parseInt(quality, 10) : undefined,
@@ -106,6 +110,7 @@ export async function ogImageRoute(app: FastifyInstance) {
             theme: { type: "string", enum: ["light", "dark", "gradient"] },
             brandColor: { type: "string" },
             fontSize: { type: "string", enum: ["small", "medium", "large"] },
+            template: { type: "string", enum: ["default", "split", "minimal", "bold"] },
             format: { type: "string", enum: ["png", "jpeg"] },
             quality: { type: "number" },
           },
@@ -121,13 +126,14 @@ export async function ogImageRoute(app: FastifyInstance) {
         theme,
         brandColor,
         fontSize,
+        template,
         format = "png",
         quality,
       } = request.body;
 
       try {
         const buffer = await generateOgImage(
-          { title, subtitle, author, domain, theme, brandColor, fontSize },
+          { title, subtitle, author, domain, theme, brandColor, fontSize, template },
           format,
           quality,
         );
