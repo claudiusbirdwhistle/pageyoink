@@ -48,6 +48,7 @@ interface PdfBody {
   headers?: Record<string, string>;
   cookies?: Array<{ name: string; value: string; domain?: string }>;
   userAgent?: string;
+  proxy?: string;
 }
 
 export async function pdfRoute(app: FastifyInstance) {
@@ -212,6 +213,7 @@ export async function pdfRoute(app: FastifyInstance) {
               },
             },
             userAgent: { type: "string" },
+            proxy: { type: "string" },
           },
         },
       },
@@ -238,6 +240,7 @@ export async function pdfRoute(app: FastifyInstance) {
           smartWait: body.smartWait || false,
           maxScroll: body.maxScroll,
           blockAds: body.blockAds || false,
+          proxy: body.proxy,
           headerTemplate: body.headerTemplate,
           footerTemplate: body.footerTemplate,
           displayHeaderFooter: body.displayHeaderFooter || false,

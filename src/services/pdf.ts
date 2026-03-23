@@ -1,4 +1,4 @@
-import { getBrowser } from "./browser.js";
+import { getBrowser, launchProxyBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
@@ -27,6 +27,7 @@ export interface PdfOptions {
   headers?: Record<string, string>;
   cookies?: Array<{ name: string; value: string; domain?: string }>;
   userAgent?: string;
+  proxy?: string;
   headerTemplate?: string;
   footerTemplate?: string;
   displayHeaderFooter?: boolean;
@@ -90,6 +91,7 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     headers,
     cookies,
     userAgent,
+    proxy,
     headerTemplate,
     footerTemplate,
     displayHeaderFooter = false,
@@ -98,7 +100,8 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
 
-  const browser = await getBrowser();
+  const proxyBrowser = proxy ? await launchProxyBrowser(proxy) : null;
+  const browser = proxyBrowser || (await getBrowser());
   const page = await browser.newPage();
 
   try {
@@ -189,5 +192,8 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     return { buffer: Buffer.from(buffer) };
   } finally {
     await page.close();
+    if (proxyBrowser) {
+      await proxyBrowser.close();
+    }
   }
 }

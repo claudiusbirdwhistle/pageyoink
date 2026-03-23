@@ -1,4 +1,4 @@
-import { getBrowser } from "./browser.js";
+import { getBrowser, launchProxyBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
@@ -26,6 +26,9 @@ export interface ScreenshotOptions {
   transparentBg?: boolean;
   clickSelector?: string;
   clickCount?: number;
+  proxy?: string;
+  geolocation?: { latitude: number; longitude: number; accuracy?: number };
+  timezone?: string;
 }
 
 export interface ScreenshotResult {
@@ -89,16 +92,30 @@ async function attemptScreenshot(
     transparentBg = false,
     clickSelector,
     clickCount = 1,
+    proxy,
+    geolocation,
+    timezone,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
 
-  const browser = await getBrowser();
+  const proxyBrowser = proxy ? await launchProxyBrowser(proxy) : null;
+  const browser = proxyBrowser || (await getBrowser());
   const page = await browser.newPage();
 
   try {
     if (blockAds) {
       await enableAdBlocking(page);
+    }
+
+    if (geolocation) {
+      const context = browser.defaultBrowserContext();
+      await context.overridePermissions(url, ["geolocation"]);
+      await page.setGeolocation(geolocation);
+    }
+
+    if (timezone) {
+      await page.emulateTimezone(timezone);
     }
 
     if (userAgent) {
@@ -202,5 +219,8 @@ async function attemptScreenshot(
     };
   } finally {
     await page.close();
+    if (proxyBrowser) {
+      await proxyBrowser.close();
+    }
   }
 }

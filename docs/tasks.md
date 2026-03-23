@@ -94,13 +94,15 @@ All complete.
 - [ ] Proxy support (BYO proxy)
 - [ ] Geolocation spoofing
 - [ ] PDF encryption and password protection
-- [ ] PDF headers/footers with template variables
 - [ ] PDF watermarks (text + image)
 - [ ] S3 export (direct upload to customer's bucket)
 - [ ] Video capture (scrolling MP4/GIF)
-- [ ] Click automation (click a selector before capture)
 - [ ] Custom font support
 - [ ] Screenshot comparison / visual diff API
 - [ ] SDK packages for Python, Go
-- [ ] Additional OG image templates
 - [ ] Geo-distributed rendering (edge nodes)
+
+## Icebox Done
+- [x] Click automation — click + click_count params (2026-03-23)
+- [x] PDF headers/footers — headerTemplate, footerTemplate, displayHeaderFooter, pageRanges (2026-03-23)
+- [x] Additional OG image templates — split, minimal, bold (2026-03-23)
