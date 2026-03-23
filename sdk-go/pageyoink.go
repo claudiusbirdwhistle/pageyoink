@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"net/url"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -51,6 +52,10 @@ type ScreenshotOptions struct {
 	Transparent       bool
 	Click             string
 	ClickCount        int
+	Fonts             []string // Web font URLs to load
+	Proxy             string   // Proxy URL (http://host:port)
+	Geolocation       string   // lat,lng[,accuracy]
+	Timezone          string   // IANA timezone ID
 	TTL               int
 	Fresh             bool
 	Timeout           int
@@ -113,6 +118,18 @@ func (c *Client) Screenshot(opts ScreenshotOptions) ([]byte, error) {
 	}
 	if opts.ClickCount > 0 {
 		params.Set("click_count", strconv.Itoa(opts.ClickCount))
+	}
+	if len(opts.Fonts) > 0 {
+		params.Set("fonts", strings.Join(opts.Fonts, ","))
+	}
+	if opts.Proxy != "" {
+		params.Set("proxy", opts.Proxy)
+	}
+	if opts.Geolocation != "" {
+		params.Set("geolocation", opts.Geolocation)
+	}
+	if opts.Timezone != "" {
+		params.Set("timezone", opts.Timezone)
 	}
 	if opts.TTL > 0 {
 		params.Set("ttl", strconv.Itoa(opts.TTL))

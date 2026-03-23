@@ -77,6 +77,9 @@ class PageYoink:
         click: str | None = None,
         click_count: int | None = None,
         fonts: list[str] | None = None,
+        proxy: str | None = None,
+        geolocation: tuple[float, float] | tuple[float, float, float] | None = None,
+        timezone: str | None = None,
         ttl: int | None = None,
         fresh: bool = False,
         timeout: int | None = None,
@@ -122,6 +125,14 @@ class PageYoink:
             params["click"] = click
         if click_count is not None:
             params["click_count"] = click_count
+        if fonts:
+            params["fonts"] = ",".join(fonts)
+        if proxy:
+            params["proxy"] = proxy
+        if geolocation:
+            params["geolocation"] = ",".join(str(v) for v in geolocation)
+        if timezone:
+            params["timezone"] = timezone
         if ttl is not None:
             params["ttl"] = ttl
         if fresh:

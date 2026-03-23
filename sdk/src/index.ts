@@ -24,6 +24,9 @@ export interface ScreenshotOptions {
   click?: string;
   clickCount?: number;
   fonts?: string[];
+  proxy?: string;
+  geolocation?: { latitude: number; longitude: number; accuracy?: number };
+  timezone?: string;
   ttl?: number;
   fresh?: boolean;
   timeout?: number;
@@ -177,6 +180,13 @@ export class PageYoink {
     if (options.transparent) params.set("transparent", "true");
     if (options.click) params.set("click", options.click);
     if (options.clickCount) params.set("click_count", String(options.clickCount));
+    if (options.fonts?.length) params.set("fonts", options.fonts.join(","));
+    if (options.proxy) params.set("proxy", options.proxy);
+    if (options.geolocation) {
+      const g = options.geolocation;
+      params.set("geolocation", `${g.latitude},${g.longitude}${g.accuracy ? `,${g.accuracy}` : ""}`);
+    }
+    if (options.timezone) params.set("timezone", options.timezone);
     if (options.ttl) params.set("ttl", String(options.ttl));
     if (options.fresh) params.set("fresh", "true");
     if (options.timeout) params.set("timeout", String(options.timeout));
