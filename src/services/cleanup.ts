@@ -46,6 +46,24 @@ const COOKIE_BANNER_SELECTORS = [
   "#hs-eu-cookie-confirmation",
   "#hs-banner-parent",
 
+  // Fundraising / donation / subscription popups
+  '[class*="donation-banner"]',
+  '[class*="fundraising"]',
+  '[class*="support-banner"]',
+  '[class*="contribution"]',
+  '[id*="donation"]',
+  '[id*="fundraising"]',
+  ".frb-banner", // Wikipedia fundraising
+  "#centralNotice", // Wikipedia central notice
+  "#frbanner", // Wikipedia
+  '[class*="site-message"]', // Guardian
+  '[data-component="epic"]', // Guardian epic contribution popup
+  '[class*="reader-revenue"]', // Guardian revenue prompts
+  '[class*="paywall"]',
+  '[class*="subscribe-banner"]',
+  '[class*="membership"]',
+  '[id*="paywall"]',
+
   // Generic role-based
   '[role="dialog"][aria-label*="cookie" i]',
   '[role="dialog"][aria-label*="consent" i]',
@@ -142,7 +160,17 @@ export async function cleanPage(page: Page): Promise<void> {
           text.includes("preferences") ||
           text.includes("manage"));
 
-      if (hasCookieText) {
+      // Detect fundraising/donation/subscription popups
+      const hasFundraisingText =
+        (text.includes("donate") ||
+          text.includes("donation") ||
+          text.includes("contribute") ||
+          text.includes("contribution") ||
+          text.includes("support us") ||
+          text.includes("support our")) &&
+        text.length < 500; // Only match focused prompts, not full articles about donations
+
+      if (hasCookieText || hasFundraisingText) {
         (el as HTMLElement).style.setProperty("display", "none", "important");
       }
     }

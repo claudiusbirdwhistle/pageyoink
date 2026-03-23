@@ -15,6 +15,7 @@ interface ScreenshotQuery {
   smart_wait?: string;
   max_scroll?: string;
   block_ads?: string;
+  viewports?: string;
   css?: string;
   js?: string;
   user_agent?: string;
@@ -77,7 +78,11 @@ const screenshotQuerySchema = {
     },
     block_ads: {
       type: "string" as const,
-      description: "Block ads and trackers using the Ghostery engine (uBlock Origin and EasyList filter compatible). Includes both network-level blocking and cosmetic filtering. Pass 'true' to enable.",
+      description: "Block ads. 'true' = aggressive network-level blocking via Ghostery engine (fast, but detectable by anti-adblock scripts on sites like The Guardian, Forbes). 'stealth' = lets all requests through, hides ad elements visually after page load (slower, but undetectable by anti-adblock scripts). Default: disabled.",
+    },
+    viewports: {
+      type: "string" as const,
+      description: "Number of viewport heights to capture. Alternative to specifying exact pixel height. For example, viewports=2 with default 720px height captures 1440px tall. Works without full_page. Default: 1.",
     },
     css: {
       type: "string" as const,
@@ -159,6 +164,7 @@ export async function screenshotRoute(app: FastifyInstance) {
         smart_wait,
         max_scroll,
         block_ads,
+        viewports,
         css,
         js,
         user_agent,
@@ -198,7 +204,8 @@ export async function screenshotRoute(app: FastifyInstance) {
           clean: clean === "true",
           smartWait: smart_wait === "true",
           maxScroll: max_scroll ? parseInt(max_scroll, 10) : undefined,
-          blockAds: block_ads === "true",
+          blockAds: block_ads === "true" ? true : block_ads === "stealth" ? "stealth" as const : false,
+          viewports: viewports ? parseInt(viewports, 10) : undefined,
           css: css || undefined,
           js: js || undefined,
           userAgent: user_agent || undefined,

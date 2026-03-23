@@ -196,7 +196,7 @@ export async function pdfRoute(app: FastifyInstance) {
           clean: clean === "true",
           smartWait: smart_wait === "true",
           maxScroll: max_scroll ? parseInt(max_scroll, 10) : undefined,
-          blockAds: block_ads === "true",
+          blockAds: block_ads === "true" ? true : block_ads === "stealth" ? "stealth" as const : false,
           css: css || undefined,
           js: js || undefined,
           userAgent: user_agent || undefined,

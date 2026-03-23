@@ -9,7 +9,7 @@ interface DiffBody {
   height?: number;
   fullPage?: boolean;
   clean?: boolean;
-  blockAds?: boolean;
+  blockAds?: boolean | "stealth";
   threshold?: number;
   format?: "json" | "image";
 }

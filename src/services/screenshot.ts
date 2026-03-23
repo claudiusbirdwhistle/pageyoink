@@ -3,6 +3,7 @@ import { cleanPage } from "./cleanup.js";
 import { waitForPageReady } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
 import { enableAdBlocking } from "./adblock.js";
+import { hideAdsStealthily } from "./stealth-adblock.js";
 
 export interface ScreenshotOptions {
   url: string;
@@ -16,7 +17,8 @@ export interface ScreenshotOptions {
   clean?: boolean;
   smartWait?: boolean;
   maxScroll?: number;
-  blockAds?: boolean;
+  blockAds?: boolean | "stealth";
+  viewports?: number;
   css?: string;
   js?: string;
   headers?: Record<string, string>;
@@ -84,6 +86,7 @@ async function attemptScreenshot(
     smartWait = false,
     maxScroll,
     blockAds = false,
+    viewports,
     css,
     js,
     headers,
@@ -106,7 +109,7 @@ async function attemptScreenshot(
   const page = await browser.newPage();
 
   try {
-    if (blockAds) {
+    if (blockAds === true) {
       await enableAdBlocking(page);
     }
 
@@ -138,9 +141,12 @@ async function attemptScreenshot(
       await page.setCookie(...cookieObjects);
     }
 
+    // If viewports is set, multiply the base height by that number
+    const effectiveHeight = viewports ? height * viewports : height;
+
     await page.setViewport({
       width,
-      height,
+      height: effectiveHeight,
       deviceScaleFactor,
     });
 
@@ -193,6 +199,11 @@ async function attemptScreenshot(
 
     if (clean) {
       await cleanPage(page);
+    }
+
+    // Stealth ad blocking: move ad elements offscreen after detection scripts ran
+    if (blockAds === "stealth") {
+      await hideAdsStealthily(page);
     }
 
     const effectiveQuality =

@@ -3,6 +3,7 @@ import { cleanPage } from "./cleanup.js";
 import { waitForPageReady } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
 import { enableAdBlocking } from "./adblock.js";
+import { hideAdsStealthily } from "./stealth-adblock.js";
 import { applyPrintFixes } from "./print-fix.js";
 
 export interface PdfOptions {
@@ -21,7 +22,7 @@ export interface PdfOptions {
   clean?: boolean;
   smartWait?: boolean;
   maxScroll?: number;
-  blockAds?: boolean;
+  blockAds?: boolean | "stealth";
   css?: string;
   js?: string;
   headers?: Record<string, string>;
@@ -105,7 +106,7 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
   const page = await browser.newPage();
 
   try {
-    if (blockAds) {
+    if (blockAds === true) {
       await enableAdBlocking(page);
     }
 
@@ -158,6 +159,10 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
 
     if (clean) {
       await cleanPage(page);
+    }
+
+    if (blockAds === "stealth") {
+      await hideAdsStealthily(page);
     }
 
     // Apply print-mode CSS fixes (carousel overflow, flex-wrap, etc.)
