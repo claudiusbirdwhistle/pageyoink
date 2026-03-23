@@ -68,11 +68,11 @@ displayHeaderFooter, pageRanges, watermark, landscape, margin, printBackground
 
 ## What's NOT Done Yet
 
-### Next Priority: PDF Options in Trial UI
+### Next Priority: API Enhancements + SDK Updates
 See `docs/tasks.md` — remaining tasks include:
-- Add PDF options to trial (page size, orientation, margins, headers/footers, watermark)
-- Add zoom and max_pages to API
-- Collapse PDF options into expandable panel
+- Add zoom (scale) and max_pages parameters to PDF API
+- Update SDKs to reflect current API surface
+- Research competitive landscape and pricing
 - Add zoom and max_pages to API
 
 ### Blocked on Human

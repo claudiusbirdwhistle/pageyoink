@@ -99,6 +99,79 @@ const LANDING_HTML = `<!DOCTYPE html>
           </select>
         </div>
       </div>
+      <details id="pdf-options-panel" style="margin-bottom:16px;background:var(--surface);border-radius:8px;border:1px solid #2a2a3e;padding:0;">
+        <summary style="padding:12px 16px;cursor:pointer;color:var(--muted);font-size:14px;font-weight:600;list-style:none;display:flex;align-items:center;gap:8px;">
+          <span style="transition:transform 0.2s;display:inline-block;" id="pdf-chevron">&#9654;</span> PDF Options
+        </summary>
+        <div style="padding:0 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div>
+            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Page Size</label>
+            <select id="pdf-format" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+              <option value="A4" selected>A4</option>
+              <option value="Letter">Letter</option>
+              <option value="Legal">Legal</option>
+              <option value="A3">A3</option>
+            </select>
+          </div>
+          <div>
+            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Orientation</label>
+            <select id="pdf-orientation" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+              <option value="portrait" selected>Portrait</option>
+              <option value="landscape">Landscape</option>
+            </select>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Margins <span style="color:#555;">(e.g. 0.5in, 10mm, 1cm)</span></label>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
+              <input type="text" id="pdf-margin-top" placeholder="0.5in" style="padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+              <input type="text" id="pdf-margin-right" placeholder="0.5in" style="padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+              <input type="text" id="pdf-margin-bottom" placeholder="0.5in" style="padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+              <input type="text" id="pdf-margin-left" placeholder="0.5in" style="padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:2px;">
+              <span style="color:#555;font-size:11px;text-align:center;">Top</span>
+              <span style="color:#555;font-size:11px;text-align:center;">Right</span>
+              <span style="color:#555;font-size:11px;text-align:center;">Bottom</span>
+              <span style="color:#555;font-size:11px;text-align:center;">Left</span>
+            </div>
+          </div>
+          <div style="grid-column:1/-1;">
+            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Header Template <span style="color:#555;">(HTML — use <span style="font-family:monospace;font-size:11px;">pageNumber, totalPages, date, title, url</span> classes)</span></label>
+            <input type="text" id="pdf-header" placeholder='<div style="font-size:10px;text-align:center;width:100%;"><span class="title"></span></div>' style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+          </div>
+          <div style="grid-column:1/-1;">
+            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Footer Template <span style="color:#555;">(same variables as header)</span></label>
+            <input type="text" id="pdf-footer" placeholder='<div style="font-size:10px;text-align:center;width:100%;"><span class="pageNumber"></span> / <span class="totalPages"></span></div>' style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+          </div>
+          <div>
+            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Watermark Text</label>
+            <input type="text" id="pdf-watermark" placeholder="DRAFT" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+          </div>
+          <div>
+            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Watermark Position</label>
+            <select id="pdf-watermark-pos" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+              <option value="center" selected>Center</option>
+              <option value="top-left">Top Left</option>
+              <option value="top-right">Top Right</option>
+              <option value="bottom-left">Bottom Left</option>
+              <option value="bottom-right">Bottom Right</option>
+            </select>
+          </div>
+          <div>
+            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Page Ranges <span style="color:#555;">(e.g. 1-3, 1,3,5)</span></label>
+            <input type="text" id="pdf-pages" placeholder="All pages" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+          </div>
+          <div>
+            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Viewport Width <span style="color:#555;">(px)</span></label>
+            <input type="number" id="pdf-width" placeholder="1280" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
+          </div>
+        </div>
+      </details>
+      <script>
+        document.getElementById('pdf-options-panel').addEventListener('toggle', (e) => {
+          document.getElementById('pdf-chevron').style.transform = e.target.open ? 'rotate(90deg)' : '';
+        });
+      </script>
       <div style="display:flex;gap:12px;margin-bottom:20px;">
         <button onclick="trialCapture('screenshot')"
           style="padding:12px 24px;border-radius:8px;border:none;background:var(--brand);color:white;font-weight:600;cursor:pointer;font-size:14px;white-space:nowrap;">Screenshot</button>
@@ -129,6 +202,33 @@ const LANDING_HTML = `<!DOCTYPE html>
         let params = 'url=' + encodeURIComponent(fullUrl);
         if (clean) params += '&clean=true';
         if (adblock) params += '&block_ads=' + adblock;
+        if (type === 'pdf') {
+          const fmt = document.getElementById('pdf-format').value;
+          if (fmt !== 'A4') params += '&format=' + fmt;
+          const orient = document.getElementById('pdf-orientation').value;
+          if (orient === 'landscape') params += '&landscape=true';
+          const mt = document.getElementById('pdf-margin-top').value.trim();
+          const mr = document.getElementById('pdf-margin-right').value.trim();
+          const mb = document.getElementById('pdf-margin-bottom').value.trim();
+          const ml = document.getElementById('pdf-margin-left').value.trim();
+          if (mt) params += '&margin_top=' + encodeURIComponent(mt);
+          if (mr) params += '&margin_right=' + encodeURIComponent(mr);
+          if (mb) params += '&margin_bottom=' + encodeURIComponent(mb);
+          if (ml) params += '&margin_left=' + encodeURIComponent(ml);
+          const header = document.getElementById('pdf-header').value.trim();
+          const footer = document.getElementById('pdf-footer').value.trim();
+          if (header) params += '&header_template=' + encodeURIComponent(header);
+          if (footer) params += '&footer_template=' + encodeURIComponent(footer);
+          const watermark = document.getElementById('pdf-watermark').value.trim();
+          if (watermark) {
+            params += '&watermark=' + encodeURIComponent(watermark);
+            params += '&watermark_position=' + document.getElementById('pdf-watermark-pos').value;
+          }
+          const pages = document.getElementById('pdf-pages').value.trim();
+          if (pages) params += '&page_ranges=' + encodeURIComponent(pages);
+          const width = document.getElementById('pdf-width').value.trim();
+          if (width) params += '&width=' + width;
+        }
         try {
           const resp = await fetch('/trial/' + type + '?' + params);
           const remaining = resp.headers.get('X-Trial-Remaining');

@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { generatePdf } from "../services/pdf.js";
+import { addWatermark } from "../services/watermark.js";
 import { validateUrl } from "../utils/url.js";
 
 // IP-based rate limiting for trial usage
@@ -134,6 +135,18 @@ export async function trialRoute(app: FastifyInstance) {
           clean?: string;
           smart_wait?: string;
           block_ads?: string;
+          format?: string;
+          landscape?: string;
+          margin_top?: string;
+          margin_right?: string;
+          margin_bottom?: string;
+          margin_left?: string;
+          header_template?: string;
+          footer_template?: string;
+          watermark?: string;
+          watermark_position?: string;
+          page_ranges?: string;
+          width?: string;
         };
       }>,
       reply,
@@ -147,7 +160,24 @@ export async function trialRoute(app: FastifyInstance) {
         });
       }
 
-      const { url, clean, smart_wait, block_ads } = request.query;
+      const {
+        url,
+        clean,
+        smart_wait,
+        block_ads,
+        format,
+        landscape,
+        margin_top,
+        margin_right,
+        margin_bottom,
+        margin_left,
+        header_template,
+        footer_template,
+        watermark,
+        watermark_position,
+        page_ranges,
+        width,
+      } = request.query;
 
       try {
         const parsed = new URL(url);
@@ -158,10 +188,26 @@ export async function trialRoute(app: FastifyInstance) {
         return reply.status(400).send({ error: "Invalid URL." });
       }
 
+      const validFormats = ["A4", "Letter", "Legal", "A3"] as const;
+      const pdfFormat = validFormats.includes(format as any)
+        ? (format as (typeof validFormats)[number])
+        : "A4";
+
+      const margin =
+        margin_top || margin_right || margin_bottom || margin_left
+          ? {
+              top: margin_top || "0.5in",
+              right: margin_right || "0.5in",
+              bottom: margin_bottom || "0.5in",
+              left: margin_left || "0.5in",
+            }
+          : undefined;
+
       try {
         const result = await generatePdf({
           url,
-          format: "A4",
+          format: pdfFormat,
+          landscape: landscape === "true",
           clean: clean === "true",
           smartWait: smart_wait === "true",
           blockAds: block_ads === "true"
@@ -169,14 +215,28 @@ export async function trialRoute(app: FastifyInstance) {
             : block_ads === "stealth"
               ? ("stealth" as const)
               : false,
+          margin,
+          headerTemplate: header_template,
+          footerTemplate: footer_template,
+          displayHeaderFooter: !!(header_template || footer_template),
+          pageRanges: page_ranges,
           timeout: 30000,
         });
+
+        let finalBuffer = result.buffer;
+        if (watermark) {
+          const validPositions = ["center", "top-left", "top-right", "bottom-left", "bottom-right"] as const;
+          const position = validPositions.includes(watermark_position as any)
+            ? (watermark_position as (typeof validPositions)[number])
+            : "center";
+          finalBuffer = await addWatermark(finalBuffer, { text: watermark, position });
+        }
 
         return reply
           .header("Content-Type", "application/pdf")
           .header("Content-Disposition", 'inline; filename="document.pdf"')
           .header("X-Trial-Remaining", String(getRemainingTrials(ip)))
-          .send(result.buffer);
+          .send(finalBuffer);
       } catch (err) {
         const message = err instanceof Error ? err.message : "PDF generation failed";
         return reply.status(500).send({ error: message });
