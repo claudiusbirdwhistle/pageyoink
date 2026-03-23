@@ -15,8 +15,8 @@
 10. [x] Viewport width/height inputs for browser rendering size
 
 ## PDF Options — Expose via API (if not already)
-11. [ ] Verify zoom parameter is supported in PDF service (Puppeteer page.pdf scale option)
-12. [ ] Add max_pages parameter — limit total pages in output PDF (truncate after N pages)
+11. [x] Add scale/zoom parameter to PDF service (Puppeteer page.pdf scale option, 0.1-2.0)
+12. [x] Add max_pages parameter — truncates output PDF after N pages using pdf-lib
 
 ## UI Polish
 13. [x] Collapse PDF options into an expandable "PDF Options" panel (don't overwhelm on first visit)

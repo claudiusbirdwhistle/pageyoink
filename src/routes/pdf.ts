@@ -21,6 +21,8 @@ interface PdfQuery {
   css?: string;
   js?: string;
   user_agent?: string;
+  scale?: string;
+  max_pages?: string;
   ttl?: string;
   fresh?: string;
 }
@@ -52,6 +54,8 @@ interface PdfBody {
   userAgent?: string;
   proxy?: string;
   watermark?: WatermarkOptions;
+  scale?: number;
+  maxPages?: number;
 }
 
 export async function pdfRoute(app: FastifyInstance) {
@@ -131,6 +135,14 @@ export async function pdfRoute(app: FastifyInstance) {
               type: "string",
               description: "Custom User-Agent string.",
             },
+            scale: {
+              type: "string",
+              description: "PDF zoom/scale factor (0.1 to 2.0). Default: 1.0. Values below 1 shrink content, above 1 enlarge it.",
+            },
+            max_pages: {
+              type: "string",
+              description: "Maximum number of pages in the output PDF. Pages beyond this limit are removed. Useful for capping long pages.",
+            },
             ttl: {
               type: "string",
               description: "Cache duration in seconds. Default: 86400 (24h).",
@@ -169,6 +181,8 @@ export async function pdfRoute(app: FastifyInstance) {
         css,
         js,
         user_agent,
+        scale,
+        max_pages,
         ttl,
         fresh,
       } = request.query;
@@ -193,6 +207,8 @@ export async function pdfRoute(app: FastifyInstance) {
           css: css || undefined,
           js: js || undefined,
           userAgent: user_agent || undefined,
+          scale: scale ? parseFloat(scale) : undefined,
+          maxPages: max_pages ? parseInt(max_pages, 10) : undefined,
         };
 
         const cacheTtl = ttl ? parseInt(ttl, 10) : undefined;
@@ -339,6 +355,14 @@ export async function pdfRoute(app: FastifyInstance) {
               type: "string",
               description: "Proxy server URL to route the request through. Format: 'http://host:port' or 'http://user:pass@host:port'. Supports HTTP proxies.",
             },
+            scale: {
+              type: "number",
+              description: "PDF zoom/scale factor (0.1 to 2.0). Default: 1.0.",
+            },
+            maxPages: {
+              type: "number",
+              description: "Maximum pages in output PDF. Pages beyond this are removed.",
+            },
             watermark: {
               type: "object",
               description: "Add a text watermark to every page of the PDF.",
@@ -404,6 +428,8 @@ export async function pdfRoute(app: FastifyInstance) {
           headers: body.headers,
           cookies: body.cookies,
           userAgent: body.userAgent,
+          scale: body.scale,
+          maxPages: body.maxPages,
         });
 
         let finalBuffer = result.buffer;

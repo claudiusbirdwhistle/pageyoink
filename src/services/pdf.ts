@@ -1,3 +1,4 @@
+import { PDFDocument } from "pdf-lib";
 import { getBrowser, launchProxyBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady, installMutationTracker } from "./readiness.js";
@@ -33,6 +34,8 @@ export interface PdfOptions {
   footerTemplate?: string;
   displayHeaderFooter?: boolean;
   pageRanges?: string;
+  scale?: number;
+  maxPages?: number;
 }
 
 export interface PdfResult {
@@ -97,6 +100,8 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     footerTemplate,
     displayHeaderFooter = false,
     pageRanges,
+    scale,
+    maxPages,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -187,6 +192,11 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
       },
     };
 
+    if (scale !== undefined) {
+      const clampedScale = Math.max(0.1, Math.min(2.0, scale));
+      pdfOptions.scale = clampedScale;
+    }
+
     if (displayHeaderFooter || headerTemplate || footerTemplate) {
       pdfOptions.displayHeaderFooter = true;
       pdfOptions.headerTemplate = headerTemplate || "<span></span>";
@@ -200,8 +210,20 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     }
 
     const buffer = await page.pdf(pdfOptions);
+    let finalBuffer = Buffer.from(buffer);
 
-    return { buffer: Buffer.from(buffer) };
+    if (maxPages && maxPages > 0) {
+      const pdfDoc = await PDFDocument.load(finalBuffer);
+      const totalPages = pdfDoc.getPageCount();
+      if (totalPages > maxPages) {
+        for (let i = totalPages - 1; i >= maxPages; i--) {
+          pdfDoc.removePage(i);
+        }
+        finalBuffer = Buffer.from(await pdfDoc.save());
+      }
+    }
+
+    return { buffer: finalBuffer };
   } finally {
     await page.close();
     if (proxyBrowser) {
