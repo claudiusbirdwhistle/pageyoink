@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { generatePdf } from "../services/pdf.js";
 import { cacheGet, cacheSet } from "../services/cache.js";
+import { addWatermark, WatermarkOptions } from "../services/watermark.js";
 
 interface PdfQuery {
   url?: string;
@@ -49,6 +50,7 @@ interface PdfBody {
   cookies?: Array<{ name: string; value: string; domain?: string }>;
   userAgent?: string;
   proxy?: string;
+  watermark?: WatermarkOptions;
 }
 
 export async function pdfRoute(app: FastifyInstance) {
@@ -214,6 +216,18 @@ export async function pdfRoute(app: FastifyInstance) {
             },
             userAgent: { type: "string" },
             proxy: { type: "string" },
+            watermark: {
+              type: "object",
+              properties: {
+                text: { type: "string" },
+                fontSize: { type: "number" },
+                color: { type: "string" },
+                opacity: { type: "number" },
+                rotation: { type: "number" },
+                position: { type: "string", enum: ["center", "top-left", "top-right", "bottom-left", "bottom-right"] },
+              },
+              required: ["text"],
+            },
           },
         },
       },
@@ -240,7 +254,7 @@ export async function pdfRoute(app: FastifyInstance) {
           smartWait: body.smartWait || false,
           maxScroll: body.maxScroll,
           blockAds: body.blockAds || false,
-          proxy: body.proxy,
+          proxy: body.proxy as string | undefined,
           headerTemplate: body.headerTemplate,
           footerTemplate: body.footerTemplate,
           displayHeaderFooter: body.displayHeaderFooter || false,
@@ -252,10 +266,17 @@ export async function pdfRoute(app: FastifyInstance) {
           userAgent: body.userAgent,
         });
 
+        let finalBuffer = result.buffer;
+
+        // Apply watermark if requested
+        if (body.watermark) {
+          finalBuffer = await addWatermark(finalBuffer, body.watermark);
+        }
+
         return reply
           .header("Content-Type", "application/pdf")
           .header("Content-Disposition", 'inline; filename="document.pdf"')
-          .send(result.buffer);
+          .send(finalBuffer);
       } catch (err) {
         const message =
           err instanceof Error ? err.message : "PDF generation failed";

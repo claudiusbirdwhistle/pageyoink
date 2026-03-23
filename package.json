@@ -26,6 +26,7 @@
     "node": ">=22.0.0"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1014.0",
     "@fastify/cors": "^11.2.0",
     "@fastify/rate-limit": "^10.3.0",
     "@fastify/swagger": "^9.7.0",
@@ -35,6 +36,7 @@
     "cross-fetch": "^4.1.0",
     "fastify": "^5.8.2",
     "fastify-plugin": "^5.1.0",
+    "pdf-lib": "^1.17.1",
     "puppeteer": "^24.40.0"
   },
   "devDependencies": {
