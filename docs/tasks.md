@@ -95,9 +95,8 @@ All complete.
 - [ ] PDF watermarks (text + image)
 - [ ] S3 export (direct upload to customer's bucket)
 - [ ] Video capture (scrolling MP4/GIF)
-- [ ] Custom font support
 - [ ] Screenshot comparison / visual diff API
-- [ ] SDK packages for Python, Go
+- [ ] SDK package for Go
 - [ ] Geo-distributed rendering (edge nodes)
 
 ## Icebox Done
@@ -106,3 +105,5 @@ All complete.
 - [x] Additional OG image templates — split, minimal, bold (2026-03-23)
 - [x] Proxy support — BYO proxy via isolated browser instance (2026-03-23)
 - [x] Geolocation spoofing — latitude, longitude, accuracy, timezone (2026-03-23)
+- [x] Python SDK — full-featured client with httpx (2026-03-23)
+- [x] Custom font loading — fonts param, @import + document.fonts.ready (2026-03-23)
