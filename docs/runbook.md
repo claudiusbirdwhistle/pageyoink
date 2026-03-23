@@ -1,114 +1,156 @@
 # Operational Runbook
 
-This document contains procedures for operating the PageYoink API service. Update this as new procedures are discovered.
+Procedures for operating the PageYoink API service.
 
 ---
 
 ## Development
 
-### Run the dev server
+### Prerequisites
+```bash
+export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"
+```
+
+### Run dev server
 ```bash
 cd /home/michael/Documents/GitHub/moneymaker
 npm run dev
+# Visit http://localhost:3000 (landing page)
+# Visit http://localhost:3000/docs (Swagger UI)
 ```
 
 ### Run tests
 ```bash
 npm test
 ```
+Tests use in-memory storage (no Firestore credentials needed).
 
-### Run linter
+### Build
 ```bash
-npm run lint
+npm run build
 ```
+
+### Test samples
+Save screenshots/PDFs to `samples/` (gitignored) for visual review.
 
 ---
 
-## Deployment
+## Deployment (Google Cloud Run)
 
-### How to deploy
-(To be documented once hosting platform is configured)
+### Auto-deploy
+Push to `main` → Cloud Build triggers → builds Docker image → deploys to Cloud Run.
+```bash
+git push  # That's it
+```
 
-Approach: GitHub Actions CI/CD pipeline triggers on push to `main`. Deploys to cloud server.
+### Manual deploy
+```bash
+gcloud run deploy pageyoink --source . --region us-east1
+```
 
-### How to check if deployment succeeded
-(To be documented once hosting platform is configured)
+### Update environment variables
+```bash
+gcloud run services update pageyoink --region us-east1 \
+  --set-env-vars "API_KEYS=key1,key2"
+```
+
+### Check deployment status
+```bash
+gcloud run services describe pageyoink --region us-east1
+gcloud run revisions list --service pageyoink --region us-east1
+```
+
+### Rollback
+```bash
+# List revisions
+gcloud run revisions list --service pageyoink --region us-east1
+
+# Route traffic to a previous revision
+gcloud run services update-traffic pageyoink --region us-east1 \
+  --to-revisions REVISION_NAME=100
+```
 
 ---
 
 ## Monitoring
 
-### Check service health
+### Health check
 ```bash
-curl https://<production-url>/internal/health
+curl https://pageyoink-1085551159615.us-east1.run.app/internal/health
 ```
 
-Expected response:
-```json
-{
-  "status": "ok",
-  "uptime": "3d 4h 12m",
-  "version": "1.0.0",
-  "requests_24h": 847,
-  "error_rate": "0.3%"
-}
+### View logs
+```bash
+# Recent logs
+gcloud run services logs read pageyoink --region us-east1 --limit 50
+
+# Stream logs
+gcloud run services logs tail pageyoink --region us-east1
+
+# Or via console: https://console.cloud.google.com/run/detail/us-east1/pageyoink/logs?project=pageyoink-api
 ```
 
-### Check application logs
-(To be documented once hosting platform is configured)
+### Check Cloud Build status
+```bash
+gcloud builds list --region=global --limit 5
+```
 
 ---
 
 ## Troubleshooting
 
-### Service is down (health endpoint unreachable)
-1. Check if the hosting platform itself is having issues (status page).
-2. Check recent commits — did a bad deploy go out?
-3. If a bad deploy: revert the commit, push to trigger redeploy.
-4. If platform issue: note in status.md, wait, and retry next cycle.
-
-### High error rate (> 5%)
-1. Check logs for the most common error.
+### Service returns 500 on screenshot/PDF
+1. Check logs: `gcloud run services logs read pageyoink --region us-east1 --limit 20`
 2. Common causes:
-   - Puppeteer/Chrome crash: usually memory pressure. Check if instance needs more RAM.
-   - Timeout errors: target URLs taking too long. Check if timeout config is reasonable.
-   - Invalid input: missing validation. Add validation and return 400.
-3. Fix root cause, deploy, verify error rate drops.
+   - **"__name is not defined"** — Named function inside `page.evaluate()`. TypeScript decorator leak. Fix: inline the function logic, never use named function declarations inside evaluate.
+   - **"Connection closed" / "Target closed"** — Chrome crashed. Retry logic handles this automatically. If persistent, increase memory.
+   - **"Navigation timeout"** — Target URL too slow. Increase timeout param or check if site is blocking headless Chrome.
 
-### Chrome/Puppeteer won't start
-1. Check that all system dependencies are installed (see Dockerfile).
-2. Common missing deps: `libx11`, `libxcomposite`, `libxdamage`, `libxrandr`, `libasound2`, `libatk1.0`, `libcups2`, `libpangocairo-1.0`.
-3. Ensure `--no-sandbox` flag is set in Puppeteer launch args (required in containerized environments).
-4. Check available memory — Chrome needs at least 256MB per instance.
+### Service is down / cold start slow
+- Cloud Run scales to zero. First request after idle takes 5-10 seconds (container start + Chrome launch).
+- Subsequent requests are fast (~2-3 seconds for screenshots).
+- To keep warm: set `--min-instances 1` (costs ~$40/month).
 
-### Out of memory
-1. Check number of concurrent browser instances.
-2. Reduce max concurrency in config.
-3. Ensure pages are being closed after capture (`page.close()`).
-4. Ensure browser instances are being recycled periodically.
-5. Consider upgrading instance size if legitimate traffic growth.
+### Firestore errors in tests
+- Tests use in-memory storage (NODE_ENV=test). Firestore is only used in production.
+- If you see "Could not load default credentials" in tests, ensure NODE_ENV=test is set.
+
+### Trial limit hit during development
+```bash
+curl -X DELETE https://pageyoink-1085551159615.us-east1.run.app/trial/reset
+# Only works when API_KEYS env var is not set
+```
 
 ---
 
-## Accounts Required (Human Setup)
+## Accounts
 
 | Account | Purpose | Status |
 |---------|---------|--------|
-| Hosting platform (Railway/Render/Fly.io) | Deploy and run the service | Not created |
+| Google Cloud (claudius.birdwhistle@gmail.com) | Cloud Run hosting + Firestore | Active — project: pageyoink-api |
+| GitHub (claudiusbirdwhistle) | Repository + CI | Active — claudiusbirdwhistle/pageyoink |
 | RapidAPI | API marketplace listing | Not created |
 | Stripe | Direct payment processing | Not created |
 | Domain registrar | Custom domain (optional) | Not created |
-| GitHub | Repository hosting | Created — claudiusbirdwhistle/pageyoink |
 
 ---
 
 ## Environment Variables
 
-| Variable | Purpose | Example |
-|----------|---------|---------|
-| `PORT` | Server port | `3000` |
-| `NODE_ENV` | Environment | `production` |
-| `API_KEYS` | Valid API keys (comma-separated or DB reference) | TBD |
-| `MAX_CONCURRENCY` | Max simultaneous browser instances | `5` |
-| `REQUEST_TIMEOUT_MS` | Max time per screenshot/PDF request | `30000` |
-| `RATE_LIMIT_PER_MINUTE` | Requests per API key per minute | `60` |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `PORT` | `3000` (set by Cloud Run) | Server port |
+| `NODE_ENV` | — | `production` on Cloud Run, `test` for tests |
+| `GCP_PROJECT_ID` | `pageyoink-api` | Google Cloud project for Firestore |
+| `API_KEYS` | (empty = auth disabled) | Comma-separated valid API keys |
+| `RATE_LIMIT_PER_MINUTE` | `60` | Max requests per key per minute |
+| `USE_MEMORY_DB` | — | Set to any value to use in-memory store instead of Firestore |
+
+---
+
+## Key Technical Notes
+
+- **Never declare named functions inside `page.evaluate()`** — TypeScript adds `__name` decorator that doesn't exist in browser context. Use inline logic or arrow functions assigned to `const`.
+- **Default wait strategy is `load` + 1s delay** — NOT `networkidle2`. This is 3-5x faster. `smart_wait=true` provides comprehensive readiness detection when needed.
+- **In-memory cache** — 500 entries max, lost on scale-to-zero. Optimization only, not persistent.
+- **Trial rate limit** — 5 captures/day per IP, in-memory (resets on restart). Dev reset: `DELETE /trial/reset`.

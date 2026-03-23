@@ -1,4 +1,4 @@
-# Trial Page Improvements — Task List
+# Task List
 
 ## Screenshot Options
 1. [ ] Remove Smart Wait checkbox from trial UI (keep as API-only advanced option)
@@ -22,3 +22,12 @@
 13. [ ] Collapse PDF options into an expandable "PDF Options" panel (don't overwhelm on first visit)
 14. [ ] Show sensible defaults in all fields so users understand what the values mean
 15. [ ] Update the "Clean" label to "Remove Overlays" or similar, with a subtitle listing what gets removed
+
+## Update SDKs
+16. [ ] Make sure that the SKDs accurately reflect the current state of the API
+
+## Research and Ideate
+17. [ ] Research the competitive landscape of web to screenshot/PDF services. What features are we missing? Populate the Ice Box of this doc with feature requests. Document which sites you researched.
+18. [ ] Research the pricing of the comparison sites in task 17. How should we price our product?
+
+## Ice Box -- Do not do these. Ice box tasks are for human review.

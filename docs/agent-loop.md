@@ -104,7 +104,7 @@ This phase is **mandatory.** Never skip it.
 | Document | Purpose |
 |----------|---------|
 | `docs/status.md` | Current project state — what's done, what's next, what's broken |
-| `docs/tasks.md` | Prioritized work queue |
+| `docs/tasks2.md` | Prioritized work queue |
 | `docs/decisions.md` | Why we made key choices (prevents re-litigating) |
 | `docs/runbook.md` | Operational procedures |
 | `docs/competitive-analysis.md` | Feature comparison vs competitors — read before adding features |

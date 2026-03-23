@@ -1,18 +1,17 @@
 # Decision Log
 
-## 2026-03-22: Product — Screenshot, PDF, and OG Image API
+## 2026-03-22: Product — Screenshot and PDF API
 
 **Context:** Needed to identify a product that can be built and operated entirely by an autonomous AI agent with high probability of generating revenue.
 
-**Decision:** Build an API service that converts URLs/HTML to screenshots (PNG/JPEG), PDFs, and OG images.
+**Decision:** Build an API service that converts URLs/HTML to screenshots (PNG/JPEG) and PDFs.
 
-**Rationale:** Market research showed 6+ profitable solo-founder businesses in this exact space (URL2PNG at $1-5M/yr, ApiFlash at $79.7K/yr, PDFShift at $9K MRR, ScreenshotAPI acquired and grew 10x). The technology is well-understood (headless Chrome/Puppeteer), infrastructure costs are low ($30-50/month), and distribution channels exist (RapidAPI marketplace). Differentiation through intelligent features (auto-popup removal, smart readiness detection, content-aware pagination) is technically feasible.
+**Rationale:** Market research showed 6+ profitable solo-founder businesses in this exact space (URL2PNG at $1-5M/yr, ApiFlash at $79.7K/yr, PDFShift at $9K MRR, ScreenshotAPI acquired and grew 10x). The technology is well-understood (headless Chrome/Puppeteer), infrastructure costs are low, and distribution channels exist (RapidAPI marketplace).
 
 **Alternatives considered:**
-- Web scraping + AI data extraction — higher technical risk, anti-bot arms race
-- Dynamic OG image generation only — too narrow, Bannerbear dominates
-- Affiliate/SEO content site — revenue takes 2-4 months, depends on Google
-- Digital product storefront — requires marketing/audience we don't have
+- Web scraping + AI data extraction — higher technical risk
+- Dynamic OG image generation only — too narrow (OG images were later added then removed as too basic vs Bannerbear)
+- Affiliate/SEO content site — revenue takes months, depends on Google
 
 **Status:** Active
 
@@ -20,37 +19,23 @@
 
 ## 2026-03-22: Architecture — Self-Documenting Repo as Agent Memory
 
-**Context:** Claude operates in Ralph Loop cycles with no persistent memory between cycles. Each cycle starts with a fresh context window.
+**Context:** Claude operates in Ralph Loop cycles with no persistent memory between cycles.
 
-**Decision:** Use the repository itself as the memory system. All state, plans, decisions, and operational procedures live in markdown files within `docs/`. Every cycle begins by reading these files for orientation.
+**Decision:** Use the repository itself as the memory system. All state, plans, decisions, and operational procedures live in markdown files within `docs/`.
 
-**Rationale:** Files in the repo are the only persistent state Claude can both read and write reliably. External systems (databases, dashboards) require credentials and may not be accessible. The repo is always available, version-controlled, and auditable.
-
-**Alternatives considered:**
-- Claude's memory system (~/.claude/memory/) — useful for cross-project knowledge but not granular enough for operational state
-- External task tracker (Linear, GitHub Issues) — requires API access and credentials; adds complexity
-- Database-backed state — over-engineered for this purpose; repo files are simpler and human-readable
+**Rationale:** Files in the repo are the only persistent state Claude can both read and write reliably.
 
 **Status:** Active
 
 ---
 
-## 2026-03-22: Clean Mode — 4-Phase Detection Over Blocklist-Only
+## 2026-03-22: Clean Mode — 4-Phase Detection
 
-**Context:** Initial clean mode used only CSS selector blocklists to remove cookie banners and chat widgets. Real-world testing against HubSpot revealed this failed — HubSpot uses a custom cookie implementation (`#hs-eu-cookie-confirmation`) and its own chat widget markup that our blocklist didn't cover. The chat widget was also too small to trigger the z-index heuristic.
+**Context:** Selector-only blocklists failed on sites with custom cookie implementations (HubSpot).
 
-**Decision:** Implement 4-phase detection:
-1. Selector-based (expanded blocklist)
-2. Text-content scanning (find fixed/sticky elements containing "cookie"+"accept"/"decline")
-3. Z-index overlay detection (now includes full-width banners >90% viewport width)
-4. Backdrop detection (semi-transparent full-viewport overlays)
+**Decision:** 4-phase detection: selector blocklist → text-content scanning → z-index overlay → backdrop removal. Also detects fundraising popups (Wikipedia, Guardian) via text scanning.
 
-**Rationale:** Phase 2 (text scanning) catches custom implementations that no blocklist can anticipate. Competitors (ScreenshotAPI, ApiFlash, Restpack) only use selector-based approaches. This is a genuine differentiator — verified working on HubSpot where selector-only approaches fail.
-
-**Alternatives considered:**
-- Blocklist-only (like competitors) — fails on custom implementations
-- AI-based visual detection — too slow and expensive per request
-- "Click accept" approach — fragile, language-dependent, and modifies cookie state
+**Rationale:** Phase 2 (text scanning) catches custom implementations that no blocklist covers. Verified on HubSpot, BBC, Intercom.
 
 **Status:** Active
 
@@ -58,30 +43,84 @@
 
 ## 2026-03-22: Phase F — Competitive Parity Before Launch
 
-**Context:** Competitive analysis against ScreenshotAPI, ApiFlash, PDFShift, URL2PNG, and Restpack revealed that PageYoink lacks CSS/JS injection, custom headers/cookies, and element capture — features every serious competitor offers. Launching without these would make us a weaker option for any developer evaluating alternatives.
+**Context:** Competitive analysis revealed gaps vs ScreenshotAPI, ApiFlash, PDFShift, Restpack.
 
-**Decision:** Add a new "Phase F: Competitive Parity" before public launch. Priority: CSS/JS injection and custom headers/cookies first, element capture and caching second.
+**Decision:** Add CSS/JS injection, custom headers/cookies, element capture, ad blocking, caching, proxy support, geolocation before launch.
 
-**Rationale:** CSS/JS injection is the #1 most-used feature across competitors for handling edge cases (custom popups, authenticated pages, visual tweaks). Custom headers/cookies are required for capturing authenticated or paywalled content. Without these, we cannot serve a significant segment of the market.
-
-**Alternatives considered:**
-- Launch without these and add later — risks bad first impressions and negative RapidAPI reviews
-- Build everything from the icebox first — over-engineering before we have customers
-
-**Status:** Active
+**Status:** Complete — all Phase F items shipped.
 
 ---
 
 ## 2026-03-22: PDF Carousel Rendering — Accepted Limitation
 
-**Context:** BBC's "Weekend Reads" horizontal carousel renders images on screen but not in Chrome's PDF output. The images have valid `src` attributes and load successfully, but Chrome's print/PDF renderer doesn't paint them in certain CSS carousel layouts.
+**Context:** BBC carousel images don't render in Chrome's PDF output.
 
-**Decision:** Accept this as a Chromium limitation. Document it. Plan to add print-mode CSS injection (Phase F) that auto-converts horizontal scroll containers to wrapped layouts as a mitigation.
+**Decision:** Accept as Chromium limitation. Added targeted print-fix.ts that forces overflow:visible on horizontal scroll containers. Partially mitigates but doesn't fully solve.
 
-**Rationale:** This affects ALL Chromium-based PDF tools, not just PageYoink. Trying to work around it at the application level would mean compositing screenshots instead of using Chrome's built-in PDF renderer — a fundamental architecture change that isn't justified for an edge case.
+**Status:** Active — partial mitigation in place
+
+---
+
+## 2026-03-22: OG Image Feature — Removed
+
+**Context:** OG image generation was added as a differentiator but was too basic (4 hardcoded templates) compared to dedicated services like Bannerbear ($49-199/mo with full design tool capabilities).
+
+**Decision:** Remove entirely rather than ship a half-baked feature that hurts credibility.
+
+**Rationale:** "If their OG image feature is this shallow, what else is half-baked?" Better to do fewer things well.
+
+**Status:** Removed (2026-03-23)
+
+---
+
+## 2026-03-23: Stealth Ad Blocking
+
+**Context:** Sites like The Guardian, Forbes, and Wired detect network-level ad blockers and show login walls or degraded content.
+
+**Decision:** Add `block_ads=stealth` mode that lets all network requests through (undetectable), then moves ad elements offscreen after page load. 3-phase detection: selector-based, iframe-src-based, IAB size heuristic.
+
+**Rationale:** Uses `position: absolute; left: -9999px` instead of `display: none` to preserve element dimensions and fool detection scripts. No competitor offers this.
+
+**Status:** Active
+
+---
+
+## 2026-03-23: Google Cloud Run Deployment
+
+**Context:** Needed serverless hosting with scale-to-zero to minimize costs while finding customers. Budget: $50-100/month.
+
+**Decision:** Deploy on Google Cloud Run with Firestore for persistence. Replaced SQLite with Firestore, filesystem cache with in-memory cache.
+
+**Rationale:** Cloud Run scales to zero (no cost when idle), runs our existing Dockerfile, and GCP free tier covers early usage ($300 free credits). Cost at low volume: near $0. Cost at 100K requests/month: ~$24. Railway/Render would cost $40-60/month always-on regardless of traffic.
 
 **Alternatives considered:**
-- Screenshot-based PDF composition — much higher complexity, loses text selectability
-- Force-scroll within carousel before capture — doesn't help, the images load but Chrome doesn't render them in print mode
+- AWS Lambda — cheapest per-request but requires significant code changes (different Chromium build, DynamoDB, Lambda handler)
+- Railway — simplest but $40-60/month always-on even with zero traffic
+- DigitalOcean — serverless options too limited (1GB RAM max, 1-min timeout)
+
+**Status:** Active — deployed at https://pageyoink-1085551159615.us-east1.run.app
+
+---
+
+## 2026-03-23: Performance — load + delay over networkidle2
+
+**Context:** Captures were taking 8-20 seconds. Profiling showed `networkidle2` adds 5-15 seconds waiting for analytics, ads, and tracking pixels that don't affect visual quality.
+
+**Decision:** Switch default from `networkidle2` to `load` event + 1 second render delay. `smart_wait` available for sites that need comprehensive readiness detection.
+
+**Benchmark:**
+- networkidle2: 6,148ms
+- load + 1s: 1,709ms
+- Quality difference: minimal
+
+**Status:** Active
+
+---
+
+## 2026-03-23: Smart Wait — Network + DOM Two-Phase Stability
+
+**Context:** Original smart wait only tracked DOM mutations, missing pending network requests. Could resolve prematurely during a loading spinner before async data loads.
+
+**Decision:** Track in-flight network requests via Puppeteer's request events + DOM mutations. Two-phase stability: if quiet is interrupted by new activity, timer resets. Only resolves after sustained quiet (500ms) across all signals simultaneously.
 
 **Status:** Active

@@ -1,68 +1,79 @@
 # PageYoink — Deployment Guide
 
-## Option A: Railway (Recommended — Easiest)
+## Current Deployment: Google Cloud Run
 
-1. Go to [railway.app](https://railway.app) and sign up
-2. Click "New Project" → "Deploy from GitHub Repo"
-3. Select `claudiusbirdwhistle/pageyoink`
-4. Set these environment variables:
-   ```
-   PORT=3000
-   API_KEYS=your-key-1,your-key-2
-   RATE_LIMIT_PER_MINUTE=60
-   DB_PATH=/app/data/pageyoink.db
-   ```
-5. Railway auto-detects the Dockerfile and deploys
-6. Add a persistent volume mounted at `/app/data` (for SQLite)
-7. Note your deployment URL (e.g., `pageyoink-production.up.railway.app`)
+PageYoink is deployed on Google Cloud Run with auto-deploy via Cloud Build.
 
-## Option B: Render
+- **Project:** pageyoink-api
+- **Region:** us-east1
+- **Service URL:** https://pageyoink-1085551159615.us-east1.run.app
+- **Config:** 2 vCPU, 2GB RAM, 0-5 instances (scale to zero)
+- **Database:** Firestore (us-east1)
+- **GCP Account:** claudius.birdwhistle@gmail.com
 
-1. Go to [render.com](https://render.com) and sign up
-2. Click "New" → "Web Service" → Connect GitHub repo
-3. Select `claudiusbirdwhistle/pageyoink`
-4. Set environment to "Docker"
-5. Add environment variables (same as above)
-6. Add a persistent disk mounted at `/app/data`
-7. Deploy
+### Auto-Deploy
 
-## Option C: Fly.io
+Cloud Build is connected to the GitHub repo. Pushing to `main` triggers:
+1. Docker image build (via `cloudbuild.yaml`)
+2. Push to Artifact Registry
+3. Deploy new revision to Cloud Run
+
+### Manual Deploy
 
 ```bash
-# Install flyctl
-curl -L https://fly.io/install.sh | sh
+gcloud run deploy pageyoink --source . --region us-east1
+```
 
-# Login
-fly auth signup
+### Set Environment Variables
 
-# Launch (from repo root)
+```bash
+gcloud run services update pageyoink --region us-east1 \
+  --set-env-vars "API_KEYS=key1,key2,RATE_LIMIT_PER_MINUTE=60"
+```
+
+### View Logs
+
+```bash
+gcloud run services logs read pageyoink --region us-east1 --limit 50
+```
+
+### Check Service Status
+
+```bash
+gcloud run services describe pageyoink --region us-east1
+curl https://pageyoink-1085551159615.us-east1.run.app/internal/health
+```
+
+---
+
+## Alternative Deployments
+
+### Railway
+
+```bash
+# Connect repo at railway.app, set env vars:
+# NODE_ENV=production, API_KEYS=..., RATE_LIMIT_PER_MINUTE=60
+# Railway auto-detects Dockerfile and deploys
+```
+
+### Render
+
+Docker web service, set env vars, deploy from GitHub.
+
+### Fly.io
+
+```bash
 fly launch --name pageyoink
-
-# Set secrets
-fly secrets set API_KEYS=your-key-1,your-key-2
-fly secrets set RATE_LIMIT_PER_MINUTE=60
-fly secrets set DB_PATH=/app/data/pageyoink.db
-
-# Create persistent volume
-fly volumes create pageyoink_data --size 1
-
-# Deploy
+fly secrets set API_KEYS=key1,key2
 fly deploy
 ```
 
-## After Deployment
-
-1. Verify health: `curl https://YOUR-URL/internal/health`
-2. Test screenshot: `curl "https://YOUR-URL/v1/screenshot?url=https://example.com" -H "x-api-key: YOUR-KEY" -o test.png`
-3. Visit landing page: `https://YOUR-URL/`
-4. Visit API docs: `https://YOUR-URL/docs`
+---
 
 ## Generate API Keys
 
-API keys are simple strings. Generate secure ones:
 ```bash
-# Generate 3 API keys
 for i in 1 2 3; do openssl rand -hex 24; done
 ```
 
-Set them as comma-separated values in the `API_KEYS` environment variable.
+Set as comma-separated `API_KEYS` environment variable.

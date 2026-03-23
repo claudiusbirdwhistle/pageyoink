@@ -1,82 +1,94 @@
 # Project Status
 
 ## Last Updated
-2026-03-22 — Phase F (Competitive Parity) complete. All autonomous work done.
+2026-03-23
 
 ## System State
-- Deployed: no
-- Health: runs locally, 33 tests pass across 7 test files
-- CI: GREEN (verified — tests + build + Docker all passing)
-- Paying customers: 0
-- Monthly revenue: $0
+- **Deployed:** Yes — Google Cloud Run (us-east1)
+- **URL:** https://pageyoink-1085551159615.us-east1.run.app
+- **CI:** Cloud Build auto-deploy on push to main (trigger may need setup — check console)
+- **Health:** Running, 28 tests passing
+- **Paying customers:** 0
+- **Monthly revenue:** $0
+
+## Infrastructure
+- **Hosting:** Google Cloud Run (2 vCPU, 2GB RAM, 0-5 instances, scale to zero)
+- **Database:** Google Firestore (us-east1, free tier)
+- **Cache:** In-memory (lost on scale-to-zero, optimization only)
+- **GCP Project:** pageyoink-api (claudius.birdwhistle@gmail.com)
+- **GitHub:** claudiusbirdwhistle/pageyoink
+- **CI/CD:** cloudbuild.yaml — Docker build + deploy on git push
 
 ## What's Built
 
-**All features at competitive parity or better vs ScreenshotAPI, ApiFlash, PDFShift, Restpack.**
+### Endpoints (11 + docs)
+- GET / — Landing page with interactive trial demo
+- GET /docs — Swagger UI with full parameter descriptions
+- GET /internal/health — Health check + usage stats
+- GET /v1/screenshot — URL to PNG/JPEG
+- GET /v1/pdf — URL to PDF
+- POST /v1/pdf — HTML/URL to PDF (full options: headers, footers, watermark, proxy)
+- POST /v1/batch — Async batch processing (up to 50 URLs)
+- GET /v1/batch/:jobId — Batch job status + results
+- POST /v1/diff — Visual diff between two URLs (pixelmatch)
+- GET /v1/usage — Per-key usage dashboard
+- GET /trial/screenshot — Free trial (5/day per IP, no API key)
+- GET /trial/pdf — Free trial PDF
 
-### Endpoints (10 + docs)
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | / | Landing page |
-| GET | /docs | Swagger UI |
-| GET | /internal/health | Health + usage stats |
-| GET | /v1/screenshot | URL → PNG/JPEG |
-| GET | /v1/pdf | URL → PDF |
-| POST | /v1/pdf | HTML/URL → PDF (full options via JSON) |
-| GET/POST | /v1/og-image | Templated social images |
-| POST | /v1/batch | Async batch (up to 50 URLs) |
-| GET | /v1/batch/:jobId | Job status + results |
-| GET | /v1/usage | Per-key usage dashboard |
+### Screenshot Parameters
+url, format, quality, width, height, viewports, full_page, device_scale_factor,
+clean, smart_wait, block_ads (true/stealth), max_scroll, css, js, user_agent,
+selector, transparent, click, click_count, fonts, ttl, fresh, timeout,
+proxy, geolocation, timezone
 
-### Screenshot & PDF Parameters
-| Param | Description |
-|-------|-------------|
-| url | Target URL |
-| format | png, jpeg (screenshot) / A4, Letter, Legal, A3 (PDF) |
-| quality | JPEG quality 1-100 |
-| width, height | Viewport dimensions |
-| full_page | Capture full scrollable page |
-| device_scale_factor | Retina/HiDPI (1x, 2x) |
-| clean | Remove cookie banners, popups, chat widgets (4-phase detection) |
-| smart_wait | Wait for DOM stability + fonts + images + animations |
-| block_ads | Block ads via Ghostery engine (uBlock/EasyList compatible) |
-| max_scroll | Cap lazy-load scrolling (viewport heights, default 10) |
-| css | Inject custom CSS |
-| js | Execute custom JavaScript |
-| user_agent | Custom user-agent |
-| selector | Capture specific element by CSS selector |
-| transparent | Transparent PNG background |
-| ttl | Cache duration in seconds (default 24h) |
-| fresh | Bypass cache |
-| timeout | Navigation timeout in ms |
+### PDF Parameters (POST body)
+All screenshot params plus: html, headers, cookies, headerTemplate, footerTemplate,
+displayHeaderFooter, pageRanges, watermark, landscape, margin, printBackground
 
-POST /v1/pdf also supports: headers, cookies (as JSON objects)
+### Key Features
+- **4-phase clean mode** — selector blocklist + text-content scanning + z-index overlay + backdrop removal. Handles cookie banners, fundraising popups (Wikipedia, Guardian), chat widgets (Intercom, HubSpot, Drift, Zendesk, etc.)
+- **Stealth ad blocking** — post-load visual hiding, undetectable by anti-adblock scripts (3-phase: selector, iframe domain, IAB size heuristic)
+- **Network ad blocking** — Ghostery engine (uBlock/EasyList compatible)
+- **Smart wait** — network request tracking + DOM mutation tracking + fonts + images + animations, two-phase stability (resets on new activity)
+- **Lazy-load scrolling** — max_scroll cap prevents infinite scroll, event-based image wait
+- **Auto retry** — transient Chrome crashes retried automatically
+- **Print-mode PDF fixes** — carousel overflow detection
+- **Response caching** — in-memory with TTL, X-Cache HIT/MISS header
+- **URL auto-normalization** — bare domains (bbc.com) auto-prepend https://
 
-### Infrastructure
-- Fastify + TypeScript + Puppeteer on Node 22
-- API key auth + per-key rate limiting
-- SQLite persistent storage (usage + batch jobs)
-- Filesystem cache with TTL (X-Cache HIT/MISS header)
-- GitHub Actions CI (test + build + Docker)
-- Dockerfile with Chromium + data volume
-- Node.js SDK (zero deps, full TypeScript types)
-- Graceful shutdown, .env.example, deployment guide
+### SDKs
+- Node.js (sdk/) — full TypeScript types
+- Python (sdk-python/) — httpx client
+- Go (sdk-go/) — zero dependencies
 
-### Key Differentiators vs Competitors
-- **Bundled API** — screenshot + PDF + OG image in one API (unique)
-- **OG image templates** — no competitor offers this
-- **4-phase clean mode** — text-content detection catches custom cookie banners (verified on HubSpot)
-- **Print-mode PDF fixes** — auto-detects carousels and forces overflow:visible (BBC carousel now renders)
-- **Batch endpoint with webhooks** — only ScreenshotAPI also has dedicated batch
-- **Usage API** — self-service per-key usage dashboard
+### Performance
+- Default: `load` event + 1s render delay (~2-3s per capture)
+- Previous: `networkidle2` (~8-15s per capture)
+- smart_wait available for JS-heavy sites needing full readiness detection
 
-## What's Needed From Human
-1. Create hosting account (Railway recommended — see docs/DEPLOY.md)
-2. Set environment variables: API_KEYS, PORT, RATE_LIMIT_PER_MINUTE, DB_PATH
-3. Create RapidAPI account and list the API
-4. Create Stripe account for direct sales
+## What's NOT Done Yet
 
-## Environment Notes
-- nvm required: `export NVM_DIR="$HOME/.nvm" && [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"`
-- Test output: `samples/` (gitignored)
-- GitHub: github.com/claudiusbirdwhistle/pageyoink
+### Next Priority: Trial Page Improvements
+See `docs/trial-improvements.md` — 15 tasks including:
+- Remove smart wait from trial UI
+- Clarify clean mode labeling
+- Add PDF options to trial (page size, orientation, margins, headers/footers, watermark)
+- Add zoom and max_pages to API
+
+### Blocked on Human
+- [ ] Set API_KEYS environment variable in Cloud Run (currently auth disabled)
+- [ ] Create RapidAPI listing
+- [ ] Set up Stripe for direct sales
+- [ ] Register pageyoink.dev domain (optional)
+- [ ] Set up Cloud Build trigger (GitHub connection made, trigger may need creation in console)
+
+### Remaining Icebox
+- PDF encryption (needs native qpdf)
+- Video capture (complex)
+- Geo-distributed rendering (needs infrastructure)
+
+## Known Issues
+- Cloud Run cold start: 5-10 seconds on first request after scale-to-zero
+- BBC "Weekend Reads" carousel: images don't render in PDF (Chromium print limitation, partially mitigated by print-fix.ts)
+- OG image feature was removed (too basic compared to Bannerbear)
+- `__name` decorator bug: never declare named functions inside page.evaluate() — see docs/agent-loop.md and memory
