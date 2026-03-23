@@ -23,6 +23,7 @@ export interface ScreenshotOptions {
   cookies?: Array<{ name: string; value: string; domain?: string }>;
   userAgent?: string;
   selector?: string;
+  transparentBg?: boolean;
 }
 
 export interface ScreenshotResult {
@@ -83,6 +84,7 @@ async function attemptScreenshot(
     cookies,
     userAgent,
     selector,
+    transparentBg = false,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -166,6 +168,7 @@ async function attemptScreenshot(
         type: format,
         encoding: "binary",
         quality: effectiveQuality,
+        omitBackground: transparentBg && format === "png",
       })) as Buffer;
     } else {
       buffer = (await page.screenshot({
@@ -173,6 +176,7 @@ async function attemptScreenshot(
         fullPage,
         encoding: "binary",
         quality: effectiveQuality,
+        omitBackground: transparentBg && format === "png",
       })) as Buffer;
     }
 
