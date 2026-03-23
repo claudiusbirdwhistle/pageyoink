@@ -3,6 +3,7 @@ import { cleanPage } from "./cleanup.js";
 import { waitForPageReady } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
 import { enableAdBlocking } from "./adblock.js";
+import { applyPrintFixes } from "./print-fix.js";
 
 export interface PdfOptions {
   url?: string;
@@ -147,6 +148,9 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     if (clean) {
       await cleanPage(page);
     }
+
+    // Apply print-mode CSS fixes (carousel overflow, flex-wrap, etc.)
+    await applyPrintFixes(page);
 
     const buffer = await page.pdf({
       format,
