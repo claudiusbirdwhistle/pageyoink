@@ -146,6 +146,8 @@ export async function trialRoute(app: FastifyInstance) {
           watermark?: string;
           watermark_position?: string;
           page_ranges?: string;
+          scale?: string;
+          max_pages?: string;
           width?: string;
         };
       }>,
@@ -176,6 +178,8 @@ export async function trialRoute(app: FastifyInstance) {
         watermark,
         watermark_position,
         page_ranges,
+        scale,
+        max_pages,
         width,
       } = request.query;
 
@@ -220,6 +224,8 @@ export async function trialRoute(app: FastifyInstance) {
           footerTemplate: footer_template,
           displayHeaderFooter: !!(header_template || footer_template),
           pageRanges: page_ranges,
+          scale: scale ? parseFloat(scale) : undefined,
+          maxPages: max_pages ? parseInt(max_pages, 10) : undefined,
           timeout: 30000,
         });
 
