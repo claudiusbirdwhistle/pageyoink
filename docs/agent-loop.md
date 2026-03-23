@@ -146,6 +146,7 @@ Save output to `samples/` for human review. Compare before/after when fixing ren
 - Refactor code for maintainability
 - Respond to errors visible in logs
 - Generate sample output for human review
+- Move icebox tasks to a current phase and complete them
 
 ### What Requires Human Intervention
 - Creating accounts (RapidAPI, hosting platform, Stripe, domain registrar)

@@ -6,7 +6,6 @@ import swaggerUi from "@fastify/swagger-ui";
 import { healthRoute } from "./routes/health.js";
 import { screenshotRoute } from "./routes/screenshot.js";
 import { pdfRoute } from "./routes/pdf.js";
-import { ogImageRoute } from "./routes/og-image.js";
 import { batchRoute } from "./routes/batch.js";
 import { landingRoute } from "./routes/landing.js";
 import { usageRoute } from "./routes/usage.js";
@@ -36,7 +35,7 @@ export async function buildApp() {
       info: {
         title: "PageYoink API",
         description:
-          "Yoink pages into screenshots, PDFs, and OG images. Fast, intelligent capture API.",
+          "Yoink pages into screenshots and PDFs. Fast, intelligent capture API.",
         version: "0.1.0",
       },
       servers: [
@@ -68,7 +67,6 @@ export async function buildApp() {
   await app.register(healthRoute);
   await app.register(screenshotRoute);
   await app.register(pdfRoute);
-  await app.register(ogImageRoute);
   await app.register(batchRoute);
   await app.register(landingRoute);
   await app.register(usageRoute);

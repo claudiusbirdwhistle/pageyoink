@@ -5,8 +5,8 @@ const LANDING_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PageYoink — Screenshot, PDF &amp; OG Image API</title>
-  <meta name="description" content="Yoink pages into screenshots, PDFs, and social images. Fast, intelligent capture API with cookie banner removal and smart rendering.">
+  <title>PageYoink — Screenshot &amp; PDF API</title>
+  <meta name="description" content="Yoink pages into screenshots and PDFs. Fast, intelligent capture API with cookie banner removal, ad blocking, and smart rendering.">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root { --brand: #6366f1; --bg: #0f0f1a; --surface: #1a1a2e; --text: #e0e0f0; --muted: #8888a0; }
@@ -59,7 +59,7 @@ const LANDING_HTML = `<!DOCTYPE html>
   <div class="container">
     <header>
       <div class="logo">Page<span>Yoink</span></div>
-      <p class="tagline">Yoink pages into screenshots, PDFs, and social images. One API, three outputs, zero hassle.</p>
+      <p class="tagline">Yoink pages into screenshots and PDFs. One API, clean captures, zero hassle.</p>
     </header>
 
     <section>
@@ -70,9 +70,11 @@ const LANDING_HTML = `<!DOCTYPE html>
         <span class="comment"># Generate a PDF</span><br>
         curl "<span class="string">https://api.pageyoink.dev/v1/pdf?url=https://example.com</span>" \\<br>
         &nbsp;&nbsp;-H "<span class="key">x-api-key</span>: <span class="string">your-key</span>" -o document.pdf<br><br>
-        <span class="comment"># Create an OG image</span><br>
-        curl "<span class="string">https://api.pageyoink.dev/v1/og-image?title=My+Blog+Post&amp;theme=gradient</span>" \\<br>
-        &nbsp;&nbsp;-H "<span class="key">x-api-key</span>: <span class="string">your-key</span>" -o og.png
+        <span class="comment"># Compare two pages visually</span><br>
+        curl -X POST "<span class="string">https://api.pageyoink.dev/v1/diff</span>" \\<br>
+        &nbsp;&nbsp;-H "<span class="key">x-api-key</span>: <span class="string">your-key</span>" \\<br>
+        &nbsp;&nbsp;-H "Content-Type: application/json" \\<br>
+        &nbsp;&nbsp;-d '{"url1":"https://example.com","url2":"https://example.org"}' -o diff.png
       </div>
     </section>
 
@@ -90,10 +92,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         <div class="endpoint">
           <h3><span class="method post">POST</span> <span class="path">/v1/pdf</span></h3>
           <p>Convert raw HTML to PDF. Send your HTML in the request body, get a PDF back.</p>
-        </div>
-        <div class="endpoint">
-          <h3><span class="method">GET</span> <span class="path">/v1/og-image</span></h3>
-          <p>Generate social sharing images from templates. Customizable theme, colors, fonts, and branding.</p>
         </div>
         <div class="endpoint">
           <h3><span class="method post">POST</span> <span class="path">/v1/batch</span></h3>
@@ -114,8 +112,8 @@ const LANDING_HTML = `<!DOCTYPE html>
           <p>Detects when JavaScript-heavy pages are truly done rendering. No more guessing at delay values.</p>
         </div>
         <div class="feature">
-          <h3>One API, Three Outputs</h3>
-          <p>Screenshots, PDFs, and OG images under one API key and one bill. No juggling multiple services.</p>
+          <h3>Visual Diff</h3>
+          <p>Compare two URLs pixel-by-pixel. Catch visual regressions before your users do.</p>
         </div>
         <div class="feature">
           <h3>Batch Processing</h3>
@@ -181,7 +179,7 @@ const LANDING_HTML = `<!DOCTYPE html>
     </section>
 
     <footer>
-      <p>PageYoink &mdash; Yoink pages into screenshots, PDFs, and OG images.</p>
+      <p>PageYoink &mdash; Yoink pages into screenshots and PDFs.</p>
     </footer>
   </div>
 </body>

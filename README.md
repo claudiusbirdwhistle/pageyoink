@@ -1,8 +1,8 @@
 # PageYoink
 
-**Yoink pages into screenshots, PDFs, and OG images.** One API, three outputs, zero hassle.
+**Yoink pages into screenshots and PDFs.** Fast, intelligent capture API.
 
-PageYoink is a fast, intelligent capture API that goes beyond basic screenshot services. It automatically removes cookie banners and chat widgets, waits for JavaScript-heavy pages to finish rendering, blocks ads, and generates social sharing images from templates — all through a simple REST API.
+PageYoink is a screenshot and PDF API that goes beyond basic capture services. It automatically removes cookie banners and chat widgets, waits for JavaScript-heavy pages to finish rendering, blocks ads, and compares pages visually — all through a simple REST API.
 
 ## Quick Start
 
@@ -15,12 +15,12 @@ curl "https://api.pageyoink.dev/v1/screenshot?url=https://example.com&clean=true
 curl "https://api.pageyoink.dev/v1/pdf?url=https://example.com&block_ads=true" \
   -H "x-api-key: YOUR_KEY" -o document.pdf
 
-# Create an OG image
-curl -X POST "https://api.pageyoink.dev/v1/og-image" \
+# Compare two pages visually
+curl -X POST "https://api.pageyoink.dev/v1/diff" \
   -H "x-api-key: YOUR_KEY" \
   -H "Content-Type: application/json" \
-  -d '{"title":"My Blog Post","theme":"gradient","template":"bold"}' \
-  -o og.png
+  -d '{"url1":"https://example.com","url2":"https://example.org","format":"image"}' \
+  -o diff.png
 ```
 
 ## SDKs
@@ -57,7 +57,6 @@ png, err := client.Screenshot(pageyoink.ScreenshotOptions{
 | GET | `/v1/screenshot` | URL to PNG/JPEG with full capture options |
 | GET | `/v1/pdf` | URL to PDF |
 | POST | `/v1/pdf` | HTML/URL to PDF with headers, footers, watermarks |
-| GET/POST | `/v1/og-image` | Generate social sharing images from templates |
 | POST | `/v1/batch` | Async batch processing (up to 50 URLs) |
 | GET | `/v1/batch/:jobId` | Check batch job status and retrieve results |
 | POST | `/v1/diff` | Visual diff between two URLs |
@@ -83,7 +82,7 @@ png, err := client.Screenshot(pageyoink.ScreenshotOptions{
 | `js` | string | Execute custom JavaScript before capture |
 | `user_agent` | string | Custom user-agent string |
 | `selector` | string | Capture specific element by CSS selector |
-| `transparent` | boolean | Transparent PNG background |
+| `transparent` | boolean | Transparent PNG background (PNG only) |
 | `click` | string | CSS selector to click before capture |
 | `click_count` | number | Number of times to click (max 10) |
 | `ttl` | number | Cache duration in seconds (default 86400) |
@@ -105,19 +104,6 @@ png, err := client.Screenshot(pageyoink.ScreenshotOptions{
 | `geolocation` | object | Spoof browser location (`{latitude, longitude, accuracy}`) |
 | `timezone` | string | IANA timezone (e.g., `"Europe/Paris"`) |
 
-## OG Image Templates
-
-Generate social sharing images (1200x630) with four built-in templates:
-
-| Template | Style |
-|----------|-------|
-| `default` | Gradient background with accent bar |
-| `split` | Bold brand-color left panel + dark content right |
-| `minimal` | Clean white centered layout |
-| `bold` | Dark background with decorative color circles |
-
-All templates support customizable `title`, `subtitle`, `author`, `domain`, `theme` (light/dark/gradient), `brandColor`, and `fontSize`.
-
 ## What Sets PageYoink Apart
 
 ### Competitive Feature Comparison
@@ -127,7 +113,6 @@ All templates support customizable `title`, `subtitle`, `author`, `domain`, `the
 | Screenshot API | Yes | Yes | Yes | Yes | Yes | Yes |
 | PDF from URL | Yes | Yes | No | Yes | No | Yes |
 | PDF from HTML | Yes | Yes | No | Yes | No | Yes |
-| OG Image Templates | **Yes** | No | No | No | No | No |
 | Visual Diff API | **Yes** | No | No | No | No | No |
 | Cookie Banner Removal | Yes | Yes | Yes | No | No | Yes |
 | Text-Based Cookie Detection | **Yes** | No | No | No | No | No |
@@ -153,13 +138,13 @@ All templates support customizable `title`, `subtitle`, `author`, `domain`, `the
 | Custom Font Loading | **Yes** | No | No | No | No | No |
 | Print-Mode PDF Fixes | **Yes** | No | No | No | No | No |
 | SDKs | Node, Python, Go | Samples only | 5+ langs | Guides | Community | Node, PHP, Go |
-| Bundled Pricing | **Yes** | Separate | Screenshot only | PDF only | Screenshot only | Separate |
+| Bundled Screenshot + PDF | **Yes** | Separate | Screenshot only | PDF only | Screenshot only | Separate |
 
 **Bold** = unique to PageYoink or significantly better than competitors.
 
 ### Key Differentiators
 
-- **One API, Three Outputs** — Screenshot + PDF + OG image under a single API key and bill. Every competitor charges separately or only offers one output type.
+- **Bundled Screenshot + PDF** — Both under a single API key and bill. Restpack charges separately; ApiFlash and URL2PNG are screenshot-only; PDFShift is PDF-only.
 
 - **4-Phase Clean Mode** — Goes beyond selector blocklists. Scans page content for cookie-related text in fixed elements, catches custom cookie implementations that competitors miss. Verified against HubSpot, BBC, Intercom.
 
