@@ -91,8 +91,6 @@ All complete.
 - [x] Overhaul clean mode — verified against HubSpot, BBC, Intercom (not just example.com)
 
 ## Icebox (Post-Launch)
-- [ ] Proxy support (BYO proxy)
-- [ ] Geolocation spoofing
 - [ ] PDF encryption and password protection
 - [ ] PDF watermarks (text + image)
 - [ ] S3 export (direct upload to customer's bucket)
@@ -106,3 +104,5 @@ All complete.
 - [x] Click automation — click + click_count params (2026-03-23)
 - [x] PDF headers/footers — headerTemplate, footerTemplate, displayHeaderFooter, pageRanges (2026-03-23)
 - [x] Additional OG image templates — split, minimal, bold (2026-03-23)
+- [x] Proxy support — BYO proxy via isolated browser instance (2026-03-23)
+- [x] Geolocation spoofing — latitude, longitude, accuracy, timezone (2026-03-23)
