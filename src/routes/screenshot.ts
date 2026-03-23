@@ -30,27 +30,91 @@ const screenshotQuerySchema = {
   type: "object" as const,
   required: ["url"],
   properties: {
-    url: { type: "string" as const },
-    format: { type: "string" as const, enum: ["png", "jpeg"] },
-    quality: { type: "string" as const },
-    full_page: { type: "string" as const },
-    width: { type: "string" as const },
-    height: { type: "string" as const },
-    device_scale_factor: { type: "string" as const },
-    timeout: { type: "string" as const },
-    clean: { type: "string" as const },
-    smart_wait: { type: "string" as const },
-    max_scroll: { type: "string" as const },
-    block_ads: { type: "string" as const },
-    css: { type: "string" as const },
-    js: { type: "string" as const },
-    user_agent: { type: "string" as const },
-    selector: { type: "string" as const },
-    transparent: { type: "string" as const },
-    ttl: { type: "string" as const },
-    fresh: { type: "string" as const },
-    click: { type: "string" as const },
-    click_count: { type: "string" as const },
+    url: {
+      type: "string" as const,
+      description: "Target URL to capture. Must include protocol (http:// or https://).",
+    },
+    format: {
+      type: "string" as const,
+      enum: ["png", "jpeg"],
+      description: "Output image format. Default: png.",
+    },
+    quality: {
+      type: "string" as const,
+      description: "JPEG compression quality, 1 (worst) to 100 (best). Only applies when format=jpeg. Default: 80.",
+    },
+    full_page: {
+      type: "string" as const,
+      description: "Capture the full scrollable page instead of just the visible viewport. Pass 'true' to enable. Default: false.",
+    },
+    width: {
+      type: "string" as const,
+      description: "Browser viewport width in pixels. Default: 1280.",
+    },
+    height: {
+      type: "string" as const,
+      description: "Browser viewport height in pixels. Default: 720.",
+    },
+    device_scale_factor: {
+      type: "string" as const,
+      description: "Device pixel ratio for retina/HiDPI renders. Use '2' for 2x resolution. Default: 1.",
+    },
+    timeout: {
+      type: "string" as const,
+      description: "Max time in milliseconds to wait for the page to load. Max allowed: 60000. Default: 30000.",
+    },
+    clean: {
+      type: "string" as const,
+      description: "Auto-remove cookie banners, consent dialogs, newsletter popups, and chat widgets (Intercom, Drift, HubSpot, etc.) before capture. Uses 4-phase detection: selector blocklist, text-content scanning, z-index overlay detection, and backdrop removal. Pass 'true' to enable.",
+    },
+    smart_wait: {
+      type: "string" as const,
+      description: "Wait for the page to be truly ready before capture: DOM mutations settled for 500ms, all fonts loaded, all images decoded, and CSS animations finished. Better than fixed delays for JS-heavy sites. Pass 'true' to enable.",
+    },
+    max_scroll: {
+      type: "string" as const,
+      description: "Maximum number of viewport heights to scroll when triggering lazy-loaded images. Prevents infinite scroll traps on sites like Reddit. Default: 10.",
+    },
+    block_ads: {
+      type: "string" as const,
+      description: "Block ads and trackers using the Ghostery engine (uBlock Origin and EasyList filter compatible). Includes both network-level blocking and cosmetic filtering. Pass 'true' to enable.",
+    },
+    css: {
+      type: "string" as const,
+      description: "Custom CSS to inject into the page after load but before capture. URL-encoded. Example: body%7Bbackground%3Ared%7D",
+    },
+    js: {
+      type: "string" as const,
+      description: "Custom JavaScript to execute in the page context before capture. Runs as a sandboxed IIFE. URL-encoded. Example: document.querySelector('.popup').remove()",
+    },
+    user_agent: {
+      type: "string" as const,
+      description: "Custom User-Agent string sent with the page request. Useful for testing mobile layouts or bypassing bot detection.",
+    },
+    selector: {
+      type: "string" as const,
+      description: "CSS selector of a specific element to capture instead of the full page. Returns just that element cropped. Example: #hero, .main-chart, article:first-of-type",
+    },
+    transparent: {
+      type: "string" as const,
+      description: "Render with a transparent background instead of white. Only works with format=png (JPEG does not support transparency). Pass 'true' to enable.",
+    },
+    ttl: {
+      type: "string" as const,
+      description: "Cache duration in seconds. Subsequent identical requests return the cached result instantly (X-Cache: HIT header). Default: 86400 (24 hours). Max: 2592000 (30 days). Set to 0 to disable caching.",
+    },
+    fresh: {
+      type: "string" as const,
+      description: "Bypass the cache and force a new capture even if a cached result exists. Pass 'true' to enable.",
+    },
+    click: {
+      type: "string" as const,
+      description: "CSS selector of an element to click before capture. Useful for expanding collapsed content, clicking 'Load More', or dismissing custom popups. Example: button.load-more, .dismiss-modal",
+    },
+    click_count: {
+      type: "string" as const,
+      description: "Number of times to click the element specified by 'click'. Max: 10. Each click waits 500ms for the page to update. Default: 1.",
+    },
   },
 };
 
@@ -60,6 +124,25 @@ export async function screenshotRoute(app: FastifyInstance) {
     {
       schema: {
         querystring: screenshotQuerySchema,
+        description: "Capture a screenshot of any URL as PNG or JPEG.",
+        tags: ["Screenshot"],
+        response: {
+          200: {
+            description: "Screenshot image binary. Content-Type will be image/png or image/jpeg.",
+            type: "string" as const,
+            format: "binary",
+          },
+          400: {
+            description: "Invalid URL or parameters.",
+            type: "object" as const,
+            properties: { error: { type: "string" as const } },
+          },
+          500: {
+            description: "Capture failed (timeout, crash, element not found).",
+            type: "object" as const,
+            properties: { error: { type: "string" as const } },
+          },
+        },
       },
     },
     async (request, reply) => {
