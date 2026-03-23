@@ -39,6 +39,10 @@ interface PdfBody {
   smartWait?: boolean;
   maxScroll?: number;
   blockAds?: boolean;
+  headerTemplate?: string;
+  footerTemplate?: string;
+  displayHeaderFooter?: boolean;
+  pageRanges?: string;
   css?: string;
   js?: string;
   headers?: Record<string, string>;
@@ -189,6 +193,10 @@ export async function pdfRoute(app: FastifyInstance) {
             smartWait: { type: "boolean" },
             maxScroll: { type: "number" },
             blockAds: { type: "boolean" },
+            headerTemplate: { type: "string" },
+            footerTemplate: { type: "string" },
+            displayHeaderFooter: { type: "boolean" },
+            pageRanges: { type: "string" },
             css: { type: "string" },
             js: { type: "string" },
             headers: { type: "object" },
@@ -230,6 +238,10 @@ export async function pdfRoute(app: FastifyInstance) {
           smartWait: body.smartWait || false,
           maxScroll: body.maxScroll,
           blockAds: body.blockAds || false,
+          headerTemplate: body.headerTemplate,
+          footerTemplate: body.footerTemplate,
+          displayHeaderFooter: body.displayHeaderFooter || false,
+          pageRanges: body.pageRanges,
           css: body.css,
           js: body.js,
           headers: body.headers,

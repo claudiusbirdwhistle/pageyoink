@@ -27,6 +27,10 @@ export interface PdfOptions {
   headers?: Record<string, string>;
   cookies?: Array<{ name: string; value: string; domain?: string }>;
   userAgent?: string;
+  headerTemplate?: string;
+  footerTemplate?: string;
+  displayHeaderFooter?: boolean;
+  pageRanges?: string;
 }
 
 export interface PdfResult {
@@ -86,6 +90,10 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     headers,
     cookies,
     userAgent,
+    headerTemplate,
+    footerTemplate,
+    displayHeaderFooter = false,
+    pageRanges,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -152,17 +160,31 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     // Apply print-mode CSS fixes (carousel overflow, flex-wrap, etc.)
     await applyPrintFixes(page);
 
-    const buffer = await page.pdf({
+    const pdfOptions: Parameters<typeof page.pdf>[0] = {
       format,
       landscape,
       printBackground,
       margin: margin || {
-        top: "0.5in",
+        top: displayHeaderFooter ? "1in" : "0.5in",
         right: "0.5in",
-        bottom: "0.5in",
+        bottom: displayHeaderFooter ? "1in" : "0.5in",
         left: "0.5in",
       },
-    });
+    };
+
+    if (displayHeaderFooter || headerTemplate || footerTemplate) {
+      pdfOptions.displayHeaderFooter = true;
+      pdfOptions.headerTemplate = headerTemplate || "<span></span>";
+      pdfOptions.footerTemplate =
+        footerTemplate ||
+        '<div style="font-size:10px;text-align:center;width:100%;"><span class="pageNumber"></span> / <span class="totalPages"></span></div>';
+    }
+
+    if (pageRanges) {
+      pdfOptions.pageRanges = pageRanges;
+    }
+
+    const buffer = await page.pdf(pdfOptions);
 
     return { buffer: Buffer.from(buffer) };
   } finally {

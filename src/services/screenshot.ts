@@ -24,6 +24,8 @@ export interface ScreenshotOptions {
   userAgent?: string;
   selector?: string;
   transparentBg?: boolean;
+  clickSelector?: string;
+  clickCount?: number;
 }
 
 export interface ScreenshotResult {
@@ -85,6 +87,8 @@ async function attemptScreenshot(
     userAgent,
     selector,
     transparentBg = false,
+    clickSelector,
+    clickCount = 1,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -136,6 +140,18 @@ async function attemptScreenshot(
     // matching competitor APIs (ApiFlash, ScreenshotAPI, Restpack).
     if (js) {
       await page.evaluate(`(function(){${js}})()`);
+    }
+
+    // Click an element before capture (e.g., "Load More", "Accept", dismiss popup)
+    if (clickSelector) {
+      for (let i = 0; i < Math.min(clickCount, 10); i++) {
+        try {
+          await page.click(clickSelector);
+          await new Promise((r) => setTimeout(r, 500));
+        } catch {
+          break; // Element not found or not clickable, stop
+        }
+      }
     }
 
     // Scroll through page to trigger lazy-loaded images

@@ -22,6 +22,8 @@ interface ScreenshotQuery {
   transparent?: string;
   ttl?: string;
   fresh?: string;
+  click?: string;
+  click_count?: string;
 }
 
 const screenshotQuerySchema = {
@@ -47,6 +49,8 @@ const screenshotQuerySchema = {
     transparent: { type: "string" as const },
     ttl: { type: "string" as const },
     fresh: { type: "string" as const },
+    click: { type: "string" as const },
+    click_count: { type: "string" as const },
   },
 };
 
@@ -79,6 +83,8 @@ export async function screenshotRoute(app: FastifyInstance) {
         transparent,
         ttl,
         fresh,
+        click,
+        click_count,
       } = request.query;
 
       // Validate URL
@@ -115,6 +121,8 @@ export async function screenshotRoute(app: FastifyInstance) {
           userAgent: user_agent || undefined,
           selector: selector || undefined,
           transparentBg: transparent === "true",
+          clickSelector: click || undefined,
+          clickCount: click_count ? parseInt(click_count, 10) : undefined,
         };
 
         const cacheTtl = ttl ? parseInt(ttl, 10) : undefined;
