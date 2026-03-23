@@ -29,6 +29,7 @@ export interface ScreenshotOptions {
   proxy?: string;
   geolocation?: { latitude: number; longitude: number; accuracy?: number };
   timezone?: string;
+  fonts?: string[];
 }
 
 export interface ScreenshotResult {
@@ -95,6 +96,7 @@ async function attemptScreenshot(
     proxy,
     geolocation,
     timezone,
+    fonts,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -146,6 +148,15 @@ async function attemptScreenshot(
       waitUntil: "networkidle2",
       timeout: effectiveTimeout,
     });
+
+    // Load custom web fonts
+    if (fonts && fonts.length > 0) {
+      const fontCss = fonts
+        .map((f) => `@import url('${f}');`)
+        .join("\n");
+      await page.addStyleTag({ content: fontCss });
+      await page.evaluate(() => document.fonts.ready);
+    }
 
     // Inject custom CSS after page load
     if (css) {
