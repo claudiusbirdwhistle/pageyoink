@@ -59,28 +59,97 @@ export async function pdfRoute(app: FastifyInstance) {
     "/v1/pdf",
     {
       schema: {
+        description: "Convert a URL to PDF. For HTML-to-PDF or advanced options (headers, cookies, watermarks), use POST instead.",
+        tags: ["PDF"],
         querystring: {
           type: "object",
           required: ["url"],
           properties: {
-            url: { type: "string" },
-            format: { type: "string", enum: ["A4", "Letter", "Legal", "A3"] },
-            landscape: { type: "string" },
-            print_background: { type: "string" },
-            margin_top: { type: "string" },
-            margin_right: { type: "string" },
-            margin_bottom: { type: "string" },
-            margin_left: { type: "string" },
-            timeout: { type: "string" },
-            clean: { type: "string" },
-            smart_wait: { type: "string" },
-            max_scroll: { type: "string" },
-            block_ads: { type: "string" },
-            css: { type: "string" },
-            js: { type: "string" },
-            user_agent: { type: "string" },
-            ttl: { type: "string" },
-            fresh: { type: "string" },
+            url: {
+              type: "string",
+              description: "Target URL to convert. Must include protocol (http:// or https://).",
+            },
+            format: {
+              type: "string",
+              enum: ["A4", "Letter", "Legal", "A3"],
+              description: "PDF page size. Default: A4.",
+            },
+            landscape: {
+              type: "string",
+              description: "Render in landscape orientation. Pass 'true' to enable. Default: false (portrait).",
+            },
+            print_background: {
+              type: "string",
+              description: "Include CSS background colors and images in the PDF. Pass 'false' to disable. Default: true.",
+            },
+            margin_top: {
+              type: "string",
+              description: "Top margin with CSS units. Examples: '0.5in', '20mm', '1cm'. Default: 0.5in.",
+            },
+            margin_right: {
+              type: "string",
+              description: "Right margin with CSS units. Default: 0.5in.",
+            },
+            margin_bottom: {
+              type: "string",
+              description: "Bottom margin with CSS units. Default: 0.5in.",
+            },
+            margin_left: {
+              type: "string",
+              description: "Left margin with CSS units. Default: 0.5in.",
+            },
+            timeout: {
+              type: "string",
+              description: "Max time in milliseconds to wait for page load. Max: 60000. Default: 30000.",
+            },
+            clean: {
+              type: "string",
+              description: "Auto-remove cookie banners, popups, and chat widgets before PDF generation. Pass 'true' to enable.",
+            },
+            smart_wait: {
+              type: "string",
+              description: "Wait for DOM stability, fonts, images, and animations before PDF generation. Pass 'true' to enable.",
+            },
+            max_scroll: {
+              type: "string",
+              description: "Max viewport heights to scroll for lazy-load triggering. Default: 10.",
+            },
+            block_ads: {
+              type: "string",
+              description: "Block ads and trackers (Ghostery/uBlock engine). Pass 'true' to enable.",
+            },
+            css: {
+              type: "string",
+              description: "Custom CSS to inject before PDF generation. URL-encoded.",
+            },
+            js: {
+              type: "string",
+              description: "Custom JavaScript to execute before PDF generation. URL-encoded.",
+            },
+            user_agent: {
+              type: "string",
+              description: "Custom User-Agent string.",
+            },
+            ttl: {
+              type: "string",
+              description: "Cache duration in seconds. Default: 86400 (24h).",
+            },
+            fresh: {
+              type: "string",
+              description: "Bypass cache and force new PDF generation. Pass 'true' to enable.",
+            },
+          },
+        },
+        response: {
+          200: {
+            description: "PDF document binary. Content-Type: application/pdf.",
+            type: "string",
+            format: "binary",
+          },
+          400: {
+            description: "Invalid URL or parameters.",
+            type: "object",
+            properties: { error: { type: "string" } },
           },
         },
       },
@@ -103,7 +172,6 @@ export async function pdfRoute(app: FastifyInstance) {
         fresh,
       } = request.query;
 
-      // Validate URL
       try {
         const parsed = new URL(url!);
         if (!["http:", "https:"].includes(parsed.protocol)) {
@@ -174,60 +242,139 @@ export async function pdfRoute(app: FastifyInstance) {
     "/v1/pdf",
     {
       schema: {
+        description: "Generate a PDF from HTML content or a URL. Supports all options including custom headers, cookies, watermarks, and PDF headers/footers. Send either 'html' or 'url' in the request body.",
+        tags: ["PDF"],
         body: {
           type: "object",
           properties: {
-            html: { type: "string" },
-            url: { type: "string" },
-            format: { type: "string", enum: ["A4", "Letter", "Legal", "A3"] },
-            landscape: { type: "boolean" },
-            printBackground: { type: "boolean" },
+            html: {
+              type: "string",
+              description: "Raw HTML string to convert to PDF. Either 'html' or 'url' is required.",
+            },
+            url: {
+              type: "string",
+              description: "URL to convert to PDF. Either 'html' or 'url' is required.",
+            },
+            format: {
+              type: "string",
+              enum: ["A4", "Letter", "Legal", "A3"],
+              description: "PDF page size. Default: A4.",
+            },
+            landscape: {
+              type: "boolean",
+              description: "Render in landscape orientation. Default: false.",
+            },
+            printBackground: {
+              type: "boolean",
+              description: "Include CSS backgrounds in PDF. Default: true.",
+            },
             margin: {
               type: "object",
+              description: "Page margins with CSS units (e.g., '0.5in', '20mm').",
               properties: {
-                top: { type: "string" },
-                right: { type: "string" },
-                bottom: { type: "string" },
-                left: { type: "string" },
+                top: { type: "string", description: "Top margin. Default: 0.5in." },
+                right: { type: "string", description: "Right margin. Default: 0.5in." },
+                bottom: { type: "string", description: "Bottom margin. Default: 0.5in." },
+                left: { type: "string", description: "Left margin. Default: 0.5in." },
               },
             },
-            timeout: { type: "number" },
-            clean: { type: "boolean" },
-            smartWait: { type: "boolean" },
-            maxScroll: { type: "number" },
-            blockAds: { type: "boolean" },
-            headerTemplate: { type: "string" },
-            footerTemplate: { type: "string" },
-            displayHeaderFooter: { type: "boolean" },
-            pageRanges: { type: "string" },
-            css: { type: "string" },
-            js: { type: "string" },
-            headers: { type: "object" },
+            timeout: {
+              type: "number",
+              description: "Navigation timeout in ms. Max: 60000. Default: 30000.",
+            },
+            clean: {
+              type: "boolean",
+              description: "Auto-remove cookie banners, popups, chat widgets.",
+            },
+            smartWait: {
+              type: "boolean",
+              description: "Wait for DOM stability, fonts, images, animations.",
+            },
+            maxScroll: {
+              type: "number",
+              description: "Max viewport heights to scroll for lazy loading. Default: 10.",
+            },
+            blockAds: {
+              type: "boolean",
+              description: "Block ads and trackers (Ghostery/uBlock engine).",
+            },
+            headerTemplate: {
+              type: "string",
+              description: "HTML template for PDF page header. Supports these CSS classes as auto-filled values: 'date' (current date), 'title' (page title), 'url' (page URL), 'pageNumber', 'totalPages'. Example: '<div style=\"font-size:10px;text-align:center;\"><span class=\"title\"></span></div>'",
+            },
+            footerTemplate: {
+              type: "string",
+              description: "HTML template for PDF page footer. Same template variables as headerTemplate. Default when displayHeaderFooter is true: page number / total pages.",
+            },
+            displayHeaderFooter: {
+              type: "boolean",
+              description: "Enable PDF header and footer rendering. Automatically enabled if headerTemplate or footerTemplate is provided. Margins are increased to 1in top/bottom when enabled.",
+            },
+            pageRanges: {
+              type: "string",
+              description: "Which pages to include in the PDF. Examples: '1-3' (pages 1 to 3), '1,3,5' (specific pages), '2-' (page 2 onwards).",
+            },
+            css: {
+              type: "string",
+              description: "Custom CSS to inject before PDF generation.",
+            },
+            js: {
+              type: "string",
+              description: "Custom JavaScript to execute before PDF generation.",
+            },
+            headers: {
+              type: "object",
+              description: "Custom HTTP headers to send when fetching the URL. Object of key-value pairs. Example: {\"Authorization\": \"Bearer token123\"}",
+            },
             cookies: {
               type: "array",
+              description: "Cookies to set before navigating to the URL. Useful for authenticated pages or bypassing consent.",
               items: {
                 type: "object",
                 properties: {
-                  name: { type: "string" },
-                  value: { type: "string" },
-                  domain: { type: "string" },
+                  name: { type: "string", description: "Cookie name." },
+                  value: { type: "string", description: "Cookie value." },
+                  domain: { type: "string", description: "Cookie domain. Defaults to the target URL's hostname." },
                 },
               },
             },
-            userAgent: { type: "string" },
-            proxy: { type: "string" },
+            userAgent: {
+              type: "string",
+              description: "Custom User-Agent string.",
+            },
+            proxy: {
+              type: "string",
+              description: "Proxy server URL to route the request through. Format: 'http://host:port' or 'http://user:pass@host:port'. Supports HTTP proxies.",
+            },
             watermark: {
               type: "object",
+              description: "Add a text watermark to every page of the PDF.",
               properties: {
-                text: { type: "string" },
-                fontSize: { type: "number" },
-                color: { type: "string" },
-                opacity: { type: "number" },
-                rotation: { type: "number" },
-                position: { type: "string", enum: ["center", "top-left", "top-right", "bottom-left", "bottom-right"] },
+                text: { type: "string", description: "Watermark text. Required." },
+                fontSize: { type: "number", description: "Font size in points. Default: 48." },
+                color: { type: "string", description: "Hex color code. Default: #888888." },
+                opacity: { type: "number", description: "Opacity from 0 (invisible) to 1 (solid). Default: 0.3." },
+                rotation: { type: "number", description: "Rotation in degrees. Negative = counter-clockwise. Default: -45." },
+                position: {
+                  type: "string",
+                  enum: ["center", "top-left", "top-right", "bottom-left", "bottom-right"],
+                  description: "Watermark position on each page. Default: center.",
+                },
               },
               required: ["text"],
             },
+          },
+        },
+        response: {
+          200: {
+            description: "PDF document binary. Content-Type: application/pdf.",
+            type: "string",
+            format: "binary",
+          },
+          400: {
+            description: "Missing html/url or invalid parameters.",
+            type: "object",
+            properties: { error: { type: "string" } },
           },
         },
       },
@@ -268,7 +415,6 @@ export async function pdfRoute(app: FastifyInstance) {
 
         let finalBuffer = result.buffer;
 
-        // Apply watermark if requested
         if (body.watermark) {
           finalBuffer = await addWatermark(finalBuffer, body.watermark);
         }

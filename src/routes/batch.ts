@@ -100,6 +100,8 @@ export async function batchRoute(app: FastifyInstance) {
     "/v1/batch",
     {
       schema: {
+        description: "Submit a batch of URLs for async screenshot/PDF processing. Returns a job ID for status tracking. Results delivered via polling or webhook.",
+        tags: ["Batch"],
         body: {
           type: "object",
           required: ["items"],
@@ -108,14 +110,16 @@ export async function batchRoute(app: FastifyInstance) {
               type: "array",
               minItems: 1,
               maxItems: MAX_BATCH_SIZE,
+              description: `Array of capture jobs (1-${MAX_BATCH_SIZE} items). Each item is processed sequentially.`,
               items: {
                 type: "object",
                 required: ["url"],
                 properties: {
-                  url: { type: "string" },
+                  url: { type: "string", description: "Target URL to capture." },
                   type: {
                     type: "string",
                     enum: ["screenshot", "pdf"],
+                    description: "Capture type. Default: screenshot.",
                   },
                   format: { type: "string", enum: ["png", "jpeg"] },
                   quality: { type: "number" },
@@ -127,7 +131,7 @@ export async function batchRoute(app: FastifyInstance) {
                 },
               },
             },
-            webhook: { type: "string" },
+            webhook: { type: "string", description: "URL to POST results to when the batch completes. Receives JSON with jobId, status, total, completed, and results array." },
           },
         },
       },
