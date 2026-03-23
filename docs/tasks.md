@@ -17,7 +17,7 @@ All complete.
 8. [ ] Print-mode CSS injection for PDFs — auto-convert horizontal carousels to wrapped layouts to fix missing images in Chrome print renderer
 
 ### Priority 3 (Nice to have before launch)
-9. [ ] Transparent background support for PNG screenshots
+9. [x] Transparent background — transparent=true, PNG only (done 2026-03-22)
 
 ## Blocked — Waiting on Human
 - [ ] Configure hosting platform — human needed for account creation (Phase C)
@@ -75,6 +75,7 @@ All complete.
 - [x] Custom cookies — cookies param (POST body) with auto domain detection
 - [x] Custom user-agent — user_agent param
 - [x] Element capture — selector param, uses element.screenshot() for pixel-perfect extraction
+- [x] Transparent background — transparent=true for PNG screenshots
 
 ### Bug Fixes & Quality (2026-03-22)
 - [x] Fix TypeScript readonly property error in CI
