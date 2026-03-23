@@ -130,14 +130,16 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
 
     if (url) {
       await page.goto(url, {
-        waitUntil: "networkidle2",
+        waitUntil: "load",
         timeout: effectiveTimeout,
       });
+      await new Promise((r) => setTimeout(r, 1000));
     } else if (html) {
       await page.setContent(html, {
-        waitUntil: "networkidle2",
+        waitUntil: "load",
         timeout: effectiveTimeout,
       });
+      await new Promise((r) => setTimeout(r, 500));
     }
 
     // Inject custom CSS after page load

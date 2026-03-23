@@ -150,10 +150,17 @@ async function attemptScreenshot(
       deviceScaleFactor,
     });
 
+    // Use 'load' event + short render delay instead of 'networkidle2'.
+    // networkidle2 waits for ALL background requests (analytics, ads, tracking)
+    // which adds 5-15s without improving visual quality.
+    // Customers who need full network idle can use smart_wait=true.
     await page.goto(url, {
-      waitUntil: "networkidle2",
+      waitUntil: "load",
       timeout: effectiveTimeout,
     });
+
+    // Allow 1s for post-load rendering (CSS transitions, JS-injected content)
+    await new Promise((r) => setTimeout(r, 1000));
 
     // Load custom web fonts
     if (fonts && fonts.length > 0) {
