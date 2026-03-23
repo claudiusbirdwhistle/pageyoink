@@ -1,6 +1,6 @@
 import { getBrowser, launchProxyBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
-import { waitForPageReady } from "./readiness.js";
+import { waitForPageReady, installMutationTracker } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
 import { enableAdBlocking } from "./adblock.js";
 import { hideAdsStealthily } from "./stealth-adblock.js";
@@ -140,6 +140,11 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
         timeout: effectiveTimeout,
       });
       await new Promise((r) => setTimeout(r, 500));
+    }
+
+    // Install mutation tracker for smart_wait (must be after goto/setContent)
+    if (smartWait) {
+      await installMutationTracker(page);
     }
 
     // Inject custom CSS after page load

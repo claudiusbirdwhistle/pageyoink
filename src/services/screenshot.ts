@@ -1,6 +1,6 @@
 import { getBrowser, launchProxyBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
-import { waitForPageReady } from "./readiness.js";
+import { waitForPageReady, installMutationTracker } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
 import { enableAdBlocking } from "./adblock.js";
 import { hideAdsStealthily } from "./stealth-adblock.js";
@@ -161,6 +161,11 @@ async function attemptScreenshot(
 
     // Allow 1s for post-load rendering (CSS transitions, JS-injected content)
     await new Promise((r) => setTimeout(r, 1000));
+
+    // Install mutation tracker for smart_wait (must be after goto)
+    if (smartWait) {
+      await installMutationTracker(page);
+    }
 
     // Load custom web fonts
     if (fonts && fonts.length > 0) {
