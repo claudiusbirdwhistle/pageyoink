@@ -19,29 +19,7 @@ export async function waitForPageReady(
     return new Promise<void>((resolve) => {
       const deadline = Date.now() + timeoutMs;
 
-      // Check all signals
-      async function checkReady(): Promise<boolean> {
-        // 1. Fonts loaded
-        const fontsReady = document.fonts.status === "loaded";
-
-        // 2. All images decoded
-        const images = Array.from(document.querySelectorAll("img"));
-        const imagesReady = images.every(
-          (img) => img.complete && img.naturalHeight > 0,
-        );
-
-        // 3. No pending animations
-        const animations = document.getAnimations();
-        const animationsSettled =
-          animations.length === 0 ||
-          animations.every(
-            (a) => a.playState === "finished" || a.playState === "idle",
-          );
-
-        return fontsReady && imagesReady && animationsSettled;
-      }
-
-      // 4. DOM stability — wait for no mutations for 500ms
+      // DOM stability — wait for no mutations for 500ms
       let lastMutationTime = Date.now();
       const observer = new MutationObserver(() => {
         lastMutationTime = Date.now();
@@ -54,20 +32,34 @@ export async function waitForPageReady(
         characterData: true,
       });
 
-      const interval = setInterval(async () => {
+      const interval = setInterval(() => {
         const now = Date.now();
 
         if (now > deadline) {
           clearInterval(interval);
           observer.disconnect();
-          resolve(); // Timeout — resolve anyway with whatever we have
+          resolve();
           return;
         }
 
-        const domStable = now - lastMutationTime > 500;
-        const ready = await checkReady();
+        // Check all readiness signals inline
+        const fontsReady = document.fonts.status === "loaded";
 
-        if (domStable && ready) {
+        const images = Array.from(document.querySelectorAll("img"));
+        const imagesReady = images.every(
+          (img) => img.complete && img.naturalHeight > 0,
+        );
+
+        const animations = document.getAnimations();
+        const animationsSettled =
+          animations.length === 0 ||
+          animations.every(
+            (a) => a.playState === "finished" || a.playState === "idle",
+          );
+
+        const domStable = now - lastMutationTime > 500;
+
+        if (domStable && fontsReady && imagesReady && animationsSettled) {
           clearInterval(interval);
           observer.disconnect();
           resolve();
