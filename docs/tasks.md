@@ -21,8 +21,7 @@ See `docs/competitive-analysis.md` for full details.
 8. [ ] Print-mode CSS injection for PDFs — auto-convert horizontal carousels to wrapped layouts to fix missing images in Chrome print renderer
 
 ### Priority 3 (Nice to have before launch)
-9. [ ] Ad blocking via blocklist (similar to clean mode approach)
-10. [ ] Transparent background support for PNG screenshots
+9. [ ] Transparent background support for PNG screenshots
 
 ## Blocked — Waiting on Human
 - [ ] Configure hosting platform — human needed for account creation (Phase C)
@@ -71,6 +70,9 @@ See `docs/competitive-analysis.md` for full details.
 - [x] Persistent storage — SQLite for usage + batch jobs
 - [x] Deployment guide (Railway, Render, Fly.io)
 - [x] Competitive analysis document
+
+### Phase F: Competitive Parity (2026-03-22)
+- [x] Ad blocking via @ghostery/adblocker-puppeteer — block_ads=true (uBlock/EasyList compatible)
 
 ### Bug Fixes & Quality (2026-03-22)
 - [x] Fix TypeScript readonly property error in CI
