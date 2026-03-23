@@ -22,6 +22,7 @@ export interface ScreenshotOptions {
   headers?: Record<string, string>;
   cookies?: Array<{ name: string; value: string; domain?: string }>;
   userAgent?: string;
+  selector?: string;
 }
 
 export interface ScreenshotResult {
@@ -81,6 +82,7 @@ async function attemptScreenshot(
     headers,
     cookies,
     userAgent,
+    selector,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -152,12 +154,27 @@ async function attemptScreenshot(
         ? Math.min(Math.max(quality, 1), 100)
         : undefined;
 
-    const buffer = (await page.screenshot({
-      type: format,
-      fullPage,
-      encoding: "binary",
-      quality: effectiveQuality,
-    })) as Buffer;
+    let buffer: Buffer;
+
+    if (selector) {
+      // Element capture: screenshot a specific DOM element
+      const element = await page.$(selector);
+      if (!element) {
+        throw new Error(`Element not found for selector: ${selector}`);
+      }
+      buffer = (await element.screenshot({
+        type: format,
+        encoding: "binary",
+        quality: effectiveQuality,
+      })) as Buffer;
+    } else {
+      buffer = (await page.screenshot({
+        type: format,
+        fullPage,
+        encoding: "binary",
+        quality: effectiveQuality,
+      })) as Buffer;
+    }
 
     return {
       buffer,

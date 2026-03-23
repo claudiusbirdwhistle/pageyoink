@@ -17,6 +17,7 @@ interface ScreenshotQuery {
   css?: string;
   js?: string;
   user_agent?: string;
+  selector?: string;
 }
 
 const screenshotQuerySchema = {
@@ -38,6 +39,7 @@ const screenshotQuerySchema = {
     css: { type: "string" as const },
     js: { type: "string" as const },
     user_agent: { type: "string" as const },
+    selector: { type: "string" as const },
   },
 };
 
@@ -66,6 +68,7 @@ export async function screenshotRoute(app: FastifyInstance) {
         css,
         js,
         user_agent,
+        selector,
       } = request.query;
 
       // Validate URL
@@ -101,6 +104,7 @@ export async function screenshotRoute(app: FastifyInstance) {
           css: css || undefined,
           js: js || undefined,
           userAgent: user_agent || undefined,
+          selector: selector || undefined,
         });
 
         return reply
