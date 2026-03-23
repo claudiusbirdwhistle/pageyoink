@@ -40,6 +40,8 @@ export interface PdfUrlOptions {
   css?: string;
   js?: string;
   userAgent?: string;
+  scale?: number;
+  maxPages?: number;
   ttl?: number;
   fresh?: boolean;
   timeout?: number;
@@ -64,6 +66,8 @@ export interface PdfHtmlOptions {
   footerTemplate?: string;
   displayHeaderFooter?: boolean;
   pageRanges?: string;
+  scale?: number;
+  maxPages?: number;
   watermark?: {
     text: string;
     fontSize?: number;
@@ -199,6 +203,8 @@ export class PageYoink {
     if (options.css) params.set("css", options.css);
     if (options.js) params.set("js", options.js);
     if (options.userAgent) params.set("user_agent", options.userAgent);
+    if (options.scale) params.set("scale", String(options.scale));
+    if (options.maxPages) params.set("max_pages", String(options.maxPages));
     if (options.ttl) params.set("ttl", String(options.ttl));
     if (options.fresh) params.set("fresh", "true");
     if (options.timeout) params.set("timeout", String(options.timeout));

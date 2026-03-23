@@ -146,6 +146,8 @@ class PageYoink:
         css: str | None = None,
         js: str | None = None,
         user_agent: str | None = None,
+        scale: float | None = None,
+        max_pages: int | None = None,
         ttl: int | None = None,
         fresh: bool = False,
         timeout: int | None = None,
@@ -168,6 +170,10 @@ class PageYoink:
             params["js"] = js
         if user_agent:
             params["user_agent"] = user_agent
+        if scale is not None:
+            params["scale"] = scale
+        if max_pages is not None:
+            params["max_pages"] = max_pages
         if ttl is not None:
             params["ttl"] = ttl
         if fresh:
@@ -198,6 +204,8 @@ class PageYoink:
         header_template: str | None = None,
         footer_template: str | None = None,
         page_ranges: str | None = None,
+        scale: float | None = None,
+        max_pages: int | None = None,
         watermark: dict[str, Any] | None = None,
         geolocation: dict[str, float] | None = None,
         timezone: str | None = None,
@@ -239,6 +247,10 @@ class PageYoink:
             body["displayHeaderFooter"] = True
         if page_ranges:
             body["pageRanges"] = page_ranges
+        if scale is not None:
+            body["scale"] = scale
+        if max_pages is not None:
+            body["maxPages"] = max_pages
         if watermark:
             body["watermark"] = watermark
         if geolocation:

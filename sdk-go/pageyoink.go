@@ -152,6 +152,16 @@ func WithClean() PdfURLOption { return func(v url.Values) { v.Set("clean", "true
 // WithBlockAds sets the ad blocking mode ("true" or "stealth").
 func WithBlockAds(mode string) PdfURLOption { return func(v url.Values) { v.Set("block_ads", mode) } }
 
+// WithScale sets the PDF zoom/scale factor (0.1 to 2.0).
+func WithScale(s float64) PdfURLOption {
+	return func(v url.Values) { v.Set("scale", strconv.FormatFloat(s, 'f', -1, 64)) }
+}
+
+// WithMaxPages limits the output PDF to N pages.
+func WithMaxPages(n int) PdfURLOption {
+	return func(v url.Values) { v.Set("max_pages", strconv.Itoa(n)) }
+}
+
 // PDFRequest is the JSON body for POST /v1/pdf.
 type PDFRequest struct {
 	HTML                string            `json:"html,omitempty"`
@@ -174,6 +184,8 @@ type PDFRequest struct {
 	FooterTemplate      string            `json:"footerTemplate,omitempty"`
 	DisplayHeaderFooter bool              `json:"displayHeaderFooter,omitempty"`
 	PageRanges          string            `json:"pageRanges,omitempty"`
+	Scale               float64           `json:"scale,omitempty"`
+	MaxPages            int               `json:"maxPages,omitempty"`
 	Watermark           *WatermarkOptions `json:"watermark,omitempty"`
 	Geolocation         *Geolocation      `json:"geolocation,omitempty"`
 	Timezone            string            `json:"timezone,omitempty"`

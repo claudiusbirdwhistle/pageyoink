@@ -24,7 +24,7 @@
 15. [x] Update the "Clean" label to "Remove Overlays" with subtitle listing what gets removed
 
 ## Update SDKs
-16. [ ] Make sure that the SKDs accurately reflect the current state of the API
+16. [x] Update SDKs with scale and maxPages parameters (Node.js, Python, Go)
 
 ## Research and Ideate
 17. [ ] Research the competitive landscape of web to screenshot/PDF services. What features are we missing? Populate the Ice Box of this doc with feature requests. Document which sites you researched.
