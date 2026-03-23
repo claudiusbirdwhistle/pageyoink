@@ -7,7 +7,7 @@
 - **Deployed:** Yes — Google Cloud Run (us-east1)
 - **URL:** https://pageyoink-1085551159615.us-east1.run.app
 - **CI:** Cloud Build auto-deploy on push to main (trigger may need setup — check console)
-- **Health:** Running, 44 tests passing
+- **Health:** Running, 46 tests passing
 - **Paying customers:** 0
 - **Monthly revenue:** $0
 

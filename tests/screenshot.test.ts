@@ -151,6 +151,26 @@ describe("Screenshot endpoint", () => {
     expect(response.statusCode).toBe(200);
     expect(response.headers["content-type"]).toBe("image/png");
   }, 30_000);
+
+  it("supports timezone spoofing", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/v1/screenshot?url=https://example.com&timezone=Asia/Tokyo",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["content-type"]).toBe("image/png");
+  }, 30_000);
+
+  it("supports geolocation spoofing", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/v1/screenshot?url=https://example.com&geolocation=48.8566,2.3522",
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.headers["content-type"]).toBe("image/png");
+  }, 30_000);
 });
 
 describe("Trial endpoints", () => {

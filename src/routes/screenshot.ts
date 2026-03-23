@@ -26,6 +26,10 @@ interface ScreenshotQuery {
   fresh?: string;
   click?: string;
   click_count?: string;
+  fonts?: string;
+  proxy?: string;
+  geolocation?: string;
+  timezone?: string;
 }
 
 const screenshotQuerySchema = {
@@ -121,6 +125,22 @@ const screenshotQuerySchema = {
       type: "string" as const,
       description: "Number of times to click the element specified by 'click'. Max: 10. Each click waits 500ms for the page to update. Default: 1.",
     },
+    fonts: {
+      type: "string" as const,
+      description: "Comma-separated list of web font URLs (@import format) to load before capture. Example: https://fonts.googleapis.com/css2?family=Roboto",
+    },
+    proxy: {
+      type: "string" as const,
+      description: "Proxy server URL to route the request through. Format: http://host:port or http://user:pass@host:port. Launches an isolated browser instance.",
+    },
+    geolocation: {
+      type: "string" as const,
+      description: "Spoof browser geolocation. Format: latitude,longitude or latitude,longitude,accuracy. Example: 48.8566,2.3522 (Paris).",
+    },
+    timezone: {
+      type: "string" as const,
+      description: "Spoof browser timezone. IANA timezone ID. Example: America/New_York, Europe/London, Asia/Tokyo.",
+    },
   },
 };
 
@@ -175,6 +195,10 @@ export async function screenshotRoute(app: FastifyInstance) {
         fresh,
         click,
         click_count,
+        fonts,
+        proxy,
+        geolocation,
+        timezone,
       } = request.query;
 
       const validated = validateUrl(url);
@@ -205,6 +229,19 @@ export async function screenshotRoute(app: FastifyInstance) {
           transparentBg: transparent === "true",
           clickSelector: click || undefined,
           clickCount: click_count ? parseInt(click_count, 10) : undefined,
+          fonts: fonts ? fonts.split(",").map((f) => f.trim()) : undefined,
+          proxy: proxy || undefined,
+          geolocation: geolocation
+            ? (() => {
+                const parts = geolocation.split(",").map(Number);
+                return {
+                  latitude: parts[0],
+                  longitude: parts[1],
+                  accuracy: parts[2] || 100,
+                };
+              })()
+            : undefined,
+          timezone: timezone || undefined,
         };
 
         const cacheTtl = ttl ? parseInt(ttl, 10) : undefined;
