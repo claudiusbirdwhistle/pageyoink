@@ -15,8 +15,8 @@ export const authMiddleware = fp(async function authMiddleware(
   app.addHook(
     "onRequest",
     async (request: FastifyRequest, reply: FastifyReply) => {
-      // Skip auth for health endpoint
-      if (request.url.startsWith("/internal/")) {
+      // Skip auth for health and trial endpoints
+      if (request.url.startsWith("/internal/") || request.url.startsWith("/trial/")) {
         return;
       }
 

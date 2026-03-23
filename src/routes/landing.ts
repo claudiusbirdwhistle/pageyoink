@@ -79,6 +79,63 @@ const LANDING_HTML = `<!DOCTYPE html>
     </section>
 
     <section>
+      <h2>Try It Now</h2>
+      <p style="color: var(--muted); margin-bottom: 20px;">Enter a URL to capture. ${`${5}`} free captures per day — no API key needed.</p>
+      <div style="display:flex;gap:12px;margin-bottom:20px;">
+        <input type="text" id="trial-url" placeholder="https://example.com" value="https://example.com"
+          style="flex:1;padding:12px 16px;border-radius:8px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:16px;outline:none;">
+        <button onclick="trialCapture('screenshot')"
+          style="padding:12px 24px;border-radius:8px;border:none;background:var(--brand);color:white;font-weight:600;cursor:pointer;font-size:14px;white-space:nowrap;">Screenshot</button>
+        <button onclick="trialCapture('pdf')"
+          style="padding:12px 24px;border-radius:8px;border:none;background:#10b981;color:white;font-weight:600;cursor:pointer;font-size:14px;white-space:nowrap;">PDF</button>
+      </div>
+      <div id="trial-status" style="color:var(--muted);font-size:14px;margin-bottom:12px;"></div>
+      <div id="trial-result" style="display:none;background:var(--surface);border-radius:12px;border:1px solid #2a2a3e;padding:16px;text-align:center;">
+        <img id="trial-image" style="max-width:100%;border-radius:8px;display:none;">
+        <a id="trial-pdf-link" style="display:none;color:var(--brand);font-size:18px;font-weight:600;">Download PDF</a>
+      </div>
+    </section>
+    <script>
+      async function trialCapture(type) {
+        const url = document.getElementById('trial-url').value.trim();
+        if (!url) return;
+        const status = document.getElementById('trial-status');
+        const result = document.getElementById('trial-result');
+        const img = document.getElementById('trial-image');
+        const pdfLink = document.getElementById('trial-pdf-link');
+        status.textContent = 'Capturing... (this may take a few seconds)';
+        result.style.display = 'none';
+        img.style.display = 'none';
+        pdfLink.style.display = 'none';
+        try {
+          const resp = await fetch('/trial/' + type + '?url=' + encodeURIComponent(url));
+          const remaining = resp.headers.get('X-Trial-Remaining');
+          if (!resp.ok) {
+            const err = await resp.json();
+            status.textContent = err.error;
+            return;
+          }
+          const blob = await resp.blob();
+          const objUrl = URL.createObjectURL(blob);
+          result.style.display = 'block';
+          if (type === 'screenshot') {
+            img.src = objUrl;
+            img.style.display = 'block';
+            status.textContent = 'Screenshot captured.' + (remaining ? ' ' + remaining + ' free captures remaining today.' : '');
+          } else {
+            pdfLink.href = objUrl;
+            pdfLink.download = 'document.pdf';
+            pdfLink.textContent = 'Download PDF';
+            pdfLink.style.display = 'inline-block';
+            status.textContent = 'PDF generated.' + (remaining ? ' ' + remaining + ' free captures remaining today.' : '');
+          }
+        } catch(e) {
+          status.textContent = 'Error: ' + e.message;
+        }
+      }
+    </script>
+
+    <section>
       <h2>Endpoints</h2>
       <div class="endpoints">
         <div class="endpoint">

@@ -1,5 +1,5 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
-import { getDb } from "../services/database.js";
+import { getDb, isUsingFirestore, memQuery } from "../services/database.js";
 
 interface UsageQuery {
   days?: string;
@@ -36,13 +36,6 @@ export async function usageRoute(app: FastifyInstance) {
         .toISOString()
         .split("T")[0];
 
-      // Query usage records for this API key within the date range
-      const snapshot = await db
-        .collection("usage")
-        .where("apiKey", "==", apiKey)
-        .where("date", ">=", cutoffDate)
-        .get();
-
       const dailyUsage: Array<{
         date: string;
         endpoint: string;
@@ -51,19 +44,44 @@ export async function usageRoute(app: FastifyInstance) {
       const endpointTotals = new Map<string, number>();
       let totalRequests = 0;
 
-      snapshot.forEach((doc) => {
-        const data = doc.data();
-        dailyUsage.push({
-          date: data.date,
-          endpoint: data.endpoint,
-          requests: data.count || 0,
+      if (!isUsingFirestore()) {
+        const results = memQuery("usage", { apiKey });
+        for (const { data } of results) {
+          if ((data.date as string) >= cutoffDate) {
+            dailyUsage.push({
+              date: data.date as string,
+              endpoint: data.endpoint as string,
+              requests: (data.count as number) || 0,
+            });
+            endpointTotals.set(
+              data.endpoint as string,
+              (endpointTotals.get(data.endpoint as string) || 0) + ((data.count as number) || 0),
+            );
+            totalRequests += (data.count as number) || 0;
+          }
+        }
+      } else {
+        const db = getDb();
+        const snapshot = await db
+          .collection("usage")
+          .where("apiKey", "==", apiKey)
+          .where("date", ">=", cutoffDate)
+          .get();
+
+        snapshot.forEach((doc) => {
+          const data = doc.data();
+          dailyUsage.push({
+            date: data.date,
+            endpoint: data.endpoint,
+            requests: data.count || 0,
+          });
+          endpointTotals.set(
+            data.endpoint,
+            (endpointTotals.get(data.endpoint) || 0) + (data.count || 0),
+          );
+          totalRequests += data.count || 0;
         });
-        endpointTotals.set(
-          data.endpoint,
-          (endpointTotals.get(data.endpoint) || 0) + (data.count || 0),
-        );
-        totalRequests += data.count || 0;
-      });
+      }
 
       // Sort daily by date descending
       dailyUsage.sort((a, b) => b.date.localeCompare(a.date));

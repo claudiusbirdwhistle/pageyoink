@@ -10,6 +10,7 @@ import { batchRoute } from "./routes/batch.js";
 import { landingRoute } from "./routes/landing.js";
 import { usageRoute } from "./routes/usage.js";
 import { diffRoute } from "./routes/diff.js";
+import { trialRoute } from "./routes/trial.js";
 import { authMiddleware } from "./middleware/auth.js";
 
 export async function buildApp() {
@@ -64,6 +65,7 @@ export async function buildApp() {
   });
 
   await app.register(authMiddleware);
+  await app.register(trialRoute);
   await app.register(healthRoute);
   await app.register(screenshotRoute);
   await app.register(pdfRoute);

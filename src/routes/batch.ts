@@ -1,7 +1,12 @@
 import { FastifyInstance } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { generatePdf } from "../services/pdf.js";
-import { getDb } from "../services/database.js";
+import {
+  getDb,
+  isUsingFirestore,
+  memSet,
+  memGet,
+} from "../services/database.js";
 import crypto from "crypto";
 
 interface BatchItem {
@@ -32,29 +37,43 @@ interface BatchResultItem {
 
 const MAX_BATCH_SIZE = 50;
 
-// --- Firestore-backed job storage ---
+// --- Job storage (Firestore in production, in-memory in tests) ---
 
 async function createJob(id: string, total: number): Promise<void> {
-  const db = getDb();
-  await db.collection("batch_jobs").doc(id).set({
+  const data = {
     status: "processing",
     createdAt: new Date().toISOString(),
     completedAt: null,
     total,
     completed: 0,
     results: [],
-  });
+  };
+
+  if (!isUsingFirestore()) {
+    memSet("batch_jobs", id, data);
+    return;
+  }
+
+  const db = getDb();
+  await db.collection("batch_jobs").doc(id).set(data);
 }
 
 async function getJob(id: string) {
-  const db = getDb();
-  const doc = await db.collection("batch_jobs").doc(id).get();
+  let data: Record<string, unknown> | null;
 
-  if (!doc.exists) return null;
+  if (!isUsingFirestore()) {
+    data = memGet("batch_jobs", id);
+  } else {
+    const db = getDb();
+    const doc = await db.collection("batch_jobs").doc(id).get();
+    if (!doc.exists) return null;
+    data = doc.data() as Record<string, unknown>;
+  }
 
-  const data = doc.data()!;
+  if (!data) return null;
+
   return {
-    id: doc.id,
+    id,
     status: data.status as string,
     createdAt: data.createdAt as string,
     completedAt: data.completedAt as string | null,
@@ -69,6 +88,10 @@ async function updateJobProgress(
   completed: number,
   results: BatchResultItem[],
 ): Promise<void> {
+  if (!isUsingFirestore()) {
+    memSet("batch_jobs", id, { completed, results });
+    return;
+  }
   const db = getDb();
   await db.collection("batch_jobs").doc(id).update({ completed, results });
 }
@@ -79,13 +102,19 @@ async function completeJob(
   results: BatchResultItem[],
   completed: number,
 ): Promise<void> {
-  const db = getDb();
-  await db.collection("batch_jobs").doc(id).update({
+  const update = {
     status,
     completedAt: new Date().toISOString(),
     completed,
     results,
-  });
+  };
+
+  if (!isUsingFirestore()) {
+    memSet("batch_jobs", id, update);
+    return;
+  }
+  const db = getDb();
+  await db.collection("batch_jobs").doc(id).update(update);
 }
 
 // --- Route ---
