@@ -81,9 +81,29 @@ const LANDING_HTML = `<!DOCTYPE html>
     <section>
       <h2>Try It Now</h2>
       <p style="color: var(--muted); margin-bottom: 20px;">Enter a URL to capture. ${`${5}`} free captures per day — no API key needed.</p>
-      <div style="display:flex;gap:12px;margin-bottom:20px;">
-        <input type="text" id="trial-url" placeholder="https://example.com" value="https://example.com"
+      <div style="display:flex;gap:12px;margin-bottom:12px;">
+        <input type="text" id="trial-url" placeholder="https://example.com" value="https://www.bbc.com"
           style="flex:1;padding:12px 16px;border-radius:8px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:16px;outline:none;">
+      </div>
+      <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
+        <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;">
+          <input type="checkbox" id="trial-clean" checked style="accent-color:var(--brand);width:16px;height:16px;">
+          Clean <span style="color:#555;font-size:12px;">(remove popups)</span>
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;">
+          <input type="checkbox" id="trial-smart-wait" style="accent-color:var(--brand);width:16px;height:16px;">
+          Smart Wait <span style="color:#555;font-size:12px;">(wait for JS)</span>
+        </label>
+        <div style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;">
+          <span>Ad Block:</span>
+          <select id="trial-adblock" style="padding:4px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:13px;">
+            <option value="">Off</option>
+            <option value="true">On (network)</option>
+            <option value="stealth">Stealth (undetectable)</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:flex;gap:12px;margin-bottom:20px;">
         <button onclick="trialCapture('screenshot')"
           style="padding:12px 24px;border-radius:8px;border:none;background:var(--brand);color:white;font-weight:600;cursor:pointer;font-size:14px;white-space:nowrap;">Screenshot</button>
         <button onclick="trialCapture('pdf')"
@@ -99,6 +119,9 @@ const LANDING_HTML = `<!DOCTYPE html>
       async function trialCapture(type) {
         const url = document.getElementById('trial-url').value.trim();
         if (!url) return;
+        const clean = document.getElementById('trial-clean').checked;
+        const smartWait = document.getElementById('trial-smart-wait').checked;
+        const adblock = document.getElementById('trial-adblock').value;
         const status = document.getElementById('trial-status');
         const result = document.getElementById('trial-result');
         const img = document.getElementById('trial-image');
@@ -107,8 +130,13 @@ const LANDING_HTML = `<!DOCTYPE html>
         result.style.display = 'none';
         img.style.display = 'none';
         pdfLink.style.display = 'none';
+        const fullUrl = url.match(/^https?:\\/\\//) ? url : 'https://' + url;
+        let params = 'url=' + encodeURIComponent(fullUrl);
+        if (clean) params += '&clean=true';
+        if (smartWait) params += '&smart_wait=true';
+        if (adblock) params += '&block_ads=' + adblock;
         try {
-          const resp = await fetch('/trial/' + type + '?url=' + encodeURIComponent(url));
+          const resp = await fetch('/trial/' + type + '?' + params);
           const remaining = resp.headers.get('X-Trial-Remaining');
           if (!resp.ok) {
             const err = await resp.json();

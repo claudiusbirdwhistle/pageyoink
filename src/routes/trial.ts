@@ -1,6 +1,7 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { generatePdf } from "../services/pdf.js";
+import { validateUrl } from "../utils/url.js";
 
 // IP-based rate limiting for trial usage
 const trialUsage = new Map<string, { count: number; date: string }>();
@@ -47,7 +48,17 @@ export async function trialRoute(app: FastifyInstance) {
         },
       },
     },
-    async (request: FastifyRequest<{ Querystring: { url: string } }>, reply) => {
+    async (
+      request: FastifyRequest<{
+        Querystring: {
+          url: string;
+          clean?: string;
+          smart_wait?: string;
+          block_ads?: string;
+        };
+      }>,
+      reply,
+    ) => {
       const ip = request.ip;
 
       if (!checkTrialLimit(ip)) {
@@ -57,17 +68,13 @@ export async function trialRoute(app: FastifyInstance) {
         });
       }
 
-      const { url } = request.query;
+      const { url: rawUrl, clean, smart_wait, block_ads } = request.query;
 
-      // Validate URL
-      try {
-        const parsed = new URL(url);
-        if (!["http:", "https:"].includes(parsed.protocol)) {
-          return reply.status(400).send({ error: "Only http/https URLs are supported." });
-        }
-      } catch {
-        return reply.status(400).send({ error: "Invalid URL." });
+      const validated = validateUrl(rawUrl);
+      if ("error" in validated) {
+        return reply.status(400).send({ error: validated.error });
       }
+      const url = validated.url;
 
       try {
         const result = await takeScreenshot({
@@ -75,7 +82,13 @@ export async function trialRoute(app: FastifyInstance) {
           format: "png",
           width: 1280,
           height: 720,
-          clean: true,
+          clean: clean === "true",
+          smartWait: smart_wait === "true",
+          blockAds: block_ads === "true"
+            ? true
+            : block_ads === "stealth"
+              ? ("stealth" as const)
+              : false,
           timeout: 30000,
         });
 
@@ -106,7 +119,17 @@ export async function trialRoute(app: FastifyInstance) {
         },
       },
     },
-    async (request: FastifyRequest<{ Querystring: { url: string } }>, reply) => {
+    async (
+      request: FastifyRequest<{
+        Querystring: {
+          url: string;
+          clean?: string;
+          smart_wait?: string;
+          block_ads?: string;
+        };
+      }>,
+      reply,
+    ) => {
       const ip = request.ip;
 
       if (!checkTrialLimit(ip)) {
@@ -116,7 +139,7 @@ export async function trialRoute(app: FastifyInstance) {
         });
       }
 
-      const { url } = request.query;
+      const { url, clean, smart_wait, block_ads } = request.query;
 
       try {
         const parsed = new URL(url);
@@ -131,7 +154,13 @@ export async function trialRoute(app: FastifyInstance) {
         const result = await generatePdf({
           url,
           format: "A4",
-          clean: true,
+          clean: clean === "true",
+          smartWait: smart_wait === "true",
+          blockAds: block_ads === "true"
+            ? true
+            : block_ads === "stealth"
+              ? ("stealth" as const)
+              : false,
           timeout: 30000,
         });
 

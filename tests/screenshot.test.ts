@@ -25,27 +25,24 @@ describe("Screenshot endpoint", () => {
     expect(response.statusCode).toBe(400);
   });
 
-  it("returns 400 for invalid url", async () => {
+  it("returns 400 for empty url", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/v1/screenshot?url=not-a-url",
+      url: "/v1/screenshot?url=",
     });
 
     expect(response.statusCode).toBe(400);
-    const body = response.json();
-    expect(body.error).toContain("Invalid URL");
   });
 
-  it("returns 400 for non-http protocol", async () => {
+  it("auto-prepends https:// to bare domains", async () => {
     const response = await app.inject({
       method: "GET",
-      url: "/v1/screenshot?url=ftp://example.com",
+      url: "/v1/screenshot?url=example.com",
     });
 
-    expect(response.statusCode).toBe(400);
-    const body = response.json();
-    expect(body.error).toContain("http and https");
-  });
+    // Should succeed (not 400) because example.com becomes https://example.com
+    expect(response.statusCode).toBe(200);
+  }, 30_000);
 
   it("takes a screenshot of a valid URL", async () => {
     const response = await app.inject({

@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { generatePdf } from "../services/pdf.js";
 import { cacheGet, cacheSet } from "../services/cache.js";
 import { addWatermark, WatermarkOptions } from "../services/watermark.js";
+import { validateUrl } from "../utils/url.js";
 
 interface PdfQuery {
   url?: string;
@@ -172,23 +173,15 @@ export async function pdfRoute(app: FastifyInstance) {
         fresh,
       } = request.query;
 
-      try {
-        const parsed = new URL(url!);
-        if (!["http:", "https:"].includes(parsed.protocol)) {
-          return reply.status(400).send({
-            error: "Invalid URL: only http and https protocols are supported",
-          });
-        }
-      } catch {
-        return reply
-          .status(400)
-          .send({ error: "Invalid URL: must be a valid URL" });
+      const validated = validateUrl(url!);
+      if ("error" in validated) {
+        return reply.status(400).send({ error: validated.error });
       }
 
       try {
         const captureParams = {
           type: "pdf" as const,
-          url,
+          url: validated.url,
           format: format || "A4",
           landscape: landscape === "true",
           printBackground: print_background !== "false",

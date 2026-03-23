@@ -20,7 +20,7 @@ describe("API Key Authentication", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: "/v1/screenshot?url=invalid",
+      url: "/v1/screenshot?url=",
     });
 
     // Should get past auth (400 is from URL validation, not auth)
@@ -68,7 +68,7 @@ describe("API Key Authentication", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: "/v1/screenshot?url=invalid-url",
+      url: "/v1/screenshot?url=",
       headers: { "x-api-key": "test-key-123" },
     });
 
@@ -84,7 +84,7 @@ describe("API Key Authentication", () => {
 
     const response = await app.inject({
       method: "GET",
-      url: "/v1/screenshot?url=invalid-url&api_key=test-key-123",
+      url: "/v1/screenshot?url=&api_key=test-key-123",
     });
 
     // Gets past auth, fails on URL validation

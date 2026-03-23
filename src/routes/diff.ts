@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { compareImages } from "../services/diff.js";
+import { validateUrl } from "../utils/url.js";
 
 interface DiffBody {
   url1: string;
@@ -55,27 +56,16 @@ export async function diffRoute(app: FastifyInstance) {
         format = "json",
       } = request.body;
 
-      // Validate URLs
-      for (const url of [url1, url2]) {
-        try {
-          const parsed = new URL(url);
-          if (!["http:", "https:"].includes(parsed.protocol)) {
-            return reply.status(400).send({
-              error: `Invalid URL: ${url}`,
-            });
-          }
-        } catch {
-          return reply.status(400).send({
-            error: `Invalid URL: ${url}`,
-          });
-        }
-      }
+      const n1 = validateUrl(url1);
+      const n2 = validateUrl(url2);
+      if ("error" in n1) return reply.status(400).send({ error: n1.error });
+      if ("error" in n2) return reply.status(400).send({ error: n2.error });
 
       try {
         // Capture both screenshots as PNG
         const [img1, img2] = await Promise.all([
           takeScreenshot({
-            url: url1,
+            url: n1.url!,
             format: "png",
             width,
             height,
@@ -84,7 +74,7 @@ export async function diffRoute(app: FastifyInstance) {
             blockAds,
           }),
           takeScreenshot({
-            url: url2,
+            url: n2.url!,
             format: "png",
             width,
             height,

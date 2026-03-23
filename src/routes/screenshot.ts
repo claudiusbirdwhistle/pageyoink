@@ -1,6 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { cacheGet, cacheSet } from "../services/cache.js";
+import { validateUrl } from "../utils/url.js";
 
 interface ScreenshotQuery {
   url: string;
@@ -176,23 +177,14 @@ export async function screenshotRoute(app: FastifyInstance) {
         click_count,
       } = request.query;
 
-      // Validate URL
-      try {
-        const parsed = new URL(url);
-        if (!["http:", "https:"].includes(parsed.protocol)) {
-          return reply.status(400).send({
-            error: "Invalid URL: only http and https protocols are supported",
-          });
-        }
-      } catch {
-        return reply
-          .status(400)
-          .send({ error: "Invalid URL: must be a valid URL" });
+      const validated = validateUrl(url);
+      if ("error" in validated) {
+        return reply.status(400).send({ error: validated.error });
       }
 
       try {
         const captureParams = {
-          url,
+          url: validated.url,
           format: format || "png",
           quality: quality ? parseInt(quality, 10) : undefined,
           fullPage: full_page === "true",

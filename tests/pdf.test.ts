@@ -26,10 +26,10 @@ describe("PDF endpoint", () => {
       expect(response.statusCode).toBe(400);
     });
 
-    it("returns 400 for invalid url", async () => {
+    it("returns 400 for empty url", async () => {
       const response = await app.inject({
         method: "GET",
-        url: "/v1/pdf?url=not-a-url",
+        url: "/v1/pdf?url=",
       });
 
       expect(response.statusCode).toBe(400);
