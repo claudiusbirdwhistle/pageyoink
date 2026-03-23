@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { generatePdf } from "../services/pdf.js";
+import { cacheGet, cacheSet } from "../services/cache.js";
 
 interface PdfQuery {
   url?: string;
@@ -18,6 +19,8 @@ interface PdfQuery {
   css?: string;
   js?: string;
   user_agent?: string;
+  ttl?: string;
+  fresh?: string;
 }
 
 interface PdfBody {
@@ -69,6 +72,8 @@ export async function pdfRoute(app: FastifyInstance) {
             css: { type: "string" },
             js: { type: "string" },
             user_agent: { type: "string" },
+            ttl: { type: "string" },
+            fresh: { type: "string" },
           },
         },
       },
@@ -87,6 +92,8 @@ export async function pdfRoute(app: FastifyInstance) {
         css,
         js,
         user_agent,
+        ttl,
+        fresh,
       } = request.query;
 
       // Validate URL
@@ -104,13 +111,13 @@ export async function pdfRoute(app: FastifyInstance) {
       }
 
       try {
-        const result = await generatePdf({
+        const captureParams = {
+          type: "pdf" as const,
           url,
           format: format || "A4",
           landscape: landscape === "true",
           printBackground: print_background !== "false",
           margin: buildMargin(request.query),
-          timeout: timeout ? parseInt(timeout, 10) : undefined,
           clean: clean === "true",
           smartWait: smart_wait === "true",
           maxScroll: max_scroll ? parseInt(max_scroll, 10) : undefined,
@@ -118,10 +125,32 @@ export async function pdfRoute(app: FastifyInstance) {
           css: css || undefined,
           js: js || undefined,
           userAgent: user_agent || undefined,
+        };
+
+        const cacheTtl = ttl ? parseInt(ttl, 10) : undefined;
+        const bypassCache = fresh === "true";
+
+        if (!bypassCache) {
+          const cached = cacheGet(captureParams);
+          if (cached) {
+            return reply
+              .header("Content-Type", "application/pdf")
+              .header("X-Cache", "HIT")
+              .header("Content-Disposition", 'inline; filename="document.pdf"')
+              .send(cached.buffer);
+          }
+        }
+
+        const result = await generatePdf({
+          ...captureParams,
+          timeout: timeout ? parseInt(timeout, 10) : undefined,
         });
+
+        cacheSet(captureParams, result.buffer, "application/pdf", cacheTtl);
 
         return reply
           .header("Content-Type", "application/pdf")
+          .header("X-Cache", "MISS")
           .header("Content-Disposition", 'inline; filename="document.pdf"')
           .send(result.buffer);
       } catch (err) {

@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
+import { cacheGet, cacheSet } from "../services/cache.js";
 
 interface ScreenshotQuery {
   url: string;
@@ -19,6 +20,8 @@ interface ScreenshotQuery {
   user_agent?: string;
   selector?: string;
   transparent?: string;
+  ttl?: string;
+  fresh?: string;
 }
 
 const screenshotQuerySchema = {
@@ -42,6 +45,8 @@ const screenshotQuerySchema = {
     user_agent: { type: "string" as const },
     selector: { type: "string" as const },
     transparent: { type: "string" as const },
+    ttl: { type: "string" as const },
+    fresh: { type: "string" as const },
   },
 };
 
@@ -72,6 +77,8 @@ export async function screenshotRoute(app: FastifyInstance) {
         user_agent,
         selector,
         transparent,
+        ttl,
+        fresh,
       } = request.query;
 
       // Validate URL
@@ -89,7 +96,7 @@ export async function screenshotRoute(app: FastifyInstance) {
       }
 
       try {
-        const result = await takeScreenshot({
+        const captureParams = {
           url,
           format: format || "png",
           quality: quality ? parseInt(quality, 10) : undefined,
@@ -99,7 +106,6 @@ export async function screenshotRoute(app: FastifyInstance) {
           deviceScaleFactor: device_scale_factor
             ? parseFloat(device_scale_factor)
             : undefined,
-          timeout: timeout ? parseInt(timeout, 10) : undefined,
           clean: clean === "true",
           smartWait: smart_wait === "true",
           maxScroll: max_scroll ? parseInt(max_scroll, 10) : undefined,
@@ -109,10 +115,37 @@ export async function screenshotRoute(app: FastifyInstance) {
           userAgent: user_agent || undefined,
           selector: selector || undefined,
           transparentBg: transparent === "true",
+        };
+
+        const cacheTtl = ttl ? parseInt(ttl, 10) : undefined;
+        const bypassCache = fresh === "true";
+
+        // Check cache (unless fresh=true)
+        if (!bypassCache) {
+          const cached = cacheGet(captureParams);
+          if (cached) {
+            return reply
+              .header("Content-Type", cached.contentType)
+              .header("X-Cache", "HIT")
+              .header(
+                "Content-Disposition",
+                `inline; filename="screenshot.${format || "png"}"`,
+              )
+              .send(cached.buffer);
+          }
+        }
+
+        const result = await takeScreenshot({
+          ...captureParams,
+          timeout: timeout ? parseInt(timeout, 10) : undefined,
         });
+
+        // Store in cache
+        cacheSet(captureParams, result.buffer, result.contentType, cacheTtl);
 
         return reply
           .header("Content-Type", result.contentType)
+          .header("X-Cache", "MISS")
           .header(
             "Content-Disposition",
             `inline; filename="screenshot.${format || "png"}"`,
