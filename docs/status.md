@@ -68,11 +68,10 @@ displayHeaderFooter, pageRanges, watermark, landscape, margin, printBackground
 
 ## What's NOT Done Yet
 
-### Next Priority: API Enhancements + SDK Updates
-See `docs/tasks.md` — remaining tasks include:
-- Add zoom (scale) and max_pages parameters to PDF API
-- Update SDKs to reflect current API surface
-- Research competitive landscape and pricing
+### All Active Tasks Complete
+All 18 tasks from docs/tasks.md are done. Remaining work is in the Ice Box (requires human review):
+- WebP output, video capture, CDN caching, anti-bot stealth, AI extraction, MCP server, PDF encryption
+- See docs/competitive-analysis.md for full landscape analysis
 - Add zoom and max_pages to API
 
 ### Blocked on Human

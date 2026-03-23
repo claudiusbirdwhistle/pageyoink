@@ -27,7 +27,14 @@
 16. [x] Update SDKs with scale and maxPages parameters (Node.js, Python, Go)
 
 ## Research and Ideate
-17. [ ] Research the competitive landscape of web to screenshot/PDF services. What features are we missing? Populate the Ice Box of this doc with feature requests. Document which sites you researched.
-18. [ ] Research the pricing of the comparison sites in task 17. How should we price our product?
+17. [x] Research competitive landscape — analyzed 13 competitors, updated docs/competitive-analysis.md
+18. [x] Research pricing — PageYoink offers most requests/dollar at $29/$79 tiers; pricing is competitive
 
 ## Ice Box -- Do not do these. Ice box tasks are for human review.
+- [ ] WebP output format (easy — Puppeteer supports natively, 25-34% smaller than PNG)
+- [ ] Video capture (MP4/GIF scrolling — complex, competitors charge premium for this)
+- [ ] CDN-based caching (Cloudflare/similar — survives scale-to-zero, currently in-memory only)
+- [ ] Anti-bot stealth mode (puppeteer-extra stealth plugin — needed for Cloudflare-protected sites)
+- [ ] AI content extraction (emerging differentiator — CaptureKit is only competitor with this)
+- [ ] MCP server integration (developer tool integration — PageBolt has this)
+- [ ] PDF encryption (needs native qpdf binary)
