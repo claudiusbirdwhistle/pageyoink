@@ -32,64 +32,60 @@ interface BatchResultItem {
 
 const MAX_BATCH_SIZE = 50;
 
-// --- SQLite-backed job storage ---
+// --- Firestore-backed job storage ---
 
-function createJob(id: string, total: number): void {
+async function createJob(id: string, total: number): Promise<void> {
   const db = getDb();
-  db.prepare(
-    `INSERT INTO batch_jobs (id, status, created_at, total, completed, results)
-     VALUES (?, 'processing', ?, ?, 0, '[]')`,
-  ).run(id, new Date().toISOString(), total);
+  await db.collection("batch_jobs").doc(id).set({
+    status: "processing",
+    createdAt: new Date().toISOString(),
+    completedAt: null,
+    total,
+    completed: 0,
+    results: [],
+  });
 }
 
-function getJob(id: string) {
+async function getJob(id: string) {
   const db = getDb();
-  const row = db.prepare("SELECT * FROM batch_jobs WHERE id = ?").get(id) as
-    | {
-        id: string;
-        status: string;
-        created_at: string;
-        completed_at: string | null;
-        total: number;
-        completed: number;
-        results: string;
-      }
-    | undefined;
+  const doc = await db.collection("batch_jobs").doc(id).get();
 
-  if (!row) return null;
+  if (!doc.exists) return null;
 
+  const data = doc.data()!;
   return {
-    id: row.id,
-    status: row.status,
-    createdAt: row.created_at,
-    completedAt: row.completed_at,
-    total: row.total,
-    completed: row.completed,
-    results: JSON.parse(row.results) as BatchResultItem[],
+    id: doc.id,
+    status: data.status as string,
+    createdAt: data.createdAt as string,
+    completedAt: data.completedAt as string | null,
+    total: data.total as number,
+    completed: data.completed as number,
+    results: data.results as BatchResultItem[],
   };
 }
 
-function updateJobProgress(
+async function updateJobProgress(
   id: string,
   completed: number,
   results: BatchResultItem[],
-): void {
+): Promise<void> {
   const db = getDb();
-  db.prepare(
-    "UPDATE batch_jobs SET completed = ?, results = ? WHERE id = ?",
-  ).run(completed, JSON.stringify(results), id);
+  await db.collection("batch_jobs").doc(id).update({ completed, results });
 }
 
-function completeJob(
+async function completeJob(
   id: string,
   status: "complete" | "failed",
   results: BatchResultItem[],
   completed: number,
-): void {
+): Promise<void> {
   const db = getDb();
-  db.prepare(
-    "UPDATE batch_jobs SET status = ?, completed_at = ?, completed = ?, results = ? WHERE id = ?",
-  ).run(status, new Date().toISOString(), completed, JSON.stringify(results), id);
+  await db.collection("batch_jobs").doc(id).update({
+    status,
+    completedAt: new Date().toISOString(),
+    completed,
+    results,
+  });
 }
 
 // --- Route ---
@@ -172,12 +168,12 @@ export async function batchRoute(app: FastifyInstance) {
       }
 
       const jobId = crypto.randomUUID();
-      createJob(jobId, items.length);
+      await createJob(jobId, items.length);
 
       // Process in background
-      processBatch(jobId, items, webhook, request.log).catch((err) => {
+      processBatch(jobId, items, webhook, request.log).catch(async (err) => {
         request.log.error({ err, jobId }, "Batch processing failed");
-        completeJob(jobId, "failed", [], 0);
+        await completeJob(jobId, "failed", [], 0);
       });
 
       return reply.status(202).send({
@@ -194,7 +190,7 @@ export async function batchRoute(app: FastifyInstance) {
     "/v1/batch/:jobId",
     async (request, reply) => {
       const { jobId } = request.params;
-      const job = getJob(jobId);
+      const job = await getJob(jobId);
 
       if (!job) {
         return reply.status(404).send({ error: "Job not found" });
@@ -261,10 +257,10 @@ async function processBatch(
 
     results.push(resultItem);
     completed++;
-    updateJobProgress(jobId, completed, results);
+    await updateJobProgress(jobId, completed, results);
   }
 
-  completeJob(jobId, "complete", results, completed);
+  await completeJob(jobId, "complete", results, completed);
 
   // Fire webhook if configured
   if (webhook) {

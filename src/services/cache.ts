@@ -1,21 +1,19 @@
-import crypto from "crypto";
-import fs from "fs";
-import path from "path";
-
-const CACHE_DIR =
-  process.env.CACHE_DIR || path.join(process.cwd(), "data", "cache");
 const DEFAULT_TTL = 86400; // 24 hours in seconds
+const MAX_CACHE_SIZE = 500; // Max entries to prevent memory bloat
 
 interface CacheEntry {
+  buffer: Buffer;
   contentType: string;
   createdAt: number;
   ttl: number;
 }
 
-/**
- * Generate a cache key from request parameters.
- * The key is a SHA-256 hash of the sorted, stringified params.
- */
+// In-memory cache — persists within a single container instance.
+// On Cloud Run, this survives across requests to the same instance
+// but is lost on scale-to-zero. This is acceptable — cache is an
+// optimization, not a requirement.
+const cache = new Map<string, CacheEntry>();
+
 function cacheKey(params: Record<string, unknown>): string {
   const sorted = Object.keys(params)
     .sort()
@@ -29,104 +27,72 @@ function cacheKey(params: Record<string, unknown>): string {
       {} as Record<string, unknown>,
     );
 
-  return crypto.createHash("sha256").update(JSON.stringify(sorted)).digest("hex");
-}
-
-function ensureCacheDir(): void {
-  if (!fs.existsSync(CACHE_DIR)) {
-    fs.mkdirSync(CACHE_DIR, { recursive: true });
+  // Simple hash — no need for crypto in memory cache
+  const str = JSON.stringify(sorted);
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    const char = str.charCodeAt(i);
+    hash = (hash << 5) - hash + char;
+    hash |= 0;
   }
+  return String(hash);
 }
 
-function dataPath(key: string): string {
-  return path.join(CACHE_DIR, `${key}.data`);
-}
-
-function metaPath(key: string): string {
-  return path.join(CACHE_DIR, `${key}.json`);
-}
-
-/**
- * Get a cached result if it exists and hasn't expired.
- */
 export function cacheGet(
   params: Record<string, unknown>,
 ): { buffer: Buffer; contentType: string } | null {
   const key = cacheKey(params);
-  const meta = metaPath(key);
-  const data = dataPath(key);
+  const entry = cache.get(key);
 
-  if (!fs.existsSync(meta) || !fs.existsSync(data)) {
+  if (!entry) return null;
+
+  const age = (Date.now() - entry.createdAt) / 1000;
+  if (age > entry.ttl) {
+    cache.delete(key);
     return null;
   }
 
-  try {
-    const entry: CacheEntry = JSON.parse(fs.readFileSync(meta, "utf-8"));
-    const age = (Date.now() - entry.createdAt) / 1000;
-
-    if (age > entry.ttl) {
-      // Expired — clean up
-      fs.unlinkSync(meta);
-      fs.unlinkSync(data);
-      return null;
-    }
-
-    return {
-      buffer: fs.readFileSync(data),
-      contentType: entry.contentType,
-    };
-  } catch {
-    return null;
-  }
+  return {
+    buffer: entry.buffer,
+    contentType: entry.contentType,
+  };
 }
 
-/**
- * Store a result in the cache.
- */
 export function cacheSet(
   params: Record<string, unknown>,
   buffer: Buffer,
   contentType: string,
   ttl: number = DEFAULT_TTL,
 ): void {
-  ensureCacheDir();
+  // Evict oldest entries if cache is full
+  if (cache.size >= MAX_CACHE_SIZE) {
+    let oldestKey: string | null = null;
+    let oldestTime = Infinity;
+    for (const [k, v] of cache.entries()) {
+      if (v.createdAt < oldestTime) {
+        oldestTime = v.createdAt;
+        oldestKey = k;
+      }
+    }
+    if (oldestKey) cache.delete(oldestKey);
+  }
 
-  const key = cacheKey(params);
-  const entry: CacheEntry = {
+  cache.set(cacheKey(params), {
+    buffer,
     contentType,
     createdAt: Date.now(),
     ttl,
-  };
-
-  fs.writeFileSync(dataPath(key), buffer);
-  fs.writeFileSync(metaPath(key), JSON.stringify(entry));
+  });
 }
 
-/**
- * Clean up all expired cache entries.
- */
 export function cacheCleanup(): number {
-  if (!fs.existsSync(CACHE_DIR)) return 0;
-
   let cleaned = 0;
-  const files = fs.readdirSync(CACHE_DIR).filter((f) => f.endsWith(".json"));
-
-  for (const file of files) {
-    try {
-      const metaFile = path.join(CACHE_DIR, file);
-      const entry: CacheEntry = JSON.parse(fs.readFileSync(metaFile, "utf-8"));
-      const age = (Date.now() - entry.createdAt) / 1000;
-
-      if (age > entry.ttl) {
-        const dataFile = metaFile.replace(".json", ".data");
-        if (fs.existsSync(metaFile)) fs.unlinkSync(metaFile);
-        if (fs.existsSync(dataFile)) fs.unlinkSync(dataFile);
-        cleaned++;
-      }
-    } catch {
-      // Corrupted entry, skip
+  const now = Date.now();
+  for (const [key, entry] of cache.entries()) {
+    if ((now - entry.createdAt) / 1000 > entry.ttl) {
+      cache.delete(key);
+      cleaned++;
     }
   }
-
   return cleaned;
 }

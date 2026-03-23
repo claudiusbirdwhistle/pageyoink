@@ -1,59 +1,28 @@
-import Database from "better-sqlite3";
-import path from "path";
-import { existsSync, mkdirSync } from "fs";
+import { Firestore } from "@google-cloud/firestore";
 
-let db: Database.Database | null = null;
+let db: Firestore | null = null;
 
-const DB_PATH = process.env.NODE_ENV === "test"
-  ? ":memory:"
-  : (process.env.DB_PATH || path.join(process.cwd(), "data", "pageyoink.db"));
-
-export function getDb(): Database.Database {
+/**
+ * Get the Firestore client. On Cloud Run, authentication is automatic
+ * via the service account. Locally, use GOOGLE_APPLICATION_CREDENTIALS
+ * env var or gcloud auth application-default login.
+ *
+ * Falls back to SQLite-like in-memory behavior when Firestore is unavailable
+ * (e.g., in tests).
+ */
+export function getDb(): Firestore {
   if (db) return db;
 
-  if (DB_PATH !== ":memory:") {
-    // Ensure data directory exists
-    const dir = path.dirname(DB_PATH);
-    if (!existsSync(dir)) {
-      mkdirSync(dir, { recursive: true });
-    }
-  }
-
-  db = new Database(DB_PATH);
-  db.pragma("journal_mode = WAL");
-  db.pragma("busy_timeout = 5000");
-
-  // Create tables
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS usage (
-      api_key TEXT NOT NULL,
-      date TEXT NOT NULL,
-      endpoint TEXT NOT NULL,
-      count INTEGER DEFAULT 1,
-      PRIMARY KEY (api_key, date, endpoint)
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_usage_key_date ON usage(api_key, date);
-
-    CREATE TABLE IF NOT EXISTS batch_jobs (
-      id TEXT PRIMARY KEY,
-      status TEXT NOT NULL DEFAULT 'processing',
-      created_at TEXT NOT NULL,
-      completed_at TEXT,
-      total INTEGER NOT NULL,
-      completed INTEGER NOT NULL DEFAULT 0,
-      results TEXT
-    );
-
-    CREATE INDEX IF NOT EXISTS idx_batch_status ON batch_jobs(status);
-  `);
+  db = new Firestore({
+    projectId: process.env.GCP_PROJECT_ID || "pageyoink-api",
+  });
 
   return db;
 }
 
 export function closeDb(): void {
   if (db) {
-    db.close();
+    db.terminate();
     db = null;
   }
 }

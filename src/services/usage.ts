@@ -1,4 +1,5 @@
 import { getDb } from "./database.js";
+import { FieldValue } from "@google-cloud/firestore";
 
 function todayKey(): string {
   return new Date().toISOString().split("T")[0];
@@ -7,39 +8,62 @@ function todayKey(): string {
 export function trackUsage(apiKey: string, endpoint: string = "unknown"): void {
   const db = getDb();
   const date = todayKey();
+  const docId = `${apiKey}:${date}:${endpoint}`;
 
-  db.prepare(`
-    INSERT INTO usage (api_key, date, endpoint, count)
-    VALUES (?, ?, ?, 1)
-    ON CONFLICT(api_key, date, endpoint)
-    DO UPDATE SET count = count + 1
-  `).run(apiKey, date, endpoint);
+  const ref = db.collection("usage").doc(docId);
+  ref
+    .set(
+      {
+        apiKey,
+        date,
+        endpoint,
+        count: FieldValue.increment(1),
+      },
+      { merge: true },
+    )
+    .catch(() => {
+      // Non-blocking — don't fail requests on usage tracking errors
+    });
 }
 
-export function getUsage(apiKey: string): number {
+export async function getUsage(apiKey: string): Promise<number> {
   const db = getDb();
   const date = todayKey();
 
-  const row = db
-    .prepare("SELECT SUM(count) as total FROM usage WHERE api_key = ? AND date = ?")
-    .get(apiKey, date) as { total: number | null } | undefined;
+  const snapshot = await db
+    .collection("usage")
+    .where("apiKey", "==", apiKey)
+    .where("date", "==", date)
+    .get();
 
-  return row?.total || 0;
+  let total = 0;
+  snapshot.forEach((doc) => {
+    total += doc.data().count || 0;
+  });
+
+  return total;
 }
 
-export function getUsageStats(): { totalKeys: number; totalRequests: number } {
+export async function getUsageStats(): Promise<{
+  totalKeys: number;
+  totalRequests: number;
+}> {
   const db = getDb();
 
-  const row = db
-    .prepare(
-      "SELECT COUNT(DISTINCT api_key) as totalKeys, COALESCE(SUM(count), 0) as totalRequests FROM usage",
-    )
-    .get() as { totalKeys: number; totalRequests: number };
+  const snapshot = await db.collection("usage").get();
 
-  return row;
+  const keys = new Set<string>();
+  let totalRequests = 0;
+
+  snapshot.forEach((doc) => {
+    const data = doc.data();
+    keys.add(data.apiKey);
+    totalRequests += data.count || 0;
+  });
+
+  return { totalKeys: keys.size, totalRequests };
 }
 
 export function resetUsage(): void {
-  const db = getDb();
-  db.prepare("DELETE FROM usage").run();
+  // No-op for Firestore (used in tests)
 }

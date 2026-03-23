@@ -6,7 +6,6 @@ interface UsageQuery {
 }
 
 export async function usageRoute(app: FastifyInstance) {
-  // GET /v1/usage — get usage for the authenticated API key
   app.get<{ Querystring: UsageQuery }>(
     "/v1/usage",
     {
@@ -33,48 +32,55 @@ export async function usageRoute(app: FastifyInstance) {
       const days = Math.min(parseInt(request.query.days || "30", 10), 90);
       const db = getDb();
 
-      // Get daily breakdown
-      const dailyUsage = db
-        .prepare(
-          `SELECT date, endpoint, SUM(count) as requests
-           FROM usage
-           WHERE api_key = ? AND date >= date('now', ?)
-           GROUP BY date, endpoint
-           ORDER BY date DESC, endpoint`,
-        )
-        .all(apiKey, `-${days} days`) as Array<{
+      const cutoffDate = new Date(Date.now() - days * 86400000)
+        .toISOString()
+        .split("T")[0];
+
+      // Query usage records for this API key within the date range
+      const snapshot = await db
+        .collection("usage")
+        .where("apiKey", "==", apiKey)
+        .where("date", ">=", cutoffDate)
+        .get();
+
+      const dailyUsage: Array<{
         date: string;
         endpoint: string;
         requests: number;
-      }>;
+      }> = [];
+      const endpointTotals = new Map<string, number>();
+      let totalRequests = 0;
 
-      // Get totals
-      const totals = db
-        .prepare(
-          `SELECT endpoint, SUM(count) as requests
-           FROM usage
-           WHERE api_key = ? AND date >= date('now', ?)
-           GROUP BY endpoint
-           ORDER BY requests DESC`,
-        )
-        .all(apiKey, `-${days} days`) as Array<{
-        endpoint: string;
-        requests: number;
-      }>;
+      snapshot.forEach((doc) => {
+        const data = doc.data();
+        dailyUsage.push({
+          date: data.date,
+          endpoint: data.endpoint,
+          requests: data.count || 0,
+        });
+        endpointTotals.set(
+          data.endpoint,
+          (endpointTotals.get(data.endpoint) || 0) + (data.count || 0),
+        );
+        totalRequests += data.count || 0;
+      });
 
-      const totalRequests = totals.reduce((sum, row) => sum + row.requests, 0);
+      // Sort daily by date descending
+      dailyUsage.sort((a, b) => b.date.localeCompare(a.date));
+
+      const byEndpoint = Array.from(endpointTotals.entries())
+        .map(([endpoint, requests]) => ({ endpoint, requests }))
+        .sort((a, b) => b.requests - a.requests);
 
       return {
         apiKey: apiKey.slice(0, 8) + "..." + apiKey.slice(-4),
         period: {
           days,
-          from: new Date(Date.now() - days * 86400000)
-            .toISOString()
-            .split("T")[0],
+          from: cutoffDate,
           to: new Date().toISOString().split("T")[0],
         },
         totalRequests,
-        byEndpoint: totals,
+        byEndpoint,
         daily: dailyUsage,
       };
     },

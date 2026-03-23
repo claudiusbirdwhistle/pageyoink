@@ -19,7 +19,7 @@ function formatUptime(ms: number): string {
 
 export async function healthRoute(app: FastifyInstance) {
   app.get("/internal/health", async () => {
-    const stats = getUsageStats();
+    const stats = await getUsageStats();
     return {
       status: "ok",
       version: "0.1.0",
