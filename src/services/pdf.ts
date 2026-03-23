@@ -21,6 +21,11 @@ export interface PdfOptions {
   smartWait?: boolean;
   maxScroll?: number;
   blockAds?: boolean;
+  css?: string;
+  js?: string;
+  headers?: Record<string, string>;
+  cookies?: Array<{ name: string; value: string; domain?: string }>;
+  userAgent?: string;
 }
 
 export interface PdfResult {
@@ -75,6 +80,11 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     smartWait = false,
     maxScroll,
     blockAds = false,
+    css,
+    js,
+    headers,
+    cookies,
+    userAgent,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -86,6 +96,25 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     if (blockAds) {
       await enableAdBlocking(page);
     }
+
+    if (userAgent) {
+      await page.setUserAgent(userAgent);
+    }
+
+    if (headers) {
+      await page.setExtraHTTPHeaders(headers);
+    }
+
+    if (cookies && cookies.length > 0 && url) {
+      const parsedUrl = new URL(url);
+      const cookieObjects = cookies.map((c) => ({
+        name: c.name,
+        value: c.value,
+        domain: c.domain || parsedUrl.hostname,
+      }));
+      await page.setCookie(...cookieObjects);
+    }
+
     if (url) {
       await page.goto(url, {
         waitUntil: "networkidle2",
@@ -96,6 +125,16 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
         waitUntil: "networkidle2",
         timeout: effectiveTimeout,
       });
+    }
+
+    // Inject custom CSS after page load
+    if (css) {
+      await page.addStyleTag({ content: css });
+    }
+
+    // Execute custom JS in page context (sandboxed by Puppeteer)
+    if (js) {
+      await page.evaluate(`(function(){${js}})()`);
     }
 
     // Scroll through page to trigger lazy-loaded images (PDFs always capture full page)

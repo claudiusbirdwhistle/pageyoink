@@ -17,6 +17,11 @@ export interface ScreenshotOptions {
   smartWait?: boolean;
   maxScroll?: number;
   blockAds?: boolean;
+  css?: string;
+  js?: string;
+  headers?: Record<string, string>;
+  cookies?: Array<{ name: string; value: string; domain?: string }>;
+  userAgent?: string;
 }
 
 export interface ScreenshotResult {
@@ -40,7 +45,6 @@ export async function takeScreenshot(
       return await attemptScreenshot(options);
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
-      // Only retry on transient errors (connection closed, crashed, etc.)
       const isTransient =
         lastError.message.includes("Connection closed") ||
         lastError.message.includes("crashed") ||
@@ -72,6 +76,11 @@ async function attemptScreenshot(
     smartWait = false,
     maxScroll,
     blockAds = false,
+    css,
+    js,
+    headers,
+    cookies,
+    userAgent,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -84,6 +93,24 @@ async function attemptScreenshot(
       await enableAdBlocking(page);
     }
 
+    if (userAgent) {
+      await page.setUserAgent(userAgent);
+    }
+
+    if (headers) {
+      await page.setExtraHTTPHeaders(headers);
+    }
+
+    if (cookies && cookies.length > 0) {
+      const parsedUrl = new URL(url);
+      const cookieObjects = cookies.map((c) => ({
+        name: c.name,
+        value: c.value,
+        domain: c.domain || parsedUrl.hostname,
+      }));
+      await page.setCookie(...cookieObjects);
+    }
+
     await page.setViewport({
       width,
       height,
@@ -94,6 +121,18 @@ async function attemptScreenshot(
       waitUntil: "networkidle2",
       timeout: effectiveTimeout,
     });
+
+    // Inject custom CSS after page load
+    if (css) {
+      await page.addStyleTag({ content: css });
+    }
+
+    // Execute custom JS in page context (sandboxed by Puppeteer).
+    // This is an intentional feature for pre-capture page manipulation,
+    // matching competitor APIs (ApiFlash, ScreenshotAPI, Restpack).
+    if (js) {
+      await page.evaluate(`(function(){${js}})()`);
+    }
 
     // Scroll through page to trigger lazy-loaded images
     if (fullPage || smartWait) {

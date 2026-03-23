@@ -14,6 +14,9 @@ interface ScreenshotQuery {
   smart_wait?: string;
   max_scroll?: string;
   block_ads?: string;
+  css?: string;
+  js?: string;
+  user_agent?: string;
 }
 
 const screenshotQuerySchema = {
@@ -32,6 +35,9 @@ const screenshotQuerySchema = {
     smart_wait: { type: "string" as const },
     max_scroll: { type: "string" as const },
     block_ads: { type: "string" as const },
+    css: { type: "string" as const },
+    js: { type: "string" as const },
+    user_agent: { type: "string" as const },
   },
 };
 
@@ -57,6 +63,9 @@ export async function screenshotRoute(app: FastifyInstance) {
         smart_wait,
         max_scroll,
         block_ads,
+        css,
+        js,
+        user_agent,
       } = request.query;
 
       // Validate URL
@@ -89,6 +98,9 @@ export async function screenshotRoute(app: FastifyInstance) {
           smartWait: smart_wait === "true",
           maxScroll: max_scroll ? parseInt(max_scroll, 10) : undefined,
           blockAds: block_ads === "true",
+          css: css || undefined,
+          js: js || undefined,
+          userAgent: user_agent || undefined,
         });
 
         return reply

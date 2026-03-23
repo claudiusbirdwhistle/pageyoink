@@ -15,6 +15,9 @@ interface PdfQuery {
   smart_wait?: string;
   max_scroll?: string;
   block_ads?: string;
+  css?: string;
+  js?: string;
+  user_agent?: string;
 }
 
 interface PdfBody {
@@ -33,6 +36,11 @@ interface PdfBody {
   smartWait?: boolean;
   maxScroll?: number;
   blockAds?: boolean;
+  css?: string;
+  js?: string;
+  headers?: Record<string, string>;
+  cookies?: Array<{ name: string; value: string; domain?: string }>;
+  userAgent?: string;
 }
 
 export async function pdfRoute(app: FastifyInstance) {
@@ -58,13 +66,28 @@ export async function pdfRoute(app: FastifyInstance) {
             smart_wait: { type: "string" },
             max_scroll: { type: "string" },
             block_ads: { type: "string" },
+            css: { type: "string" },
+            js: { type: "string" },
+            user_agent: { type: "string" },
           },
         },
       },
     },
     async (request, reply) => {
-      const { url, format, landscape, print_background, timeout, clean, smart_wait, max_scroll, block_ads } =
-        request.query;
+      const {
+        url,
+        format,
+        landscape,
+        print_background,
+        timeout,
+        clean,
+        smart_wait,
+        max_scroll,
+        block_ads,
+        css,
+        js,
+        user_agent,
+      } = request.query;
 
       // Validate URL
       try {
@@ -92,14 +115,14 @@ export async function pdfRoute(app: FastifyInstance) {
           smartWait: smart_wait === "true",
           maxScroll: max_scroll ? parseInt(max_scroll, 10) : undefined,
           blockAds: block_ads === "true",
+          css: css || undefined,
+          js: js || undefined,
+          userAgent: user_agent || undefined,
         });
 
         return reply
           .header("Content-Type", "application/pdf")
-          .header(
-            "Content-Disposition",
-            'inline; filename="document.pdf"',
-          )
+          .header("Content-Disposition", 'inline; filename="document.pdf"')
           .send(result.buffer);
       } catch (err) {
         const message =
@@ -110,16 +133,16 @@ export async function pdfRoute(app: FastifyInstance) {
     },
   );
 
-  // POST: HTML-to-PDF
+  // POST: HTML-to-PDF (also supports full options for URL-based via JSON body)
   app.post<{ Body: PdfBody }>(
     "/v1/pdf",
     {
       schema: {
         body: {
           type: "object",
-          required: ["html"],
           properties: {
             html: { type: "string" },
+            url: { type: "string" },
             format: { type: "string", enum: ["A4", "Letter", "Legal", "A3"] },
             landscape: { type: "boolean" },
             printBackground: { type: "boolean" },
@@ -137,34 +160,57 @@ export async function pdfRoute(app: FastifyInstance) {
             smartWait: { type: "boolean" },
             maxScroll: { type: "number" },
             blockAds: { type: "boolean" },
+            css: { type: "string" },
+            js: { type: "string" },
+            headers: { type: "object" },
+            cookies: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  name: { type: "string" },
+                  value: { type: "string" },
+                  domain: { type: "string" },
+                },
+              },
+            },
+            userAgent: { type: "string" },
           },
         },
       },
     },
     async (request, reply) => {
-      const { html, format, landscape, printBackground, margin, timeout, clean, smartWait, maxScroll, blockAds } =
-        request.body;
+      const body = request.body as PdfBody & { url?: string };
+
+      if (!body.html && !body.url) {
+        return reply
+          .status(400)
+          .send({ error: "Either html or url must be provided" });
+      }
 
       try {
         const result = await generatePdf({
-          html,
-          format: format || "A4",
-          landscape: landscape || false,
-          printBackground: printBackground !== false,
-          margin,
-          timeout,
-          clean: clean || false,
-          smartWait: smartWait || false,
-          maxScroll,
-          blockAds: blockAds || false,
+          html: body.html,
+          url: body.url,
+          format: body.format || "A4",
+          landscape: body.landscape || false,
+          printBackground: body.printBackground !== false,
+          margin: body.margin,
+          timeout: body.timeout,
+          clean: body.clean || false,
+          smartWait: body.smartWait || false,
+          maxScroll: body.maxScroll,
+          blockAds: body.blockAds || false,
+          css: body.css,
+          js: body.js,
+          headers: body.headers,
+          cookies: body.cookies,
+          userAgent: body.userAgent,
         });
 
         return reply
           .header("Content-Type", "application/pdf")
-          .header(
-            "Content-Disposition",
-            'inline; filename="document.pdf"',
-          )
+          .header("Content-Disposition", 'inline; filename="document.pdf"')
           .send(result.buffer);
       } catch (err) {
         const message =
