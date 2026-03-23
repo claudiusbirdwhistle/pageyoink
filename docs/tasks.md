@@ -13,7 +13,7 @@ All complete.
 
 ### Priority 2 (Should have)
 6. [x] Element capture — `selector` param captures specific DOM element (done 2026-03-22)
-7. [ ] Caching with TTL — cache screenshots/PDFs, return cached version on repeated requests (don't count against quota)
+7. [x] Caching with TTL — filesystem cache, SHA-256 key, X-Cache header, ttl + fresh params (done 2026-03-22)
 8. [ ] Print-mode CSS injection for PDFs — auto-convert horizontal carousels to wrapped layouts to fix missing images in Chrome print renderer
 
 ### Priority 3 (Nice to have before launch)
@@ -76,6 +76,7 @@ All complete.
 - [x] Custom user-agent — user_agent param
 - [x] Element capture — selector param, uses element.screenshot() for pixel-perfect extraction
 - [x] Transparent background — transparent=true for PNG screenshots
+- [x] Caching with TTL — filesystem cache, X-Cache HIT/MISS header, ttl + fresh params
 
 ### Bug Fixes & Quality (2026-03-22)
 - [x] Fix TypeScript readonly property error in CI
