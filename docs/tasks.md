@@ -14,10 +14,12 @@ All complete.
 ### Priority 2 (Should have)
 6. [x] Element capture — `selector` param captures specific DOM element (done 2026-03-22)
 7. [x] Caching with TTL — filesystem cache, SHA-256 key, X-Cache header, ttl + fresh params (done 2026-03-22)
-8. [ ] Print-mode CSS injection for PDFs — auto-convert horizontal carousels to wrapped layouts to fix missing images in Chrome print renderer
+8. [x] Print-mode CSS fixes for PDFs — auto-detects horizontal scroll containers, forces overflow:visible + flex-wrap (done 2026-03-22)
 
 ### Priority 3 (Nice to have before launch)
 9. [x] Transparent background — transparent=true, PNG only (done 2026-03-22)
+
+**Phase F complete. All 9 items done.**
 
 ## Blocked — Waiting on Human
 - [ ] Configure hosting platform — human needed for account creation (Phase C)
@@ -77,6 +79,8 @@ All complete.
 - [x] Element capture — selector param, uses element.screenshot() for pixel-perfect extraction
 - [x] Transparent background — transparent=true for PNG screenshots
 - [x] Caching with TTL — filesystem cache, X-Cache HIT/MISS header, ttl + fresh params
+- [x] Print-mode PDF fixes — targeted carousel overflow fix, verified on BBC
+- [x] Transparent background — transparent=true for PNG screenshots
 
 ### Bug Fixes & Quality (2026-03-22)
 - [x] Fix TypeScript readonly property error in CI
