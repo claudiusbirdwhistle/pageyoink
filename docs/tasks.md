@@ -93,7 +93,6 @@ All complete.
 ## Icebox (Post-Launch)
 - [ ] PDF encryption and password protection
 - [ ] Video capture (scrolling MP4/GIF)
-- [ ] Screenshot comparison / visual diff API
 - [ ] Geo-distributed rendering (edge nodes)
 
 ## Icebox Done
@@ -107,3 +106,4 @@ All complete.
 - [x] PDF watermarks — text watermark via pdf-lib, position/color/opacity/rotation (2026-03-23)
 - [x] S3 export service — exportToS3() for AWS/Wasabi/MinIO/DO Spaces (2026-03-23)
 - [x] Go SDK — full client, zero dependencies (2026-03-23)
+- [x] Screenshot comparison / visual diff — POST /v1/diff with pixelmatch (2026-03-23)
