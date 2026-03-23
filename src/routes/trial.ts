@@ -32,6 +32,14 @@ function getRemainingTrials(ip: string): number {
 }
 
 export async function trialRoute(app: FastifyInstance) {
+  // Dev-only: reset trial limits
+  app.delete("/trial/reset", async (_request, reply) => {
+    if (process.env.NODE_ENV === "production" && process.env.API_KEYS) {
+      return reply.status(404).send({ error: "Not found" });
+    }
+    trialUsage.clear();
+    return { message: "Trial limits reset" };
+  });
   // Trial screenshot — no API key needed, IP rate limited
   app.get(
     "/trial/screenshot",
