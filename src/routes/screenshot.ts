@@ -3,6 +3,7 @@ import { takeScreenshot } from "../services/screenshot.js";
 import { cacheGet, cacheSet } from "../services/cache.js";
 import { validateUrlSafe } from "../utils/url.js";
 import { checkSsrf } from "../utils/ssrf.js";
+import { classifyNavigationError } from "../utils/errors.js";
 import {
   validateViewport,
   validateCssSize,
@@ -326,10 +327,9 @@ export async function screenshotRoute(app: FastifyInstance) {
           )
           .send(result.buffer);
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Screenshot failed";
+        const classified = classifyNavigationError(err);
         request.log.error({ err }, "Screenshot failed");
-        return reply.status(500).send({ error: message });
+        return reply.status(classified.statusCode).send({ error: classified.message });
       }
     },
   );

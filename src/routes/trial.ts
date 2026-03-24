@@ -7,6 +7,7 @@ import { extractContent } from "../services/extract.js";
 import { extractMetadata } from "../services/metadata.js";
 import { cleanPage } from "../services/cleanup.js";
 import { validateUrlSafe } from "../utils/url.js";
+import { classifyNavigationError } from "../utils/errors.js";
 
 // IP-based rate limiting for trial usage
 const trialUsage = new Map<string, { count: number; date: string }>();
@@ -110,8 +111,8 @@ export async function trialRoute(app: FastifyInstance) {
           .header("X-Trial-Remaining", String(getRemainingTrials(ip)))
           .send(result.buffer);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Screenshot failed";
-        return reply.status(500).send({ error: message });
+        const classified = classifyNavigationError(err);
+        return reply.status(classified.statusCode).send({ error: classified.message });
       }
     },
   );
@@ -255,8 +256,8 @@ export async function trialRoute(app: FastifyInstance) {
           .header("X-Trial-Remaining", String(getRemainingTrials(ip)))
           .send(finalBuffer);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "PDF generation failed";
-        return reply.status(500).send({ error: message });
+        const classified = classifyNavigationError(err);
+        return reply.status(classified.statusCode).send({ error: classified.message });
       }
     },
   );
@@ -303,8 +304,8 @@ export async function trialRoute(app: FastifyInstance) {
           .header("X-Trial-Remaining", String(getRemainingTrials(ip)))
           .send(result);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Extraction failed";
-        return reply.status(500).send({ error: message });
+        const classified = classifyNavigationError(err);
+        return reply.status(classified.statusCode).send({ error: classified.message });
       } finally {
         await page.close();
       }
@@ -349,8 +350,8 @@ export async function trialRoute(app: FastifyInstance) {
           .header("X-Trial-Remaining", String(getRemainingTrials(ip)))
           .send(metadata);
       } catch (err) {
-        const message = err instanceof Error ? err.message : "Metadata extraction failed";
-        return reply.status(500).send({ error: message });
+        const classified = classifyNavigationError(err);
+        return reply.status(classified.statusCode).send({ error: classified.message });
       } finally {
         await page.close();
       }

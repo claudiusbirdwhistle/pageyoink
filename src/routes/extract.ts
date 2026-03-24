@@ -3,6 +3,7 @@ import { getBrowser, launchProxyBrowser } from "../services/browser.js";
 import { extractContent, ExtractResult } from "../services/extract.js";
 import { cleanPage } from "../services/cleanup.js";
 import { validateUrlSafe } from "../utils/url.js";
+import { classifyNavigationError } from "../utils/errors.js";
 
 interface ExtractQuery {
   url: string;
@@ -57,6 +58,8 @@ export async function extractRoute(app: FastifyInstance) {
               url: { type: "string" },
               excerpt: { type: "string" },
               author: { type: "string", nullable: true },
+              warning: { type: "string", description: "Present when Readability could not identify article content and fallback was used." },
+              httpStatus: { type: "number", description: "HTTP status code returned by the target page (e.g., 200, 404, 500)." },
             },
           },
         },
@@ -100,17 +103,19 @@ export async function extractRoute(app: FastifyInstance) {
           });
         }
 
+        // B5: Track upstream HTTP status
+        const httpStatus = response?.status() ?? null;
+
         if (shouldClean) {
           await cleanPage(page);
         }
 
         const result = await extractContent(page, format);
-        return reply.send(result);
+        return reply.send({ ...result, ...(httpStatus ? { httpStatus } : {}) });
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Content extraction failed";
+        const classified = classifyNavigationError(err);
         request.log.error({ err }, "Extraction failed");
-        return reply.status(500).send({ error: message });
+        return reply.status(classified.statusCode).send({ error: classified.message });
       } finally {
         await page.close();
       }

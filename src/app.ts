@@ -21,6 +21,37 @@ export async function buildApp() {
     logger: process.env.NODE_ENV !== "test",
   });
 
+  // Global error handler: standardize all error responses to {"error":"message"}
+  app.setErrorHandler(async (error, request, reply) => {
+    // Fastify validation errors (schema validation)
+    if (error.validation) {
+      return reply.status(400).send({
+        error: error.message,
+      });
+    }
+
+    // Rate limit errors
+    if (error.statusCode === 429) {
+      return reply.status(429).send({
+        error: "Too many requests. Please slow down.",
+      });
+    }
+
+    // Don't leak stack traces in production
+    const message = error.message || "Internal server error";
+    const statusCode = error.statusCode || 500;
+
+    if (statusCode >= 500) {
+      request.log.error({ err: error }, "Unhandled error");
+    }
+
+    return reply.status(statusCode).send({
+      error: process.env.NODE_ENV === "production" && statusCode >= 500
+        ? "Internal server error"
+        : message,
+    });
+  });
+
   // Add request ID to response headers for debugging
   app.addHook("onSend", async (request, reply) => {
     reply.header("X-Request-Id", request.id);

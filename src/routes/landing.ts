@@ -80,7 +80,7 @@ const LANDING_HTML = `<!DOCTYPE html>
       <h2>Try It Now</h2>
       <p style="color: var(--muted); margin-bottom: 20px;">Paste any URL. See everything. ${`${5}`} free captures per day — no API key needed.</p>
       <div style="display:flex;gap:12px;margin-bottom:12px;">
-        <input type="text" id="trial-url" placeholder="https://example.com" value="https://www.bbc.com"
+        <input type="text" id="trial-url" placeholder="https://example.com" value="https://news.ycombinator.com"
           style="flex:1;padding:12px 16px;border-radius:8px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:16px;outline:none;">
       </div>
       <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
@@ -99,8 +99,7 @@ const LANDING_HTML = `<!DOCTYPE html>
       </div>
       <!-- PDF options available via API — keeping demo clean -->
       <div style="display:flex;gap:12px;margin-bottom:20px;">
-        <button onclick="captureAll()"
-          style="padding:14px 32px;border-radius:8px;border:none;background:var(--brand);color:white;font-weight:700;cursor:pointer;font-size:16px;white-space:nowrap;letter-spacing:0.3px;">Capture Page</button>
+        <button class="capture-btn" onclick="captureAll()">Capture Page</button>
       </div>
       <div id="trial-status" style="color:var(--muted);font-size:14px;margin-bottom:12px;"></div>
       <div id="trial-result" style="display:none;">
@@ -118,7 +117,7 @@ const LANDING_HTML = `<!DOCTYPE html>
             <a id="trial-pdf-link" style="display:none;color:var(--brand);font-size:18px;font-weight:600;">Download PDF</a>
           </div>
           <div id="tab-content" class="tab-content" style="display:none;">
-            <div id="trial-extract" style="max-height:500px;overflow-y:auto;font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap;font-family:-apple-system,sans-serif;"></div>
+            <div id="trial-extract" style="max-height:500px;overflow-y:auto;font-size:14px;line-height:1.7;color:var(--text);font-family:-apple-system,sans-serif;"></div>
             <div id="trial-extract-meta" style="margin-top:12px;padding-top:12px;border-top:1px solid #2a2a3e;color:var(--muted);font-size:12px;"></div>
           </div>
           <div id="tab-metadata" class="tab-content" style="display:none;">
@@ -127,11 +126,55 @@ const LANDING_HTML = `<!DOCTYPE html>
         </div>
       </div>
     </section>
+    <style>
+      .spinner { display:inline-block;width:20px;height:20px;border:2px solid var(--muted);border-top-color:var(--brand);border-radius:50%;animation:spin 0.8s linear infinite;vertical-align:middle;margin-right:8px; }
+      @keyframes spin { to { transform:rotate(360deg); } }
+      .tab-content { transition: opacity 0.2s ease; }
+      .rendered-md h1,.rendered-md h2,.rendered-md h3,.rendered-md h4 { margin:16px 0 8px;font-weight:700;color:var(--text); }
+      .rendered-md h1 { font-size:24px; } .rendered-md h2 { font-size:20px; } .rendered-md h3 { font-size:17px; }
+      .rendered-md p { margin:8px 0; } .rendered-md a { color:var(--brand); }
+      .rendered-md ul,.rendered-md ol { margin:8px 0 8px 24px; }
+      .rendered-md li { margin:4px 0; }
+      .rendered-md code { background:#12121f;padding:2px 6px;border-radius:4px;font-size:13px; }
+      .rendered-md pre { background:#12121f;padding:12px;border-radius:8px;overflow-x:auto;margin:12px 0; }
+      .rendered-md pre code { background:none;padding:0; }
+      .rendered-md table { border-collapse:collapse;margin:12px 0;width:100%; }
+      .rendered-md th,.rendered-md td { border:1px solid #2a2a3e;padding:8px 12px;text-align:left; }
+      .rendered-md th { background:#12121f;font-weight:600; }
+      .rendered-md blockquote { border-left:3px solid var(--brand);padding-left:12px;color:var(--muted);margin:8px 0; }
+      .rendered-md img { max-width:100%;border-radius:4px; }
+      .error-msg { color:#ef4444;font-size:14px;padding:12px;background:#1a0a0a;border:1px solid #3a1a1a;border-radius:8px; }
+      .capture-btn { padding:14px 32px;border-radius:8px;border:none;background:var(--brand);color:white;font-weight:700;cursor:pointer;font-size:16px;white-space:nowrap;letter-spacing:0.3px;transition:opacity 0.2s; }
+      .capture-btn:disabled { opacity:0.5;cursor:not-allowed; }
+      .capture-timing { color:var(--brand);font-weight:600; }
+    </style>
     <script>
+      // Safe helper: create a text node spinner indicator
+      function showSpinner(el, msg) {
+        el.textContent = '';
+        var sp = document.createElement('span');
+        sp.className = 'spinner';
+        el.appendChild(sp);
+        el.appendChild(document.createTextNode(' ' + msg));
+      }
+      // Safe helper: show error in an element
+      function showError(el, msg) {
+        el.textContent = '';
+        var div = document.createElement('div');
+        div.className = 'error-msg';
+        div.textContent = msg;
+        el.appendChild(div);
+      }
+
+      // C7: Enter key triggers capture
+      document.getElementById('trial-url').addEventListener('keydown', function(e) {
+        if (e.key === 'Enter') { e.preventDefault(); captureAll(); }
+      });
+
       // Tab switching
-      document.addEventListener('click', (e) => {
-        if (!e.target.classList?.contains('trial-tab')) return;
-        const tabName = e.target.dataset.tab;
+      document.addEventListener('click', function(e) {
+        if (!e.target.classList || !e.target.classList.contains('trial-tab')) return;
+        var tabName = e.target.dataset.tab;
         activateTab(tabName);
 
         // PDF tab: generate PDF on first click (lazy)
@@ -140,57 +183,175 @@ const LANDING_HTML = `<!DOCTYPE html>
         }
       });
 
+      // C1/B3: Render markdown as formatted HTML using safe DOM construction
+      function renderMarkdownToDOM(container, md) {
+        container.textContent = '';
+        var wrapper = document.createElement('div');
+        wrapper.className = 'rendered-md';
+        var lines = md.split('\\n');
+        var i = 0;
+        while (i < lines.length) {
+          var line = lines[i];
+          // Headings
+          var headingMatch = line.match(/^(#{1,4}) (.+)$/);
+          if (headingMatch) {
+            var level = headingMatch[1].length;
+            var h = document.createElement('h' + level);
+            h.textContent = headingMatch[2];
+            wrapper.appendChild(h);
+            i++; continue;
+          }
+          // List items
+          if (line.match(/^[-*] /)) {
+            var ul = document.createElement('ul');
+            while (i < lines.length && lines[i].match(/^[-*] /)) {
+              var li = document.createElement('li');
+              appendInlineContent(li, lines[i].replace(/^[-*] /, ''));
+              ul.appendChild(li);
+              i++;
+            }
+            wrapper.appendChild(ul);
+            continue;
+          }
+          // Blockquotes
+          if (line.match(/^> /)) {
+            var bq = document.createElement('blockquote');
+            bq.textContent = line.replace(/^> /, '');
+            wrapper.appendChild(bq);
+            i++; continue;
+          }
+          // Code blocks
+          if (line.match(/^\`\`\`/)) {
+            var pre = document.createElement('pre');
+            var code = document.createElement('code');
+            i++;
+            var codeLines = [];
+            while (i < lines.length && !lines[i].match(/^\`\`\`/)) {
+              codeLines.push(lines[i]);
+              i++;
+            }
+            code.textContent = codeLines.join('\\n');
+            pre.appendChild(code);
+            wrapper.appendChild(pre);
+            i++; continue;
+          }
+          // Empty lines
+          if (line.trim() === '') { i++; continue; }
+          // Regular paragraph
+          var p = document.createElement('p');
+          appendInlineContent(p, line);
+          wrapper.appendChild(p);
+          i++;
+        }
+        container.appendChild(wrapper);
+      }
+
+      // Process inline markdown (bold, italic, code, links) safely
+      function appendInlineContent(el, text) {
+        // Split on markdown patterns and create safe DOM nodes
+        var parts = text.split(/(\\[([^\\]]+)\\]\\(([^)]+)\\)|\\*\\*([^*]+)\\*\\*|\`([^\`]+)\`)/);
+        for (var j = 0; j < parts.length; j++) {
+          var part = parts[j];
+          if (part === undefined || part === '') continue;
+          // Check if this is a link pattern
+          var linkMatch = part.match(/^\\[([^\\]]+)\\]\\(([^)]+)\\)$/);
+          if (linkMatch) {
+            var a = document.createElement('a');
+            a.textContent = linkMatch[1];
+            a.href = linkMatch[2];
+            a.target = '_blank';
+            a.rel = 'noopener';
+            el.appendChild(a);
+            j += 2; // skip captured groups
+            continue;
+          }
+          // Bold
+          var boldMatch = part.match(/^\\*\\*([^*]+)\\*\\*$/);
+          if (boldMatch) {
+            var strong = document.createElement('strong');
+            strong.textContent = boldMatch[1];
+            el.appendChild(strong);
+            j += 1;
+            continue;
+          }
+          // Inline code
+          var codeMatch = part.match(/^\`([^\`]+)\`$/);
+          if (codeMatch) {
+            var codeEl = document.createElement('code');
+            codeEl.textContent = codeMatch[1];
+            el.appendChild(codeEl);
+            j += 1;
+            continue;
+          }
+          // Plain text
+          el.appendChild(document.createTextNode(part));
+        }
+      }
+
       async function loadPdf() {
-        const pdfLink = document.getElementById('trial-pdf-link');
-        const pdfTab = document.getElementById('tab-pdf');
-        pdfTab.textContent = 'Generating PDF...';
+        var pdfLink = document.getElementById('trial-pdf-link');
+        var pdfTab = document.getElementById('tab-pdf');
+        showSpinner(pdfTab, 'Generating PDF...');
         try {
-          const clean = document.getElementById('trial-clean').checked;
-          let params = 'url=' + encodeURIComponent(capturedUrl);
+          var clean = document.getElementById('trial-clean').checked;
+          var params = 'url=' + encodeURIComponent(capturedUrl);
           if (clean) params += '&clean=true';
-          const resp = await fetch('/trial/pdf?' + params);
-          if (!resp.ok) { pdfTab.textContent = 'PDF generation failed.'; return; }
-          const blob = await resp.blob();
-          const objUrl = URL.createObjectURL(blob);
+          var resp = await fetch('/trial/pdf?' + params);
+          if (!resp.ok) {
+            var errData = await resp.json().catch(function() { return {}; });
+            showError(pdfTab, 'PDF generation failed' + (errData.error ? ': ' + errData.error : ''));
+            return;
+          }
+          var blob = await resp.blob();
+          var objUrl = URL.createObjectURL(blob);
           pdfTab.textContent = '';
           pdfLink.href = objUrl;
           pdfLink.download = 'document.pdf';
           pdfLink.textContent = 'Download PDF (' + (blob.size / 1024 / 1024).toFixed(1) + ' MB)';
           pdfLink.style.display = 'inline-block';
           pdfTab.appendChild(pdfLink);
-        } catch(e) { pdfTab.textContent = 'Error: ' + e.message; }
+        } catch(e) { showError(pdfTab, 'Error: ' + e.message); }
       }
 
       async function loadExtract(url) {
-        const el = document.getElementById('trial-extract');
-        const meta = document.getElementById('trial-extract-meta');
-        el.textContent = 'Extracting content...';
+        var el = document.getElementById('trial-extract');
+        var meta = document.getElementById('trial-extract-meta');
+        showSpinner(el, 'Extracting content...');
         try {
-          const resp = await fetch('/trial/extract?url=' + encodeURIComponent(url));
-          if (!resp.ok) { el.textContent = 'Extraction failed.'; return; }
-          const data = await resp.json();
-          el.textContent = data.content;
+          var resp = await fetch('/trial/extract?url=' + encodeURIComponent(url));
+          if (!resp.ok) {
+            var errData = await resp.json().catch(function() { return {}; });
+            showError(el, 'Extraction failed' + (errData.error ? ': ' + errData.error : ''));
+            return;
+          }
+          var data = await resp.json();
+          // C1/B3: Render markdown as formatted HTML using safe DOM construction
+          renderMarkdownToDOM(el, data.content);
           meta.textContent = data.wordCount + ' words' + (data.author ? ' | By ' + data.author : '') + ' | ' + data.title;
-        } catch(e) { el.textContent = 'Error: ' + e.message; }
+        } catch(e) { showError(el, 'Error: ' + e.message); }
       }
 
       async function loadMetadata(url) {
-        const el = document.getElementById('trial-metadata');
-        el.textContent = 'Loading metadata...';
+        var el = document.getElementById('trial-metadata');
+        showSpinner(el, 'Loading metadata...');
         try {
-          const resp = await fetch('/trial/metadata?url=' + encodeURIComponent(url));
-          if (!resp.ok) { el.textContent = 'Metadata extraction failed.'; return; }
-          const data = await resp.json();
+          var resp = await fetch('/trial/metadata?url=' + encodeURIComponent(url));
+          if (!resp.ok) {
+            var errData = await resp.json().catch(function() { return {}; });
+            showError(el, 'Metadata extraction failed' + (errData.error ? ': ' + errData.error : ''));
+            return;
+          }
+          var data = await resp.json();
           // Build metadata display using safe DOM methods
           el.textContent = '';
-          const grid = document.createElement('div');
+          var grid = document.createElement('div');
           grid.style.cssText = 'display:grid;grid-template-columns:120px 1fr;gap:8px 16px;';
-          const addRow = (label, value) => {
+          var addRow = function(label, value) {
             if (!value) return;
-            const lbl = document.createElement('div');
+            var lbl = document.createElement('div');
             lbl.style.cssText = 'color:var(--muted);font-weight:600;';
             lbl.textContent = label;
-            const val = document.createElement('div');
+            var val = document.createElement('div');
             val.textContent = String(value);
             grid.appendChild(lbl);
             grid.appendChild(val);
@@ -211,31 +372,39 @@ const LANDING_HTML = `<!DOCTYPE html>
           el.appendChild(grid);
           // OG image preview (safe - using DOM methods)
           if (data.og.image) {
-            const imgContainer = document.createElement('div');
+            var imgContainer = document.createElement('div');
             imgContainer.style.cssText = 'margin-top:16px;';
-            const ogImg = document.createElement('img');
+            var ogImg = document.createElement('img');
             ogImg.src = data.og.image;
             ogImg.style.cssText = 'max-width:100%;max-height:200px;border-radius:8px;border:1px solid #2a2a3e;';
-            ogImg.onerror = () => { ogImg.style.display = 'none'; };
+            ogImg.onerror = function() { ogImg.style.display = 'none'; };
             imgContainer.appendChild(ogImg);
             el.appendChild(imgContainer);
           }
-        } catch(e) { el.textContent = 'Error: ' + e.message; }
+        } catch(e) { showError(el, 'Error: ' + e.message); }
       }
 
-      let capturedUrl = '';
+      var capturedUrl = '';
+      var captureStartTime = 0;
 
       async function captureAll() {
-        const url = document.getElementById('trial-url').value.trim();
+        var url = document.getElementById('trial-url').value.trim();
         if (!url) return;
-        const clean = document.getElementById('trial-clean').checked;
-        const adblock = document.getElementById('trial-adblock').value;
-        const status = document.getElementById('trial-status');
-        const result = document.getElementById('trial-result');
-        const img = document.getElementById('trial-image');
-        const pdfLink = document.getElementById('trial-pdf-link');
+        var clean = document.getElementById('trial-clean').checked;
+        var adblock = document.getElementById('trial-adblock').value;
+        var status = document.getElementById('trial-status');
+        var result = document.getElementById('trial-result');
+        var img = document.getElementById('trial-image');
+        var pdfLink = document.getElementById('trial-pdf-link');
+        var captureBtn = document.querySelector('.capture-btn');
 
-        status.textContent = 'Capturing page... (this may take a few seconds)';
+        // C5: Disable button while capturing
+        captureBtn.disabled = true;
+        captureBtn.textContent = 'Capturing...';
+        captureStartTime = Date.now();
+
+        // C3: Show loading spinner
+        showSpinner(status, 'Capturing page... (this may take a few seconds)');
         result.style.display = 'none';
 
         // Reset all tab content
@@ -244,24 +413,28 @@ const LANDING_HTML = `<!DOCTYPE html>
         document.getElementById('trial-metadata').textContent = '';
         img.style.display = 'none';
         pdfLink.style.display = 'none';
+        pdfLink.removeAttribute('href');
 
-        const fullUrl = url.match(/^https?:\\/\\//) ? url : 'https://' + url;
+        var fullUrl = url.match(/^https?:\\/\\//) ? url : 'https://' + url;
         capturedUrl = fullUrl;
-        let params = 'url=' + encodeURIComponent(fullUrl);
+        var params = 'url=' + encodeURIComponent(fullUrl);
         if (clean) params += '&clean=true';
         if (adblock) params += '&block_ads=' + adblock;
 
         try {
           // Take screenshot first (fastest visual feedback)
-          const resp = await fetch('/trial/screenshot?' + params);
-          const remaining = resp.headers.get('X-Trial-Remaining');
+          var resp = await fetch('/trial/screenshot?' + params);
+          var remaining = resp.headers.get('X-Trial-Remaining');
           if (!resp.ok) {
-            const err = await resp.json();
-            status.textContent = err.error;
+            var err = await resp.json();
+            showError(status, err.error || 'Capture failed');
             return;
           }
-          const blob = await resp.blob();
-          const objUrl = URL.createObjectURL(blob);
+          var blob = await resp.blob();
+          var objUrl = URL.createObjectURL(blob);
+
+          // C6: Show capture timing
+          var elapsed = ((Date.now() - captureStartTime) / 1000).toFixed(1);
 
           // Show results with Screenshot tab active
           result.style.display = 'block';
@@ -270,30 +443,42 @@ const LANDING_HTML = `<!DOCTYPE html>
 
           // Activate screenshot tab
           activateTab('screenshot');
-          status.textContent = 'Page captured.' + (remaining ? ' ' + remaining + ' free captures remaining today.' : '') + ' Click tabs to see all outputs.';
+          status.textContent = '';
+          var timing = document.createElement('span');
+          timing.className = 'capture-timing';
+          timing.textContent = 'Captured in ' + elapsed + 's';
+          status.appendChild(timing);
+          status.appendChild(document.createTextNode(
+            (remaining ? ' \\u00b7 ' + remaining + ' free captures remaining today.' : '') +
+            ' Click tabs to see all outputs.'
+          ));
 
           // Start loading content and metadata in the background
           loadExtract(fullUrl);
           loadMetadata(fullUrl);
         } catch(e) {
-          status.textContent = 'Error: ' + e.message;
+          showError(status, 'Error: ' + e.message);
+        } finally {
+          // C5: Re-enable button
+          captureBtn.disabled = false;
+          captureBtn.textContent = 'Capture Page';
         }
       }
 
       function activateTab(tabName) {
-        document.querySelectorAll('.trial-tab').forEach((t) => {
+        document.querySelectorAll('.trial-tab').forEach(function(t) {
           t.classList.remove('active');
           t.style.color = 'var(--muted)';
           t.style.borderBottomColor = 'transparent';
         });
-        document.querySelectorAll('.tab-content').forEach((c) => { c.style.display = 'none'; });
-        const tab = document.querySelector('[data-tab="' + tabName + '"]');
+        document.querySelectorAll('.tab-content').forEach(function(c) { c.style.display = 'none'; });
+        var tab = document.querySelector('[data-tab="' + tabName + '"]');
         if (tab) {
           tab.classList.add('active');
           tab.style.color = 'var(--brand)';
           tab.style.borderBottomColor = 'var(--brand)';
         }
-        const content = document.getElementById('tab-' + tabName);
+        var content = document.getElementById('tab-' + tabName);
         if (content) content.style.display = '';
       }
     </script>

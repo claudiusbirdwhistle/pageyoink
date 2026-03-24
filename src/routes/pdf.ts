@@ -3,6 +3,7 @@ import { generatePdf } from "../services/pdf.js";
 import { cacheGet, cacheSet } from "../services/cache.js";
 import { addWatermark, WatermarkOptions } from "../services/watermark.js";
 import { validateUrlSafe } from "../utils/url.js";
+import { classifyNavigationError } from "../utils/errors.js";
 import { checkSsrf } from "../utils/ssrf.js";
 
 interface PdfQuery {
@@ -239,10 +240,9 @@ export async function pdfRoute(app: FastifyInstance) {
           .header("Content-Disposition", 'inline; filename="document.pdf"')
           .send(result.buffer);
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "PDF generation failed";
+        const classified = classifyNavigationError(err);
         request.log.error({ err }, "PDF generation failed");
-        return reply.status(500).send({ error: message });
+        return reply.status(classified.statusCode).send({ error: classified.message });
       }
     },
   );
@@ -462,10 +462,9 @@ export async function pdfRoute(app: FastifyInstance) {
           .header("Content-Disposition", 'inline; filename="document.pdf"')
           .send(finalBuffer);
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "PDF generation failed";
+        const classified = classifyNavigationError(err);
         request.log.error({ err }, "PDF generation failed");
-        return reply.status(500).send({ error: message });
+        return reply.status(classified.statusCode).send({ error: classified.message });
       }
     },
   );

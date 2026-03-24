@@ -18,6 +18,8 @@ export interface ExtractResult {
   excerpt: string;
   /** Author if detected */
   author: string | null;
+  /** Warning message if content extraction was degraded */
+  warning?: string;
 }
 
 /**
@@ -51,6 +53,7 @@ export async function extractContent(
   let title: string;
   let author: string | null = null;
   let excerpt = "";
+  let warning: string | undefined;
 
   if (article && article.content && article.content.trim().length > 0) {
     // Readability found an article
@@ -67,6 +70,7 @@ export async function extractContent(
       return clone.innerHTML;
     })()`) as string;
     title = pageTitle;
+    warning = "No article content detected. Returning full page body text as fallback.";
   }
 
   let content: string;
@@ -133,7 +137,7 @@ export async function extractContent(
     if (plainText.length > 200) excerpt += "...";
   }
 
-  return {
+  const result: ExtractResult = {
     content,
     format,
     title,
@@ -142,4 +146,6 @@ export async function extractContent(
     excerpt,
     author,
   };
+  if (warning) result.warning = warning;
+  return result;
 }

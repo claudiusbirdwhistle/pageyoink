@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { compareImages } from "../services/diff.js";
 import { validateUrlSafe } from "../utils/url.js";
+import { classifyNavigationError } from "../utils/errors.js";
 
 interface DiffBody {
   url1: string;
@@ -105,10 +106,9 @@ export async function diffRoute(app: FastifyInstance) {
           diffImage: result.diffImage.toString("base64"),
         };
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Diff failed";
+        const classified = classifyNavigationError(err);
         request.log.error({ err }, "Diff failed");
-        return reply.status(500).send({ error: message });
+        return reply.status(classified.statusCode).send({ error: classified.message });
       }
     },
   );

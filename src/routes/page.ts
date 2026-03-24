@@ -10,6 +10,7 @@ import { hideAdsStealthily } from "../services/stealth-adblock.js";
 import { applyPrintFixes } from "../services/print-fix.js";
 import { validateUrlSafe } from "../utils/url.js";
 import { validateViewport, validateCssSize, validateJsSize } from "../utils/validation.js";
+import { classifyNavigationError } from "../utils/errors.js";
 
 interface PageBody {
   url: string;
@@ -256,10 +257,9 @@ export async function pageRoute(app: FastifyInstance) {
 
         return reply.send(result);
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Page capture failed";
+        const classified = classifyNavigationError(err);
         request.log.error({ err }, "Unified page capture failed");
-        return reply.status(500).send({ error: message });
+        return reply.status(classified.statusCode).send({ error: classified.message });
       } finally {
         await page.close();
       }

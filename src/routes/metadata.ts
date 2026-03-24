@@ -2,6 +2,7 @@ import { FastifyInstance } from "fastify";
 import { getBrowser } from "../services/browser.js";
 import { extractMetadata } from "../services/metadata.js";
 import { validateUrlSafe } from "../utils/url.js";
+import { classifyNavigationError } from "../utils/errors.js";
 
 interface MetadataQuery {
   url: string;
@@ -60,10 +61,9 @@ export async function metadataRoute(app: FastifyInstance) {
         const metadata = await extractMetadata(page);
         return reply.send(metadata);
       } catch (err) {
-        const message =
-          err instanceof Error ? err.message : "Metadata extraction failed";
+        const classified = classifyNavigationError(err);
         request.log.error({ err }, "Metadata extraction failed");
-        return reply.status(500).send({ error: message });
+        return reply.status(classified.statusCode).send({ error: classified.message });
       } finally {
         await page.close();
       }
