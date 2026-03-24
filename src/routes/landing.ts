@@ -5,8 +5,8 @@ const LANDING_HTML = `<!DOCTYPE html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>PageYoink — Screenshot &amp; PDF API</title>
-  <meta name="description" content="Yoink pages into screenshots and PDFs. Fast, intelligent capture API with cookie banner removal, ad blocking, and smart rendering.">
+  <title>PageYoink — The Web Page API</title>
+  <meta name="description" content="One URL, everything you need. Screenshot, PDF, Markdown, metadata — all from a single page load. Clean captures, LLM-ready content, MCP server for AI agents.">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root { --brand: #6366f1; --bg: #0f0f1a; --surface: #1a1a2e; --text: #e0e0f0; --muted: #8888a0; }
@@ -59,22 +59,20 @@ const LANDING_HTML = `<!DOCTYPE html>
   <div class="container">
     <header>
       <div class="logo">Page<span>Yoink</span></div>
-      <p class="tagline">Yoink pages into screenshots and PDFs. One API, clean captures, zero hassle.</p>
+      <p class="tagline">One URL. Screenshot, PDF, markdown, metadata. All from a single page load.</p>
     </header>
 
     <section>
       <div class="code-block">
-        <span class="comment"># Take a screenshot</span><br>
-        curl "<span class="string">https://api.pageyoink.dev/v1/screenshot?url=https://example.com&amp;clean=true</span>" \\<br>
-        &nbsp;&nbsp;-H "<span class="key">x-api-key</span>: <span class="string">your-key</span>" -o screenshot.png<br><br>
-        <span class="comment"># Generate a PDF</span><br>
-        curl "<span class="string">https://api.pageyoink.dev/v1/pdf?url=https://example.com</span>" \\<br>
-        &nbsp;&nbsp;-H "<span class="key">x-api-key</span>: <span class="string">your-key</span>" -o document.pdf<br><br>
-        <span class="comment"># Compare two pages visually</span><br>
-        curl -X POST "<span class="string">https://api.pageyoink.dev/v1/diff</span>" \\<br>
+        <span class="comment"># One URL, everything you need</span><br>
+        curl -X POST "<span class="string">https://api.pageyoink.dev/v1/page</span>" \\<br>
         &nbsp;&nbsp;-H "<span class="key">x-api-key</span>: <span class="string">your-key</span>" \\<br>
         &nbsp;&nbsp;-H "Content-Type: application/json" \\<br>
-        &nbsp;&nbsp;-d '{"url1":"https://example.com","url2":"https://example.org"}' -o diff.png
+        &nbsp;&nbsp;-d '{"url":"https://example.com","outputs":["screenshot","markdown","metadata"]}'<br><br>
+        <span class="comment"># Or use individual endpoints</span><br>
+        curl "<span class="string">https://api.pageyoink.dev/v1/extract?url=https://example.com</span>" <span class="comment"># Markdown</span><br>
+        curl "<span class="string">https://api.pageyoink.dev/v1/screenshot?url=https://example.com</span>" <span class="comment"># PNG</span><br>
+        curl "<span class="string">https://api.pageyoink.dev/v1/metadata?url=https://example.com</span>" <span class="comment"># JSON</span>
       </div>
     </section>
 
@@ -389,22 +387,40 @@ const LANDING_HTML = `<!DOCTYPE html>
     <section>
       <h2>Endpoints</h2>
       <div class="endpoints">
+        <div class="endpoint" style="border-color:var(--brand);">
+          <h3><span class="method post">POST</span> <span class="path">/v1/page</span> <span style="color:var(--brand);font-size:12px;font-weight:400;">UNIFIED</span></h3>
+          <p>One URL, any combination of outputs: screenshot, PDF, markdown, text, HTML, metadata. All from a single page load.</p>
+        </div>
+        <div class="endpoint">
+          <h3><span class="method">GET</span> <span class="path">/v1/extract</span></h3>
+          <p>Extract clean content as Markdown, plain text, or HTML. Powered by Mozilla Readability.</p>
+        </div>
+        <div class="endpoint">
+          <h3><span class="method">GET</span> <span class="path">/v1/metadata</span></h3>
+          <p>Page metadata: title, OG tags, Twitter Cards, favicon, JSON-LD, word count, link count.</p>
+        </div>
         <div class="endpoint">
           <h3><span class="method">GET</span> <span class="path">/v1/screenshot</span></h3>
-          <p>Capture any URL as PNG or JPEG. Configurable viewport, full-page, retina, and format options.</p>
+          <p>Capture any URL as PNG or JPEG. Viewport, full-page, retina, clean mode, ad blocking.</p>
         </div>
         <div class="endpoint">
           <h3><span class="method">GET</span> <span class="path">/v1/pdf</span></h3>
-          <p>Convert any URL to PDF. Supports A4/Letter/Legal/A3, landscape, margins, and background printing.</p>
-        </div>
-        <div class="endpoint">
-          <h3><span class="method post">POST</span> <span class="path">/v1/pdf</span></h3>
-          <p>Convert raw HTML to PDF. Send your HTML in the request body, get a PDF back.</p>
+          <p>Convert any URL to PDF. Page size, landscape, margins, headers/footers, watermarks.</p>
         </div>
         <div class="endpoint">
           <h3><span class="method post">POST</span> <span class="path">/v1/batch</span></h3>
-          <p>Process up to 50 URLs at once. Async with job tracking and optional webhook notification.</p>
+          <p>Process up to 50 URLs at once with webhook delivery when complete.</p>
         </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>For AI Agents</h2>
+      <div class="code-block">
+        <span class="comment"># Give any AI agent web access in one line</span><br>
+        npx pageyoink-mcp<br><br>
+        <span class="comment"># Tools available: web_page, screenshot, extract, metadata</span><br>
+        <span class="comment"># Works with Claude Desktop, Cursor, VS Code, and any MCP client</span>
       </div>
     </section>
 
@@ -412,72 +428,73 @@ const LANDING_HTML = `<!DOCTYPE html>
       <h2>What Makes PageYoink Different</h2>
       <div class="features">
         <div class="feature">
-          <h3>Clean Mode</h3>
-          <p>Auto-removes cookie banners, consent dialogs, chat widgets, and popups. No CSS selectors needed.</p>
+          <h3>One Page Load, All Outputs</h3>
+          <p>Screenshot + PDF + Markdown + Metadata from a single browser session. Faster and cheaper than calling separate APIs.</p>
         </div>
         <div class="feature">
-          <h3>Smart Wait</h3>
-          <p>Detects when JavaScript-heavy pages are truly done rendering. No more guessing at delay values.</p>
+          <h3>Clean Captures</h3>
+          <p>4-phase detection removes cookie banners, chat widgets, fundraising popups, and overlays automatically.</p>
         </div>
         <div class="feature">
-          <h3>Visual Diff</h3>
-          <p>Compare two URLs pixel-by-pixel. Catch visual regressions before your users do.</p>
+          <h3>LLM-Ready Markdown</h3>
+          <p>Extract clean content with Mozilla Readability. Headings, links, tables, code blocks preserved. Perfect for RAG pipelines.</p>
         </div>
         <div class="feature">
-          <h3>Batch Processing</h3>
-          <p>Submit up to 50 URLs at once with webhook delivery when the batch completes.</p>
+          <h3>MCP Server</h3>
+          <p>Give any AI agent web access with one command: npx pageyoink-mcp. Works with Claude, Cursor, and any MCP client.</p>
         </div>
         <div class="feature">
-          <h3>Simple Pricing</h3>
-          <p>Predictable pricing with no hidden fees. No per-feature surcharges or surprise bills.</p>
+          <h3>All Outputs Included</h3>
+          <p>Every pricing tier includes every output type. No credit multipliers, no per-feature surcharges.</p>
         </div>
         <div class="feature">
           <h3>Developer First</h3>
-          <p>Clean REST API, clear error messages, and comprehensive documentation.</p>
+          <p>Clean REST API, Swagger docs, SDKs in Node.js, Python, and Go. From zero to first capture in 60 seconds.</p>
         </div>
       </div>
     </section>
 
     <section class="pricing">
       <h2>Pricing</h2>
+      <p style="color:var(--muted);text-align:center;margin-bottom:30px;">One page capture = one browser load = any combination of outputs. No credit multipliers.</p>
       <div class="tiers">
         <div class="tier">
           <h3>Free</h3>
           <div class="price">$0<span>/mo</span></div>
           <ul>
-            <li>100 requests/month</li>
-            <li>All endpoints</li>
+            <li>200 captures/month</li>
+            <li>All outputs included</li>
             <li>Clean mode</li>
-            <li>Smart wait</li>
+            <li>MCP server access</li>
           </ul>
         </div>
         <div class="tier">
-          <h3>Starter</h3>
-          <div class="price">$9<span>/mo</span></div>
+          <h3>Builder</h3>
+          <div class="price">$12<span>/mo</span></div>
           <ul>
-            <li>5,000 requests/month</li>
-            <li>All endpoints</li>
+            <li>5,000 captures/month</li>
+            <li>All outputs included</li>
             <li>Batch processing</li>
-            <li>Priority rendering</li>
+            <li>Visual diff</li>
           </ul>
         </div>
         <div class="tier featured">
           <h3>Pro</h3>
-          <div class="price">$29<span>/mo</span></div>
+          <div class="price">$39<span>/mo</span></div>
           <ul>
-            <li>25,000 requests/month</li>
-            <li>All endpoints</li>
-            <li>Batch processing</li>
+            <li>25,000 captures/month</li>
+            <li>All outputs included</li>
+            <li>Priority rendering</li>
             <li>Webhooks</li>
             <li>Priority support</li>
           </ul>
         </div>
         <div class="tier">
-          <h3>Business</h3>
-          <div class="price">$79<span>/mo</span></div>
+          <h3>Scale</h3>
+          <div class="price">$99<span>/mo</span></div>
           <ul>
-            <li>100,000 requests/month</li>
-            <li>All endpoints</li>
+            <li>100,000 captures/month</li>
+            <li>All outputs included</li>
             <li>Custom concurrency</li>
             <li>SLA guarantee</li>
             <li>Dedicated support</li>
@@ -487,7 +504,8 @@ const LANDING_HTML = `<!DOCTYPE html>
     </section>
 
     <footer>
-      <p>PageYoink &mdash; Yoink pages into screenshots and PDFs.</p>
+      <p>PageYoink &mdash; One URL. Everything you need.</p>
+      <p style="margin-top:8px;font-size:12px;"><a href="/docs">API Docs</a></p>
     </footer>
   </div>
 </body>

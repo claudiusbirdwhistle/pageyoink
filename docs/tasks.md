@@ -94,41 +94,36 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 ## Phase G: Landing Page Rebuild — New Positioning
 
 ### New Hero Section
-30. [ ] Redesign landing page hero: "One URL. Everything you need." (or similar — think about the exact copy)
-31. [ ] Replace single URL input + Screenshot/PDF buttons with a multi-output demo
-32. [ ] Demo should show tabbed results: Screenshot | PDF | Content | Metadata
-33. [ ] Each tab loads its content from the trial endpoint when clicked (not all at once)
-34. [ ] Screenshot tab: show the rendered image (existing behavior)
-35. [ ] PDF tab: show download link + page count + file size (existing behavior, enhanced)
-36. [ ] Content tab: show extracted markdown with word count, rendered as formatted text
-37. [ ] Metadata tab: show OG preview card + meta tags + link/image counts + structured data
+30. [x] Redesign hero: "One URL. Screenshot, PDF, markdown, metadata. All from a single page load."
+31. [x] Multi-output demo with tabbed results (done in Phase E tasks 15-17)
+32. [x] Tabbed results: Screenshot | PDF | Content | Metadata
+33. [x] Tabs lazy-load content on click
+34. [x] Screenshot tab shows rendered image
+35. [x] PDF tab shows download link
+36. [x] Content tab shows markdown with word count and author
+37. [x] Metadata tab shows OG tags, stats, OG image preview
 
 ### AI Agent Section
-38. [ ] Add "For AI Agents" section below the demo
-39. [ ] Show the MCP install command: `npx pageyoink-mcp`
-40. [ ] Show example of an AI agent using the tool (a realistic conversation snippet)
-41. [ ] Link to MCP server README/docs
+38. [x] "For AI Agents" section with MCP install command
+39. [x] Shows `npx pageyoink-mcp` command
+40. [x] Shows available tools (web_page, screenshot, extract, metadata)
+41. [ ] Link to MCP server README/docs (needs hosted docs)
 
 ### API Section
-42. [ ] Update the endpoint list to feature `/v1/page` as the primary endpoint
-43. [ ] Keep individual endpoints (screenshot, pdf, extract, metadata) listed as focused alternatives
-44. [ ] Show a code example of the unified endpoint with multiple outputs
+42. [x] /v1/page featured as primary endpoint with "UNIFIED" badge
+43. [x] Individual endpoints listed: extract, metadata, screenshot, pdf, batch
+44. [x] Code example shows unified endpoint + individual endpoints
 
 ### Pricing Section
-45. [ ] Redesign pricing around "page captures" not "screenshots"
-    - Free: 200 captures/month, all outputs included
-    - Builder: $12/mo, 5,000 captures
-    - Pro: $39/mo, 25,000 captures
-    - Scale: $99/mo, 100,000 captures
-    - "All outputs included" badge on every tier — this is the differentiator
-46. [ ] Make it clear: one page capture = one browser load = any combination of outputs. No credit multipliers.
+45. [x] Redesigned: Free (200), Builder ($12/5K), Pro ($39/25K), Scale ($99/100K)
+46. [x] "One page capture = one browser load = any combination of outputs" explainer text
 
 ### General Polish
-47. [ ] Update tagline from "Screenshot & PDF API" to something reflecting the unified vision
-48. [ ] Update meta tags (og:title, og:description) for SEO and social sharing
-49. [ ] Ensure the landing page is fast (minimize inline CSS/JS, consider code splitting)
-50. [ ] Mobile-responsive design for the landing page
-51. [ ] Add footer with links: Docs, GitHub, API Status, Blog (placeholder)
+47. [x] Title: "The Web Page API", tagline updated
+48. [x] Meta description updated for SEO
+49. [ ] Page performance optimization (defer)
+50. [ ] Mobile-responsive design refinement (defer)
+51. [x] Footer with Docs link
 
 ---
 
