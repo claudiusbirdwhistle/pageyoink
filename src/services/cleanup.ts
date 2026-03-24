@@ -70,6 +70,15 @@ const COOKIE_BANNER_SELECTORS = [
   '[role="dialog"][aria-label*="privacy" i]',
   '[role="alertdialog"][aria-label*="cookie" i]',
   '[role="region"][aria-label*="cookie" i]',
+
+  // Promotional / announcement banners
+  "global-banner", // GitHub
+  '[class*="global-banner"]',
+  '[class*="announcement-banner"]',
+  '[class*="promo-banner"]',
+  '[class*="top-banner"]',
+  '[class*="site-banner"]',
+  '[class*="marketing-banner"]',
 ];
 
 // Common popup/modal/overlay selectors
@@ -220,8 +229,14 @@ export async function cleanPage(page: Page): Promise<void> {
       }
     }
 
-    // Remove any overflow:hidden on body (often set by modals)
-    document.body.style.overflow = "auto";
-    document.documentElement.style.overflow = "auto";
+    // Remove overflow:hidden on body (often set by modals) but don't
+    // change overflow:visible — that can break print/PDF rendering on
+    // sites like NYTimes where it creates a new formatting context.
+    if (window.getComputedStyle(document.body).overflow === "hidden") {
+      document.body.style.overflow = "auto";
+    }
+    if (window.getComputedStyle(document.documentElement).overflow === "hidden") {
+      document.documentElement.style.overflow = "auto";
+    }
   }, allSelectors);
 }
