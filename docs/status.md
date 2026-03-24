@@ -7,7 +7,7 @@
 - **Deployed:** Yes — Google Cloud Run (us-east1)
 - **URL:** https://pageyoink-1085551159615.us-east1.run.app
 - **CI:** Cloud Build auto-deploy on push to main
-- **Health:** Running, 83 tests passing
+- **Health:** Running, 125 tests passing
 - **Paying customers:** 0
 - **Monthly revenue:** $0
 
@@ -44,7 +44,7 @@
 - **4-phase clean mode** — cookie banners, chat widgets, text scanning, overlay detection
 - **Stealth ad blocking** — network blocking (Ghostery) + post-load visual hiding
 - **Smart wait** — DOM stability + fonts + images + animations
-- **Security hardened** — SSRF protection, input validation, browser hardening
+- **Security hardened** — SSRF protection, input validation, browser hardening, Helmet-style headers
 - **MCP server** — pageyoink-mcp package for AI agent web access
 
 ### SDKs
@@ -55,9 +55,22 @@
 ### Landing Page
 - New positioning: "One URL. Everything you need."
 - Tabbed demo: Screenshot | PDF | Content | Metadata
+- Markdown rendered as formatted HTML (not raw text)
+- Loading spinners, error states, capture timing
+- "How It Works" section, use cases, FAQ, privacy note
+- OG/Twitter meta tags for social sharing
+- Mobile responsive, tab animations
 - Updated pricing: Free 200, Builder $12, Pro $39, Scale $99
 - AI Agent section with MCP install command
 - Unified endpoint featured as primary
+
+### Recent Changes (2026-03-24 audit cycle)
+- **__name bugs fixed**: All page.evaluate() calls converted to string-based scripts, regression test added
+- **Error handling standardized**: Global error handler, DNS errors → 400, navigation timeout → 504
+- **Landing page UX**: Spinners, error states, button disable, timing, Enter key, markdown rendering
+- **Security hardened**: Helmet headers, static imports, proxy validation, rate limit headers
+- **Test coverage**: 125 tests (up from 83) — new tests for diff, trial, landing, cleanup, cache, watermark, integration
+- **Content quality**: Extract warns when Readability fallback used, httpStatus reported
 
 ## What's NOT Done Yet
 
@@ -68,6 +81,12 @@
 - [ ] Publish pageyoink-mcp to npm
 - [ ] Create Product Hunt and Hacker News listings
 - [ ] Build LangChain/CrewAI integrations
+
+### Remaining Audit Tasks (categories 9-12)
+- Build & ops (I1-I5): Docker testing, health checks, graceful shutdown, env docs
+- SDK & docs (J1-J6): TypeScript types, SDK docs, CHANGELOG
+- Content quality testing (K1-K3): Multi-site rendering quality validation
+- MCP server polish (L1-L5): End-to-end testing, timeout config, error messages
 
 ### Deferred (Post-Launch)
 - Caching for /v1/page endpoint
@@ -81,4 +100,4 @@
 - Cloud Run cold start: 5-10 seconds on first request after scale-to-zero
 - BBC carousel images don't render in PDF (Chromium limitation)
 - NYTimes print stylesheet hides masthead logo (site-specific)
-- `__name` decorator bug: never use named functions in page.evaluate()
+- `__name` decorator bug: FIXED — all page.evaluate() now uses string-based scripts
