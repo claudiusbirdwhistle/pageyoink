@@ -232,8 +232,13 @@ export async function screenshotRoute(app: FastifyInstance) {
         if (geoError) return reply.status(400).send({ error: geoError });
       }
 
-      // SSRF check for proxy URL
+      // Validate and SSRF-check proxy URL
       if (proxy) {
+        // H4: Strict proxy format validation (host:port or http://host:port)
+        const proxyPattern = /^(https?:\/\/)?[\w.-]+(:\d{1,5})?$/;
+        if (!proxyPattern.test(proxy)) {
+          return reply.status(400).send({ error: "Invalid proxy format. Must be host:port or http://host:port." });
+        }
         const proxyCheck = await checkSsrf(
           proxy.match(/^https?:\/\//) ? proxy : `http://${proxy}`,
         );

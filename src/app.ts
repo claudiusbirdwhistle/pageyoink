@@ -52,15 +52,22 @@ export async function buildApp() {
     });
   });
 
-  // Add request ID to response headers for debugging
+  // Security headers (Helmet-style)
   app.addHook("onSend", async (request, reply) => {
     reply.header("X-Request-Id", request.id);
+    reply.header("X-Content-Type-Options", "nosniff");
+    reply.header("X-Frame-Options", "DENY");
+    reply.header("X-XSS-Protection", "0"); // Modern approach: rely on CSP
+    reply.header("Referrer-Policy", "strict-origin-when-cross-origin");
+    reply.header("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   });
 
   await app.register(cors);
   await app.register(rateLimit, {
     max: parseInt(process.env.RATE_LIMIT_PER_MINUTE || "60", 10),
     timeWindow: "1 minute",
+    addHeadersOnExceeding: { "x-ratelimit-limit": true, "x-ratelimit-remaining": true, "x-ratelimit-reset": true },
+    addHeaders: { "x-ratelimit-limit": true, "x-ratelimit-remaining": true, "x-ratelimit-reset": true, "retry-after": true },
     keyGenerator: (request) => {
       return (
         (request.headers["x-api-key"] as string) ||

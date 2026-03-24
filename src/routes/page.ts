@@ -139,10 +139,15 @@ export async function pageRoute(app: FastifyInstance) {
       const effectiveTimeout = Math.min(body.timeout || 30_000, 60_000);
       const shouldClean = body.clean !== false; // Default true
 
-      const browser = await getBrowser();
-      const page = await browser.newPage();
+      // G2: Retry logic for browser crashes
+      const maxRetries = 2;
+      let lastError: unknown;
 
-      try {
+      for (let attempt = 0; attempt < maxRetries; attempt++) {
+        const browser = await getBrowser();
+        const page = await browser.newPage();
+
+        try {
         // Set viewport
         await page.setViewport({
           width: vpWidth || 1280,
@@ -160,11 +165,24 @@ export async function pageRoute(app: FastifyInstance) {
         }
 
         // Navigate
-        await page.goto(validated.url, {
+        const navResponse = await page.goto(validated.url, {
           waitUntil: "load",
           timeout: effectiveTimeout,
         });
         await new Promise((r) => setTimeout(r, 1000));
+
+        // G3: Check content type for non-HTML URLs
+        const contentType = navResponse?.headers()?.["content-type"] || "";
+        const isHtml = !contentType || contentType.includes("text/html") || contentType.includes("text/plain") || contentType.includes("application/xhtml");
+        if (!isHtml) {
+          // Non-HTML content: allow screenshot/pdf but block extract/markdown
+          const textOutputs = outputs.filter((o) => ["markdown", "text", "html"].includes(o));
+          if (textOutputs.length > 0 && !outputs.includes("screenshot") && !outputs.includes("pdf")) {
+            return reply.status(400).send({
+              error: `URL returned non-HTML content (${contentType.split(";")[0]}). Text extraction requires an HTML page.`,
+            });
+          }
+        }
 
         // Smart wait
         if (body.smartWait) {
@@ -256,13 +274,27 @@ export async function pageRoute(app: FastifyInstance) {
         result.outputs = outputs;
 
         return reply.send(result);
-      } catch (err) {
-        const classified = classifyNavigationError(err);
-        request.log.error({ err }, "Unified page capture failed");
-        return reply.status(classified.statusCode).send({ error: classified.message });
-      } finally {
-        await page.close();
+        } catch (err) {
+          lastError = err;
+          const msg = err instanceof Error ? err.message : String(err);
+          // Only retry on browser crashes / protocol errors, not on client errors
+          if (msg.includes("Protocol error") || msg.includes("Session closed") || msg.includes("Target closed")) {
+            request.log.warn({ err, attempt }, "Browser crash, retrying...");
+            continue;
+          }
+          // Non-retryable error
+          const classified = classifyNavigationError(err);
+          request.log.error({ err }, "Unified page capture failed");
+          return reply.status(classified.statusCode).send({ error: classified.message });
+        } finally {
+          await page.close();
+        }
       }
+
+      // All retries exhausted
+      const classified = classifyNavigationError(lastError);
+      request.log.error({ err: lastError }, "Unified page capture failed after retries");
+      return reply.status(classified.statusCode).send({ error: classified.message });
     },
   );
 }

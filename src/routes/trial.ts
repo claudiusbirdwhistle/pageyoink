@@ -7,6 +7,7 @@ import { extractContent } from "../services/extract.js";
 import { extractMetadata } from "../services/metadata.js";
 import { cleanPage } from "../services/cleanup.js";
 import { validateUrlSafe } from "../utils/url.js";
+import { checkSsrf } from "../utils/ssrf.js";
 import { classifyNavigationError } from "../utils/errors.js";
 
 // IP-based rate limiting for trial usage
@@ -189,7 +190,6 @@ export async function trialRoute(app: FastifyInstance) {
       } = request.query;
 
       // SSRF-safe URL validation
-      const { checkSsrf } = await import("../utils/ssrf.js");
       const ssrfError = await checkSsrf(url);
       if (ssrfError) {
         return reply.status(400).send({ error: ssrfError });

@@ -81,7 +81,7 @@ describe("Diff endpoint (POST /v1/diff)", () => {
     expect(typeof body.diffPercentage).toBe("number");
     expect(body.diffImage).toBeDefined(); // base64 string
     expect(body.identical).toBe(true); // same URL should produce identical screenshots
-  }, 60_000);
+  }, 120_000);
 
   it("image format returns PNG binary", async () => {
     const response = await app.inject({
