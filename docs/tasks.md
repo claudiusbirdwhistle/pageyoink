@@ -52,18 +52,9 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 5. [x] Sample output saved to samples/wikipedia_extract.md, samples/hn_extract.md
 
 ### Metadata Extraction
-6. [ ] Create `src/services/metadata.ts` — extracts page metadata from a loaded Puppeteer Page
-   - Title, description, canonical URL
-   - Open Graph tags (og:title, og:description, og:image, og:type, og:url)
-   - Twitter Card tags (twitter:card, twitter:title, twitter:image)
-   - Favicon URL
-   - Language (html lang attribute)
-   - Link count (internal vs external)
-   - Image count
-   - Word count
-   - Structured data (JSON-LD, if present)
-7. [ ] Create `GET /v1/metadata` endpoint — lightweight, doesn't need full rendering for basic sites
-8. [ ] Test metadata extraction against real sites with rich OG tags: nytimes.com, github.com, producthunt.com
+6. [x] Create `src/services/metadata.ts` — extracts title, description, OG, Twitter Cards, favicon, JSON-LD, link/image/word counts
+7. [x] Create `GET /v1/metadata` endpoint — lightweight with 15s default timeout
+8. [x] Test: example.com, github.com (OG tags), HN (link counts), SSRF blocking — 5 tests
 
 ### Unified Page Endpoint
 9. [ ] Design the `/v1/page` endpoint response shape — think carefully about this before implementing
