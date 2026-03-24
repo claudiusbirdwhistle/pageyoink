@@ -7,6 +7,15 @@ const LANDING_HTML = `<!DOCTYPE html>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>PageYoink — The Web Page API</title>
   <meta name="description" content="One URL, everything you need. Screenshot, PDF, Markdown, metadata — all from a single page load. Clean captures, LLM-ready content, MCP server for AI agents.">
+  <meta property="og:title" content="PageYoink — The Web Page API">
+  <meta property="og:description" content="One URL, everything you need. Screenshot, PDF, Markdown, metadata from a single page load.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://pageyoink.dev">
+  <meta property="og:image" content="https://pageyoink-1085551159615.us-east1.run.app/v1/screenshot?url=https://pageyoink-1085551159615.us-east1.run.app">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="PageYoink — The Web Page API">
+  <meta name="twitter:description" content="One URL, everything you need. Screenshot, PDF, Markdown, metadata from a single page load.">
+  <meta name="twitter:image" content="https://pageyoink-1085551159615.us-east1.run.app/v1/screenshot?url=https://pageyoink-1085551159615.us-east1.run.app">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     :root { --brand: #6366f1; --bg: #0f0f1a; --surface: #1a1a2e; --text: #e0e0f0; --muted: #8888a0; }
@@ -53,6 +62,45 @@ const LANDING_HTML = `<!DOCTYPE html>
     footer { text-align: center; padding: 60px 0 40px; color: var(--muted); font-size: 14px; }
     section { margin-bottom: 40px; }
     section h2 { font-size: 28px; margin-bottom: 20px; }
+
+    /* C15: Mobile responsive */
+    @media (max-width: 480px) {
+      .logo { font-size: 32px; }
+      .tagline { font-size: 18px; }
+      header { padding: 40px 0 30px; }
+      .container { padding: 0 16px; }
+      section h2 { font-size: 22px; }
+      #trial-tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+      .trial-tab { padding: 8px 14px !important; font-size: 13px !important; white-space: nowrap; }
+      .tiers { grid-template-columns: 1fr; }
+      .features { grid-template-columns: 1fr; }
+    }
+
+    /* C17: Tab switch animation */
+    .tab-content { animation: fadeIn 0.2s ease-in; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* C10: How it works */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 24px; margin: 24px 0; }
+    .step { text-align: center; padding: 24px; }
+    .step-number { width: 48px; height: 48px; border-radius: 50%; background: var(--brand); color: white; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; margin-bottom: 12px; }
+    .step h3 { font-size: 16px; margin-bottom: 6px; }
+    .step p { color: var(--muted); font-size: 14px; }
+
+    /* C11: Use cases */
+    .use-cases { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin: 24px 0; }
+    .use-case { background: var(--surface); border-radius: 12px; padding: 24px; border: 1px solid #2a2a3e; }
+    .use-case h3 { font-size: 16px; margin-bottom: 8px; color: var(--brand); }
+    .use-case p { color: var(--muted); font-size: 14px; }
+
+    /* C12: FAQ */
+    .faq { margin: 24px 0; }
+    .faq-item { background: var(--surface); border-radius: 12px; padding: 20px; margin-bottom: 12px; border: 1px solid #2a2a3e; }
+    .faq-item h3 { font-size: 15px; margin-bottom: 6px; }
+    .faq-item p { color: var(--muted); font-size: 14px; }
+
+    /* C18: Metadata card layout */
+    .metadata-card { background: var(--surface); border-radius: 12px; border: 1px solid #2a2a3e; }
   </style>
 </head>
 <body>
@@ -551,6 +599,71 @@ const LANDING_HTML = `<!DOCTYPE html>
           <p>Clean REST API, Swagger docs, SDKs in Node.js, Python, and Go. From zero to first capture in 60 seconds.</p>
         </div>
       </div>
+    </section>
+
+    <section>
+      <h2>How It Works</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">1</div>
+          <h3>Send a URL</h3>
+          <p>POST to /v1/page with any URL and pick your outputs: screenshot, PDF, markdown, metadata.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">2</div>
+          <h3>We Load It in a Real Browser</h3>
+          <p>Chromium renders the page, handles JavaScript, removes popups, waits for fonts and images.</p>
+        </div>
+        <div class="step">
+          <div class="step-number">3</div>
+          <h3>Get Any Output You Need</h3>
+          <p>Screenshot as PNG, PDF with formatting, clean Markdown for LLMs, structured metadata — all from one page load.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>Built For</h2>
+      <div class="use-cases">
+        <div class="use-case">
+          <h3>AI Agents &amp; LLMs</h3>
+          <p>Give your AI agent web access with MCP. Extract clean Markdown from any URL for RAG pipelines, summarization, and research.</p>
+        </div>
+        <div class="use-case">
+          <h3>QA &amp; Testing Teams</h3>
+          <p>Visual regression testing with pixel-level diff. Screenshot before/after deployments, catch layout regressions automatically.</p>
+        </div>
+        <div class="use-case">
+          <h3>Content Pipelines</h3>
+          <p>Turn any web page into structured data. Extract articles, metadata, OG tags, and JSON-LD at scale with batch processing.</p>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <h2>FAQ</h2>
+      <div class="faq">
+        <div class="faq-item">
+          <h3>What sites work?</h3>
+          <p>Any publicly accessible website. We use a full Chromium browser, so JavaScript-heavy SPAs, server-rendered pages, and static sites all work.</p>
+        </div>
+        <div class="faq-item">
+          <h3>How fast is it?</h3>
+          <p>Most captures complete in 2-5 seconds. Complex pages with heavy JavaScript may take up to 15 seconds. The unified endpoint captures all outputs in a single page load.</p>
+        </div>
+        <div class="faq-item">
+          <h3>What about JavaScript-heavy sites?</h3>
+          <p>Full JavaScript execution with smart wait detection. We monitor DOM stability, network activity, font loading, and animations before capturing.</p>
+        </div>
+        <div class="faq-item">
+          <h3>Is it free?</h3>
+          <p>Yes! 200 captures/month free with all outputs included. No credit card required. The trial demo above gives you 5 captures per day.</p>
+        </div>
+      </div>
+    </section>
+
+    <section style="text-align:center;padding:20px 0;">
+      <p style="color:var(--muted);font-size:13px;">Your captures are ephemeral. We don't store your content — pages are rendered on demand and results are returned directly. No data is retained after the response.</p>
     </section>
 
     <section class="pricing">
