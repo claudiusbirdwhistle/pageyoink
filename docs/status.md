@@ -1,13 +1,13 @@
 # Project Status
 
 ## Last Updated
-2026-03-23
+2026-03-24
 
 ## System State
 - **Deployed:** Yes — Google Cloud Run (us-east1)
 - **URL:** https://pageyoink-1085551159615.us-east1.run.app
-- **CI:** Cloud Build auto-deploy on push to main (trigger may need setup — check console)
-- **Health:** Running, 46 tests passing
+- **CI:** Cloud Build auto-deploy on push to main
+- **Health:** Running, 83 tests passing
 - **Paying customers:** 0
 - **Monthly revenue:** $0
 
@@ -21,10 +21,13 @@
 
 ## What's Built
 
-### Endpoints (11 + docs)
-- GET / — Landing page with interactive trial demo
+### Endpoints (15 + docs)
+- GET / — Landing page with tabbed multi-output demo
 - GET /docs — Swagger UI with full parameter descriptions
 - GET /internal/health — Health check + usage stats
+- **POST /v1/page** — Unified endpoint (screenshot + PDF + markdown + metadata from single page load)
+- GET /v1/extract — Markdown/text/HTML content extraction (Readability + Turndown)
+- GET /v1/metadata — OG tags, Twitter Cards, JSON-LD, page stats
 - GET /v1/screenshot — URL to PNG/JPEG
 - GET /v1/pdf — URL to PDF
 - POST /v1/pdf — HTML/URL to PDF (full options: headers, footers, watermark, proxy)
@@ -32,66 +35,50 @@
 - GET /v1/batch/:jobId — Batch job status + results
 - POST /v1/diff — Visual diff between two URLs (pixelmatch)
 - GET /v1/usage — Per-key usage dashboard
-- GET /trial/screenshot — Free trial (5/day per IP, no API key)
-- GET /trial/pdf — Free trial PDF
-
-### Screenshot Parameters
-url, format, quality, width, height, viewports, full_page, device_scale_factor,
-clean, smart_wait, block_ads (true/stealth), max_scroll, css, js, user_agent,
-selector, transparent, click, click_count, fonts, ttl, fresh, timeout,
-proxy, geolocation, timezone
-
-### PDF Parameters (POST body)
-All screenshot params plus: html, headers, cookies, headerTemplate, footerTemplate,
-displayHeaderFooter, pageRanges, watermark, landscape, margin, printBackground,
-scale (0.1-2.0), maxPages (truncate output)
+- GET /trial/screenshot, /trial/pdf, /trial/extract, /trial/metadata — Free trial endpoints
 
 ### Key Features
-- **4-phase clean mode** — selector blocklist + text-content scanning + z-index overlay + backdrop removal. Handles cookie banners, fundraising popups (Wikipedia, Guardian), chat widgets (Intercom, HubSpot, Drift, Zendesk, etc.)
-- **Stealth ad blocking** — post-load visual hiding, undetectable by anti-adblock scripts (3-phase: selector, iframe domain, IAB size heuristic)
-- **Network ad blocking** — Ghostery engine (uBlock/EasyList compatible)
-- **Smart wait** — network request tracking + DOM mutation tracking + fonts + images + animations, two-phase stability (resets on new activity)
-- **Lazy-load scrolling** — max_scroll cap prevents infinite scroll, event-based image wait
-- **Auto retry** — transient Chrome crashes retried automatically
-- **Print-mode PDF fixes** — carousel overflow detection
-- **Response caching** — in-memory with TTL, X-Cache HIT/MISS header
-- **URL auto-normalization** — bare domains (bbc.com) auto-prepend https://
+- **Unified page capture** — POST /v1/page returns any combination of outputs from a single page load
+- **LLM-ready extraction** — Mozilla Readability + Turndown for clean Markdown
+- **Metadata extraction** — OG tags, Twitter Cards, JSON-LD, page stats, favicon
+- **4-phase clean mode** — cookie banners, chat widgets, text scanning, overlay detection
+- **Stealth ad blocking** — network blocking (Ghostery) + post-load visual hiding
+- **Smart wait** — DOM stability + fonts + images + animations
+- **Security hardened** — SSRF protection, input validation, browser hardening
+- **MCP server** — pageyoink-mcp package for AI agent web access
 
 ### SDKs
-- Node.js (sdk/) — full TypeScript types
-- Python (sdk-python/) — httpx client
-- Go (sdk-go/) — zero dependencies
+- Node.js (sdk/) — page(), extract(), metadata(), screenshot, PDF, diff, batch
+- Python (sdk-python/) — same methods
+- Go (sdk-go/) — same methods
 
-### Performance
-- Default: `load` event + 1s render delay (~2-3s per capture)
-- Previous: `networkidle2` (~8-15s per capture)
-- smart_wait available for JS-heavy sites needing full readiness detection
+### Landing Page
+- New positioning: "One URL. Everything you need."
+- Tabbed demo: Screenshot | PDF | Content | Metadata
+- Updated pricing: Free 200, Builder $12, Pro $39, Scale $99
+- AI Agent section with MCP install command
+- Unified endpoint featured as primary
 
 ## What's NOT Done Yet
 
-### Current Phase: F (MCP Server) + G (Landing Page Rebuild)
-Phase E (Unified Page API) complete. New endpoints:
-- GET /v1/extract — markdown/text/html extraction (Readability + Turndown)
-- GET /v1/metadata — OG tags, Twitter Cards, JSON-LD, page stats
-- POST /v1/page — unified endpoint (one URL, any combination of outputs)
-- Trial demo now has 4 tabs: Screenshot | PDF | Content | Metadata
-- Security hardening complete (SSRF, browser flags, input validation)
-- 83 tests passing
-
 ### Blocked on Human
-- [ ] Set API_KEYS environment variable in Cloud Run (currently auth disabled)
-- [ ] Create RapidAPI listing
-- [ ] Set up Stripe for direct sales
-- [ ] Register pageyoink.dev domain (optional)
-- [ ] Set up Cloud Build trigger (GitHub connection made, trigger may need creation in console)
+- [ ] Set up Stripe for payment processing
+- [ ] Implement API key provisioning and tier-based rate limiting
+- [ ] Register pageyoink.dev domain
+- [ ] Publish pageyoink-mcp to npm
+- [ ] Create Product Hunt and Hacker News listings
+- [ ] Build LangChain/CrewAI integrations
 
-### Remaining Icebox
-- PDF encryption (needs native qpdf)
-- Video capture (complex)
-- Geo-distributed rendering (needs infrastructure)
+### Deferred (Post-Launch)
+- Caching for /v1/page endpoint
+- Parallel extraction optimization
+- Social share preview renderer
+- Responsive multi-viewport preview
+- Table extraction as JSON
+- Top 50 website clean mode testing
 
 ## Known Issues
 - Cloud Run cold start: 5-10 seconds on first request after scale-to-zero
-- BBC "Weekend Reads" carousel: images don't render in PDF (Chromium print limitation, partially mitigated by print-fix.ts)
-- OG image feature was removed (too basic compared to Bannerbear)
-- `__name` decorator bug: never declare named functions inside page.evaluate() — see docs/agent-loop.md and memory
+- BBC carousel images don't render in PDF (Chromium limitation)
+- NYTimes print stylesheet hides masthead logo (site-specific)
+- `__name` decorator bug: never use named functions in page.evaluate()
