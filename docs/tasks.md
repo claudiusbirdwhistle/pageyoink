@@ -157,13 +157,13 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 
 These require human action (account creation, credentials):
 
-66. [ ] Set up Stripe for payment processing
-67. [ ] Implement API key provisioning (signup → API key → usage tracking)
-68. [ ] Implement tier-based rate limiting (free: 200/mo, builder: 5K, pro: 25K, scale: 100K)
-69. [ ] Build simple dashboard: API key management, usage stats, billing
-70. [ ] Set API_KEYS environment variable in Cloud Run
-71. [ ] Register pageyoink.dev domain (or similar)
-72. [ ] Set up DNS and SSL for custom domain
+66. [ ] Set up Stripe for payment processing (BLOCKED: needs Stripe account)
+67. [ ] Implement API key provisioning (BLOCKED: needs auth infrastructure decision)
+68. [ ] Implement tier-based rate limiting (BLOCKED: needs API key system first)
+69. [ ] Build simple dashboard (BLOCKED: needs auth + Stripe)
+70. [ ] Set API_KEYS environment variable in Cloud Run (BLOCKED: needs GCP console access)
+71. [ ] Register pageyoink.dev domain (BLOCKED: needs domain registrar)
+72. [ ] Set up DNS and SSL for custom domain (BLOCKED: needs domain)
 
 ---
 
