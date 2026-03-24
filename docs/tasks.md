@@ -45,17 +45,11 @@ S19. [x] Rate limit the /trial/reset endpoint — now blocked when NODE_ENV=prod
 This is the core product pivot. Build the new outputs and unified endpoint.
 
 ### Markdown Extraction
-1. [ ] Add Readability.js + Turndown.js dependencies
-2. [ ] Create `src/services/extract.ts` — accepts a Puppeteer Page, returns markdown string
-   - Use Readability to extract article content (strips nav, ads, sidebars)
-   - Use Turndown to convert clean HTML to markdown
-   - Preserve: headings, links, images (as markdown refs), tables, code blocks, lists
-   - Handle edge cases: pages with no article (return full body), empty pages, error pages
-3. [ ] Create `GET /v1/extract` endpoint — accepts url, returns markdown + plain text + metadata
-   - Query params: url, format (markdown|text|html), clean (boolean), timeout
-   - Response: `{ content: string, format: string, title: string, wordCount: number, url: string }`
-4. [ ] Test markdown extraction against real sites: nytimes.com, github.com, stripe.com/docs, wikipedia.org, news.ycombinator.com
-5. [ ] Save sample markdown output to samples/ for review
+1. [x] Add Readability.js + Turndown.js + jsdom dependencies
+2. [x] Create `src/services/extract.ts` — Readability + Turndown pipeline with fallback to body
+3. [x] Create `GET /v1/extract` endpoint — markdown/text/html formats, clean defaults to true
+4. [x] Test extraction: example.com, wikipedia (3124 words), HN (554 words) + 6 unit tests
+5. [x] Sample output saved to samples/wikipedia_extract.md, samples/hn_extract.md
 
 ### Metadata Extraction
 6. [ ] Create `src/services/metadata.ts` — extracts page metadata from a loaded Puppeteer Page
