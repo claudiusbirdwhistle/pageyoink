@@ -307,6 +307,59 @@ class PageYoink:
             return self._post("/v1/diff", body)
         return self._post_json("/v1/diff", body)
 
+    # -- Unified Page --
+
+    def page(
+        self,
+        url: str,
+        *,
+        outputs: list[str] | None = None,
+        clean: bool = True,
+        timeout: int | None = None,
+    ) -> dict[str, Any]:
+        """Unified page capture — one URL, multiple outputs from a single page load."""
+        body: dict[str, Any] = {"url": url}
+        if outputs:
+            body["outputs"] = outputs
+        if not clean:
+            body["clean"] = False
+        if timeout is not None:
+            body["timeout"] = timeout
+        return self._post_json("/v1/page", body)
+
+    # -- Extract --
+
+    def extract(
+        self,
+        url: str,
+        *,
+        format: str = "markdown",
+        clean: bool = True,
+        timeout: int | None = None,
+    ) -> dict[str, Any]:
+        """Extract clean content from a URL as markdown, text, or HTML."""
+        params: dict[str, Any] = {"url": url, "format": format}
+        if not clean:
+            params["clean"] = "false"
+        if timeout is not None:
+            params["timeout"] = timeout
+        resp = self._client.get(f"{self.base_url}/v1/extract?{urlencode(params)}")
+        if not resp.is_success:
+            raise PageYoinkError(resp.text, resp.status_code)
+        return resp.json()
+
+    # -- Metadata --
+
+    def metadata(self, url: str, timeout: int | None = None) -> dict[str, Any]:
+        """Extract metadata: title, OG tags, Twitter Cards, page stats, JSON-LD."""
+        params: dict[str, Any] = {"url": url}
+        if timeout is not None:
+            params["timeout"] = timeout
+        resp = self._client.get(f"{self.base_url}/v1/metadata?{urlencode(params)}")
+        if not resp.is_success:
+            raise PageYoinkError(resp.text, resp.status_code)
+        return resp.json()
+
     # -- Batch --
 
     def batch(

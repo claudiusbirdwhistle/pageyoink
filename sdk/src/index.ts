@@ -280,6 +280,59 @@ export class PageYoink {
   }
 
   /**
+   * Unified page capture — one URL, multiple outputs from a single page load.
+   */
+  async page(
+    url: string,
+    options: {
+      outputs?: Array<"screenshot" | "pdf" | "markdown" | "text" | "html" | "metadata">;
+      clean?: boolean;
+      smartWait?: boolean;
+      blockAds?: boolean | "stealth";
+      viewport?: { width?: number; height?: number };
+      timeout?: number;
+      css?: string;
+      js?: string;
+      userAgent?: string;
+      pdfFormat?: "A4" | "Letter" | "Legal" | "A3";
+      landscape?: boolean;
+      extractFormat?: "markdown" | "text" | "html";
+    } = {},
+  ): Promise<Record<string, unknown>> {
+    const response = await this.fetch("/v1/page", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ url, ...options }),
+    });
+    return response.json();
+  }
+
+  /**
+   * Extract clean content from a URL as markdown, text, or HTML.
+   */
+  async extract(
+    url: string,
+    options: { format?: "markdown" | "text" | "html"; clean?: boolean; timeout?: number } = {},
+  ): Promise<{ content: string; format: string; title: string; wordCount: number; url: string; excerpt: string; author: string | null }> {
+    const params = new URLSearchParams({ url });
+    if (options.format) params.set("format", options.format);
+    if (options.clean === false) params.set("clean", "false");
+    if (options.timeout) params.set("timeout", String(options.timeout));
+    const response = await this.fetch(`/v1/extract?${params}`);
+    return response.json();
+  }
+
+  /**
+   * Extract metadata from a URL — title, OG tags, Twitter Cards, page stats.
+   */
+  async metadata(url: string, timeout?: number): Promise<Record<string, unknown>> {
+    const params = new URLSearchParams({ url });
+    if (timeout) params.set("timeout", String(timeout));
+    const response = await this.fetch(`/v1/metadata?${params}`);
+    return response.json();
+  }
+
+  /**
    * Get usage statistics for the current API key.
    */
   async usage(days: number = 30): Promise<UsageData> {

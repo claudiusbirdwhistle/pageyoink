@@ -136,9 +136,9 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 55. [ ] Add code examples in Node.js, Python, and curl for the unified endpoint
 
 ### SDK Updates
-56. [ ] Update Node.js SDK with page(), extract(), metadata() methods
-57. [ ] Update Python SDK with page(), extract(), metadata() methods
-58. [ ] Update Go SDK with Page(), Extract(), Metadata() methods
+56. [x] Update Node.js SDK with page(), extract(), metadata() methods
+57. [x] Update Python SDK with page(), extract(), metadata() methods
+58. [x] Update Go SDK with Page(), Extract(), Metadata() methods
 
 ### Content for Launch
 59. [ ] Write launch blog post: "Introducing PageYoink — The Web Page API for AI Agents"

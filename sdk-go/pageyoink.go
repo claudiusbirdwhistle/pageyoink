@@ -238,6 +238,50 @@ func (c *Client) PDFFromHTML(req PDFRequest) ([]byte, error) {
 	return c.post("/v1/pdf", req)
 }
 
+// PageRequest is the JSON body for POST /v1/page (unified endpoint).
+type PageRequest struct {
+	URL           string   `json:"url"`
+	Outputs       []string `json:"outputs,omitempty"`
+	Clean         *bool    `json:"clean,omitempty"`
+	SmartWait     bool     `json:"smartWait,omitempty"`
+	Timeout       int      `json:"timeout,omitempty"`
+}
+
+// Page captures a URL and returns multiple outputs from a single page load.
+func (c *Client) Page(req PageRequest) (json.RawMessage, error) {
+	data, err := c.post("/v1/page", req)
+	if err != nil {
+		return nil, err
+	}
+	return json.RawMessage(data), nil
+}
+
+// Extract returns clean content from a URL as markdown, text, or HTML.
+func (c *Client) Extract(targetURL string, format string) (json.RawMessage, error) {
+	if format == "" {
+		format = "markdown"
+	}
+	params := url.Values{}
+	params.Set("url", targetURL)
+	params.Set("format", format)
+	data, err := c.get("/v1/extract?" + params.Encode())
+	if err != nil {
+		return nil, err
+	}
+	return json.RawMessage(data), nil
+}
+
+// Metadata returns page metadata: title, OG tags, Twitter Cards, stats.
+func (c *Client) Metadata(targetURL string) (json.RawMessage, error) {
+	params := url.Values{}
+	params.Set("url", targetURL)
+	data, err := c.get("/v1/metadata?" + params.Encode())
+	if err != nil {
+		return nil, err
+	}
+	return json.RawMessage(data), nil
+}
+
 // DiffRequest is the JSON body for POST /v1/diff.
 type DiffRequest struct {
 	URL1      string      `json:"url1"`
