@@ -61,7 +61,54 @@ export async function triggerLazyImages(
     MAX_SCROLL_TIME_MS,
   );
 
-  // Phase 2: Force-decode all images and wait for completion
+  // Phase 2: Scroll again slowly to let intersection observers fire
+  // Some sites (NYTimes) use JS intersection observers that need elements
+  // to be in the viewport briefly for content to render
+  await page.evaluate(async (maxTimeMs: number) => {
+    const viewportHeight = window.innerHeight;
+    const scrollHeight = document.body.scrollHeight;
+    const step = viewportHeight * 0.5;
+    const startTime = Date.now();
+
+    for (let y = 0; y < scrollHeight; y += step) {
+      if (Date.now() - startTime > maxTimeMs) break;
+      window.scrollTo(0, y);
+      // Longer pause to let intersection observers fire and render
+      await new Promise<void>((r) => setTimeout(r, 150));
+    }
+    window.scrollTo(0, 0);
+  }, Math.min(MAX_SCROLL_TIME_MS, 10_000));
+
+  // Phase 3: Force all lazy images to load eagerly
+  await page.evaluate(() => {
+    const images = Array.from(document.querySelectorAll("img"));
+    for (const img of images) {
+      if (img.loading === "lazy") {
+        img.loading = "eager";
+      }
+      // Force unloaded images to re-request
+      if (img.src && !img.src.startsWith("data:") && img.naturalWidth === 0) {
+        const src = img.src;
+        img.src = "";
+        img.src = src;
+      }
+    }
+    // Also handle <picture> <source> elements — force srcset evaluation
+    const pictures = document.querySelectorAll("picture");
+    pictures.forEach((pic) => {
+      const img = pic.querySelector("img");
+      if (img && img.naturalWidth === 0 && img.src) {
+        // Remove sources temporarily to force img src fallback
+        const sources = pic.querySelectorAll("source");
+        sources.forEach((s) => s.remove());
+        const src = img.src;
+        img.src = "";
+        img.src = src;
+      }
+    });
+  });
+
+  // Phase 4: Wait for all images to finish loading
   await page.evaluate(async () => {
     const images = Array.from(document.querySelectorAll("img"));
     const promises = images
@@ -71,18 +118,16 @@ export async function triggerLazyImages(
           new Promise<void>((resolve) => {
             img.addEventListener("load", () => resolve(), { once: true });
             img.addEventListener("error", () => resolve(), { once: true });
-            // If already complete by the time we attach listeners
             if (img.complete) resolve();
           }),
       );
 
-    // Wait for all pending images, with a timeout
     await Promise.race([
       Promise.all(promises),
-      new Promise<void>((resolve) => setTimeout(resolve, 5000)),
+      new Promise<void>((resolve) => setTimeout(resolve, 10000)),
     ]);
   });
 
-  // Phase 3: Wait for browser to finish painting
+  // Phase 5: Wait for browser to finish painting
   await new Promise((resolve) => setTimeout(resolve, 1000));
 }
