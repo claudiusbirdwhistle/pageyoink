@@ -80,7 +80,7 @@ const LANDING_HTML = `<!DOCTYPE html>
 
     <section>
       <h2>Try It Now</h2>
-      <p style="color: var(--muted); margin-bottom: 20px;">Enter a URL to capture. ${`${5}`} free captures per day — no API key needed.</p>
+      <p style="color: var(--muted); margin-bottom: 20px;">Paste any URL. See everything. ${`${5}`} free captures per day — no API key needed.</p>
       <div style="display:flex;gap:12px;margin-bottom:12px;">
         <input type="text" id="trial-url" placeholder="https://example.com" value="https://www.bbc.com"
           style="flex:1;padding:12px 16px;border-radius:8px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:16px;outline:none;">
@@ -179,12 +179,120 @@ const LANDING_HTML = `<!DOCTYPE html>
           style="padding:12px 24px;border-radius:8px;border:none;background:#10b981;color:white;font-weight:600;cursor:pointer;font-size:14px;white-space:nowrap;">PDF</button>
       </div>
       <div id="trial-status" style="color:var(--muted);font-size:14px;margin-bottom:12px;"></div>
-      <div id="trial-result" style="display:none;background:var(--surface);border-radius:12px;border:1px solid #2a2a3e;padding:16px;text-align:center;">
-        <img id="trial-image" style="max-width:100%;border-radius:8px;display:none;">
-        <a id="trial-pdf-link" style="display:none;color:var(--brand);font-size:18px;font-weight:600;">Download PDF</a>
+      <div id="trial-result" style="display:none;">
+        <div id="trial-tabs" style="display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #2a2a3e;">
+          <button class="trial-tab active" data-tab="screenshot" style="padding:10px 20px;border:none;background:transparent;color:var(--brand);font-weight:600;font-size:14px;cursor:pointer;border-bottom:2px solid var(--brand);margin-bottom:-2px;">Screenshot</button>
+          <button class="trial-tab" data-tab="pdf" style="padding:10px 20px;border:none;background:transparent;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">PDF</button>
+          <button class="trial-tab" data-tab="content" style="padding:10px 20px;border:none;background:transparent;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">Content</button>
+          <button class="trial-tab" data-tab="metadata" style="padding:10px 20px;border:none;background:transparent;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">Metadata</button>
+        </div>
+        <div style="background:var(--surface);border-radius:0 0 12px 12px;border:1px solid #2a2a3e;border-top:none;padding:16px;">
+          <div id="tab-screenshot" class="tab-content" style="text-align:center;">
+            <img id="trial-image" style="max-width:100%;border-radius:8px;display:none;">
+          </div>
+          <div id="tab-pdf" class="tab-content" style="display:none;text-align:center;">
+            <a id="trial-pdf-link" style="display:none;color:var(--brand);font-size:18px;font-weight:600;">Download PDF</a>
+          </div>
+          <div id="tab-content" class="tab-content" style="display:none;">
+            <div id="trial-extract" style="max-height:500px;overflow-y:auto;font-size:14px;line-height:1.7;color:var(--text);white-space:pre-wrap;font-family:-apple-system,sans-serif;"></div>
+            <div id="trial-extract-meta" style="margin-top:12px;padding-top:12px;border-top:1px solid #2a2a3e;color:var(--muted);font-size:12px;"></div>
+          </div>
+          <div id="tab-metadata" class="tab-content" style="display:none;">
+            <div id="trial-metadata" style="font-size:13px;color:var(--text);"></div>
+          </div>
+        </div>
       </div>
     </section>
     <script>
+      // Tab switching
+      document.addEventListener('click', (e) => {
+        if (!e.target.classList?.contains('trial-tab')) return;
+        document.querySelectorAll('.trial-tab').forEach((t) => {
+          t.classList.remove('active');
+          t.style.color = 'var(--muted)';
+          t.style.borderBottomColor = 'transparent';
+        });
+        e.target.classList.add('active');
+        e.target.style.color = 'var(--brand)';
+        e.target.style.borderBottomColor = 'var(--brand)';
+        document.querySelectorAll('.tab-content').forEach((c) => { c.style.display = 'none'; });
+        const tabId = 'tab-' + e.target.dataset.tab;
+        const tab = document.getElementById(tabId);
+        if (tab) tab.style.display = '';
+
+        // Lazy-load content/metadata tabs on first click
+        const rawUrl = document.getElementById('trial-url').value.trim();
+        const fullUrl = rawUrl.match(/^https?:\\/\\//) ? rawUrl : 'https://' + rawUrl;
+        if (e.target.dataset.tab === 'content' && !document.getElementById('trial-extract').textContent) {
+          loadExtract(fullUrl);
+        }
+        if (e.target.dataset.tab === 'metadata' && !document.getElementById('trial-metadata').textContent) {
+          loadMetadata(fullUrl);
+        }
+      });
+
+      async function loadExtract(url) {
+        const el = document.getElementById('trial-extract');
+        const meta = document.getElementById('trial-extract-meta');
+        el.textContent = 'Extracting content...';
+        try {
+          const resp = await fetch('/trial/extract?url=' + encodeURIComponent(url));
+          if (!resp.ok) { el.textContent = 'Extraction failed.'; return; }
+          const data = await resp.json();
+          el.textContent = data.content;
+          meta.textContent = data.wordCount + ' words' + (data.author ? ' | By ' + data.author : '') + ' | ' + data.title;
+        } catch(e) { el.textContent = 'Error: ' + e.message; }
+      }
+
+      async function loadMetadata(url) {
+        const el = document.getElementById('trial-metadata');
+        el.textContent = 'Loading metadata...';
+        try {
+          const resp = await fetch('/trial/metadata?url=' + encodeURIComponent(url));
+          if (!resp.ok) { el.textContent = 'Metadata extraction failed.'; return; }
+          const data = await resp.json();
+          // Build metadata display using safe DOM methods
+          el.textContent = '';
+          const grid = document.createElement('div');
+          grid.style.cssText = 'display:grid;grid-template-columns:120px 1fr;gap:8px 16px;';
+          const addRow = (label, value) => {
+            if (!value) return;
+            const lbl = document.createElement('div');
+            lbl.style.cssText = 'color:var(--muted);font-weight:600;';
+            lbl.textContent = label;
+            const val = document.createElement('div');
+            val.textContent = String(value);
+            grid.appendChild(lbl);
+            grid.appendChild(val);
+          };
+          addRow('Title', data.title);
+          addRow('Description', data.description);
+          addRow('Language', data.language);
+          addRow('OG Title', data.og.title);
+          addRow('OG Description', data.og.description);
+          addRow('OG Type', data.og.type);
+          addRow('Twitter Card', data.twitter.card);
+          addRow('Twitter Site', data.twitter.site);
+          addRow('Words', data.stats.wordCount);
+          addRow('Links', data.stats.linkCount + ' (' + data.stats.internalLinks + ' internal, ' + data.stats.externalLinks + ' external)');
+          addRow('Images', data.stats.imageCount);
+          addRow('Canonical', data.canonicalUrl);
+          if (data.jsonLd) addRow('JSON-LD', data.jsonLd.length + ' item(s)');
+          el.appendChild(grid);
+          // OG image preview (safe - using DOM methods)
+          if (data.og.image) {
+            const imgContainer = document.createElement('div');
+            imgContainer.style.cssText = 'margin-top:16px;';
+            const ogImg = document.createElement('img');
+            ogImg.src = data.og.image;
+            ogImg.style.cssText = 'max-width:100%;max-height:200px;border-radius:8px;border:1px solid #2a2a3e;';
+            ogImg.onerror = () => { ogImg.style.display = 'none'; };
+            imgContainer.appendChild(ogImg);
+            el.appendChild(imgContainer);
+          }
+        } catch(e) { el.textContent = 'Error: ' + e.message; }
+      }
+
       async function trialCapture(type) {
         const url = document.getElementById('trial-url').value.trim();
         if (!url) return;
@@ -196,6 +304,10 @@ const LANDING_HTML = `<!DOCTYPE html>
         const pdfLink = document.getElementById('trial-pdf-link');
         status.textContent = 'Capturing... (this may take a few seconds)';
         result.style.display = 'none';
+        // Reset tab content for new URL
+        document.getElementById('trial-extract').textContent = '';
+        document.getElementById('trial-extract-meta').textContent = '';
+        document.getElementById('trial-metadata').textContent = '';
         img.style.display = 'none';
         pdfLink.style.display = 'none';
         const fullUrl = url.match(/^https?:\\/\\//) ? url : 'https://' + url;
@@ -240,15 +352,32 @@ const LANDING_HTML = `<!DOCTYPE html>
           const blob = await resp.blob();
           const objUrl = URL.createObjectURL(blob);
           result.style.display = 'block';
+          // Show appropriate tab
+          document.querySelectorAll('.trial-tab').forEach((t) => {
+            t.classList.remove('active');
+            t.style.color = 'var(--muted)';
+            t.style.borderBottomColor = 'transparent';
+          });
+          document.querySelectorAll('.tab-content').forEach((c) => { c.style.display = 'none'; });
           if (type === 'screenshot') {
             img.src = objUrl;
             img.style.display = 'block';
+            document.getElementById('tab-screenshot').style.display = '';
+            const ssTab = document.querySelector('[data-tab="screenshot"]');
+            ssTab.classList.add('active');
+            ssTab.style.color = 'var(--brand)';
+            ssTab.style.borderBottomColor = 'var(--brand)';
             status.textContent = 'Screenshot captured.' + (remaining ? ' ' + remaining + ' free captures remaining today.' : '');
           } else {
             pdfLink.href = objUrl;
             pdfLink.download = 'document.pdf';
             pdfLink.textContent = 'Download PDF';
             pdfLink.style.display = 'inline-block';
+            document.getElementById('tab-pdf').style.display = '';
+            const pdfTab = document.querySelector('[data-tab="pdf"]');
+            pdfTab.classList.add('active');
+            pdfTab.style.color = 'var(--brand)';
+            pdfTab.style.borderBottomColor = 'var(--brand)';
             status.textContent = 'PDF generated.' + (remaining ? ' ' + remaining + ' free captures remaining today.' : '');
           }
         } catch(e) {

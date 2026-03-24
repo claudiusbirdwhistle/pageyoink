@@ -2,6 +2,10 @@ import { FastifyInstance, FastifyRequest } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { generatePdf } from "../services/pdf.js";
 import { addWatermark } from "../services/watermark.js";
+import { getBrowser } from "../services/browser.js";
+import { extractContent } from "../services/extract.js";
+import { extractMetadata } from "../services/metadata.js";
+import { cleanPage } from "../services/cleanup.js";
 import { validateUrlSafe } from "../utils/url.js";
 
 // IP-based rate limiting for trial usage
@@ -253,6 +257,102 @@ export async function trialRoute(app: FastifyInstance) {
       } catch (err) {
         const message = err instanceof Error ? err.message : "PDF generation failed";
         return reply.status(500).send({ error: message });
+      }
+    },
+  );
+
+  // Trial extract — content extraction, same limits
+  app.get(
+    "/trial/extract",
+    {
+      schema: {
+        description: "Free trial content extraction. Limited to 5 per IP per day.",
+        tags: ["Trial"],
+      },
+    },
+    async (
+      request: FastifyRequest<{
+        Querystring: { url: string; format?: string; clean?: string };
+      }>,
+      reply,
+    ) => {
+      const ip = request.ip;
+      if (!checkTrialLimit(ip)) {
+        return reply.status(429).send({
+          error: `Trial limit reached (${TRIAL_LIMIT_PER_DAY} per day).`,
+        });
+      }
+
+      const { url: rawUrl, format, clean } = request.query;
+      const validated = await validateUrlSafe(rawUrl);
+      if ("error" in validated) {
+        return reply.status(400).send({ error: validated.error });
+      }
+
+      const browser = await getBrowser();
+      const page = await browser.newPage();
+      try {
+        await page.goto(validated.url, { waitUntil: "load", timeout: 30000 });
+        await new Promise((r) => setTimeout(r, 1000));
+        if (clean !== "false") await cleanPage(page);
+        const result = await extractContent(
+          page,
+          (format as "markdown" | "text" | "html") || "markdown",
+        );
+        return reply
+          .header("X-Trial-Remaining", String(getRemainingTrials(ip)))
+          .send(result);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Extraction failed";
+        return reply.status(500).send({ error: message });
+      } finally {
+        await page.close();
+      }
+    },
+  );
+
+  // Trial metadata — metadata extraction, same limits
+  app.get(
+    "/trial/metadata",
+    {
+      schema: {
+        description: "Free trial metadata extraction. Limited to 5 per IP per day.",
+        tags: ["Trial"],
+      },
+    },
+    async (
+      request: FastifyRequest<{
+        Querystring: { url: string };
+      }>,
+      reply,
+    ) => {
+      const ip = request.ip;
+      if (!checkTrialLimit(ip)) {
+        return reply.status(429).send({
+          error: `Trial limit reached (${TRIAL_LIMIT_PER_DAY} per day).`,
+        });
+      }
+
+      const { url: rawUrl } = request.query;
+      const validated = await validateUrlSafe(rawUrl);
+      if ("error" in validated) {
+        return reply.status(400).send({ error: validated.error });
+      }
+
+      const browser = await getBrowser();
+      const page = await browser.newPage();
+      try {
+        await page.goto(validated.url, { waitUntil: "load", timeout: 15000 });
+        await new Promise((r) => setTimeout(r, 500));
+        const metadata = await extractMetadata(page);
+        return reply
+          .header("X-Trial-Remaining", String(getRemainingTrials(ip)))
+          .send(metadata);
+      } catch (err) {
+        const message = err instanceof Error ? err.message : "Metadata extraction failed";
+        return reply.status(500).send({ error: message });
+      } finally {
+        await page.close();
       }
     },
   );

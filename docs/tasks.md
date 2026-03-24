@@ -61,13 +61,13 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 10. [x] Implement POST /v1/page — loads page once, extracts screenshot/pdf/markdown/text/html/metadata
 11. [ ] Add caching support to `/v1/page` (same TTL/fresh mechanism as existing endpoints)
 12. [x] Write tests — 7 tests covering default outputs, selective outputs, PDF, SSRF, viewport validation
-13. [ ] Test unified endpoint against real sites, verify single page load (check timing)
+13. [x] Test unified endpoint: HN in 4.6s (screenshot+markdown+metadata from single page load)
 14. [x] Swagger/OpenAPI docs auto-generated from schema decorators
 
 ### Trial Page Integration
-15. [ ] Add "Content" tab to trial demo — show markdown extraction output
-16. [ ] Add "Metadata" tab to trial demo — show OG tags, structured data, page info
-17. [ ] The trial demo should now show tabs: Screenshot | PDF | Content | Metadata
+15. [x] Add "Content" tab — shows extracted markdown with word count, author, title
+16. [x] Add "Metadata" tab — shows OG tags, Twitter Cards, link/image counts, JSON-LD, OG image preview
+17. [x] Trial demo now shows tabs: Screenshot | PDF | Content | Metadata (lazy-loaded on click)
 
 ---
 
