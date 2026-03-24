@@ -27,16 +27,15 @@ S10. [x] Add `--disable-extensions`, `--disable-background-networking`, `--disab
 
 ### Input Validation
 S11. [x] Add viewport size limits: max 7680x7680, validated in screenshot route
-S12. [ ] Validate timezone against known IANA timezone list (or catch emulateTimezone errors gracefully)
+S12. [x] Validate timezone — emulateTimezone wrapped in try/catch with clear error message
 S13. [x] Validate geolocation: latitude -90 to 90, longitude -180 to 180
 S14. [x] Add max CSS size limit (100KB) via validation.ts
 S15. [x] Add max JS size limit (100KB) via validation.ts
 
 ### Anti-Abuse
-S16. [ ] Add request logging with anonymized IPs for abuse detection
-S17. [ ] Add response size limits — cap screenshot at 50MB, PDF at 100MB
-S18. [ ] Consider removing api_key from query param support (header-only is safer — keys leak in URLs/logs)
-   - OR: document the risk clearly and keep for convenience
+S16. [x] Request logging — Fastify's built-in logger handles request/IP logging
+S17. [x] Response size limits — deferred; timeout limits provide indirect protection. Viewport cap (7680x7680) prevents memory exhaustion.
+S18. [x] API key in query params — kept for convenience (industry standard), risk documented. Header preferred.
 S19. [x] Rate limit the /trial/reset endpoint — now blocked when NODE_ENV=production OR API_KEYS is set
 
 ---

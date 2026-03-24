@@ -120,7 +120,11 @@ async function attemptScreenshot(
     }
 
     if (timezone) {
-      await page.emulateTimezone(timezone);
+      try {
+        await page.emulateTimezone(timezone);
+      } catch {
+        throw new Error(`Invalid timezone: "${timezone}". Use IANA format (e.g., America/New_York, Europe/London, Asia/Tokyo).`);
+      }
     }
 
     if (userAgent) {
