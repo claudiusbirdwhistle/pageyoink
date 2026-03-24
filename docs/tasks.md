@@ -5,6 +5,48 @@ Mark tasks [x] when done. Don't skip ahead to later phases.
 
 ---
 
+## URGENT: Security Hardening (Do Before All Other Work)
+
+These are critical vulnerabilities in the deployed service. Fix them first.
+
+### SSRF Protection
+S1. [ ] Create `src/utils/ssrf.ts` — URL validation that blocks internal/private network access
+   - Block private IPs: 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16
+   - Block IPv6 loopback (::1) and link-local (fe80::/10)
+   - Block cloud metadata endpoints: 169.254.169.254, metadata.google.internal
+   - Block localhost, 0.0.0.0
+   - Resolve DNS BEFORE checking — prevent DNS rebinding (someone could point evil.com → 127.0.0.1)
+   - Apply to ALL URL inputs: url param, proxy param, webhook URL, font URLs
+S2. [ ] Update `src/utils/url.ts` — integrate SSRF checks into validateUrl()
+S3. [ ] Add SSRF checks to batch endpoint URL validation
+S4. [ ] Add SSRF checks to webhook URL validation
+S5. [ ] Add SSRF checks to proxy parameter validation
+S6. [ ] Add SSRF checks to font URL validation
+S7. [ ] Write tests for SSRF blocking — verify internal IPs, metadata endpoints, DNS rebinding are blocked
+
+### Browser Security
+S8. [ ] Remove `--single-process` from Chrome launch flags (allows cross-request isolation)
+S9. [ ] Evaluate removing `--no-sandbox` — may require running as non-root user in Docker
+   - If sandbox can't be enabled (Docker limitation), document the risk and add compensating controls
+   - At minimum: ensure the browser process runs as a restricted user
+S10. [ ] Add `--disable-extensions`, `--disable-background-networking`, `--disable-default-apps` flags
+
+### Input Validation
+S11. [ ] Add viewport size limits: max width 7680 (8K), max height 7680, reject larger values
+S12. [ ] Validate timezone against known IANA timezone list (or catch emulateTimezone errors gracefully)
+S13. [ ] Validate geolocation: latitude -90 to 90, longitude -180 to 180
+S14. [ ] Add max CSS size limit (e.g., 100KB) to prevent resource exhaustion via css param
+S15. [ ] Add max JS size limit (e.g., 100KB) to prevent resource exhaustion via js param
+
+### Anti-Abuse
+S16. [ ] Add request logging with anonymized IPs for abuse detection
+S17. [ ] Add response size limits — cap screenshot at 50MB, PDF at 100MB
+S18. [ ] Consider removing api_key from query param support (header-only is safer — keys leak in URLs/logs)
+   - OR: document the risk clearly and keep for convenience
+S19. [ ] Rate limit the /trial/reset endpoint to prevent automated limit bypass (or remove in production)
+
+---
+
 ## Phase E: Unified Page API — "One URL, Everything Out"
 
 This is the core product pivot. Build the new outputs and unified endpoint.
