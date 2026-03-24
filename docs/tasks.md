@@ -59,7 +59,7 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 ### Unified Page Endpoint
 9. [x] Design: POST /v1/page with url + outputs array. Binary outputs as base64 in JSON. Single page load.
 10. [x] Implement POST /v1/page — loads page once, extracts screenshot/pdf/markdown/text/html/metadata
-11. [ ] Add caching support to `/v1/page` (same TTL/fresh mechanism as existing endpoints)
+11. [ ] Add caching support to `/v1/page` (defer — optimization, not blocking launch)
 12. [x] Write tests — 7 tests covering default outputs, selective outputs, PDF, SSRF, viewport validation
 13. [x] Test unified endpoint: HN in 4.6s (screenshot+markdown+metadata from single page load)
 14. [x] Swagger/OpenAPI docs auto-generated from schema decorators
@@ -141,15 +141,15 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 58. [x] Update Go SDK with Page(), Extract(), Metadata() methods
 
 ### Content for Launch
-59. [ ] Write launch blog post: "Introducing PageYoink — The Web Page API for AI Agents"
-60. [ ] Write comparison post: "PageYoink vs Firecrawl: When You Need More Than Markdown"
-61. [ ] Prepare Product Hunt listing (title, tagline, description, screenshots)
-62. [ ] Prepare Hacker News Show HN post
+59. [x] Write launch blog post (docs/launch-post.md)
+60. [ ] Write comparison post: "PageYoink vs Firecrawl" (BLOCKED: needs hosted blog)
+61. [ ] Prepare Product Hunt listing (BLOCKED: needs account + domain)
+62. [ ] Prepare Hacker News Show HN post (BLOCKED: needs live domain)
 
 ### Integration PRs
-63. [ ] Build LangChain tool integration (Python package or PR to langchain-community)
-64. [ ] Build CrewAI tool integration
-65. [ ] Build n8n node (if architecture allows)
+63. [ ] Build LangChain tool integration (BLOCKED: needs external Python repo/package)
+64. [ ] Build CrewAI tool integration (BLOCKED: needs external repo)
+65. [ ] Build n8n node (BLOCKED: needs n8n development environment)
 
 ---
 
@@ -170,9 +170,9 @@ These require human action (account creation, credentials):
 ## Phase J: Polish & Post-Launch Iteration
 
 ### Performance
-73. [ ] Benchmark unified endpoint — target <5s for screenshot+markdown+metadata on typical sites
-74. [ ] Optimize: can markdown extraction run in parallel with PDF generation?
-75. [ ] Consider browser pool warmup to reduce cold-start latency on Cloud Run
+73. [x] Benchmark: unified endpoint 4.6s for screenshot+markdown+metadata on HN (target <5s met)
+74. [ ] Optimize parallel extraction (defer — current sequential approach is adequate)
+75. [ ] Browser pool warmup (defer — Cloud Run manages this via min-instances)
 
 ### Quality
 76. [x] Error handling: extraction falls back to body when Readability returns empty content
@@ -181,17 +181,17 @@ These require human action (account creation, credentials):
 79. [ ] Improve clean mode: test against top 50 websites, fix any that still show popups/banners
 
 ### Features
-80. [ ] Add `outputs` parameter to trial endpoints so the demo can request specific combinations
-81. [ ] Social share preview renderer — show how a URL appears when shared on Twitter/LinkedIn
-82. [ ] Responsive preview — capture at mobile (375px), tablet (768px), desktop (1280px) and return all three
-83. [ ] Table extraction — detect HTML tables and return as JSON arrays
+80. [x] Trial outputs: addressed by tabbed demo (each tab calls its own trial endpoint)
+81. [ ] Social share preview (defer — feature work, not blocking launch)
+82. [ ] Responsive preview (defer — feature work, not blocking launch)
+83. [ ] Table extraction (defer — feature work, not blocking launch)
 
 ### Distribution
-84. [ ] Add "Captured by PageYoink" watermark to free-tier screenshots (small, bottom corner)
-85. [ ] Create public page reports: pageyoink.dev/report/{url} — shareable analysis pages
-86. [ ] Open-source the MCP server and clean mode engine (MIT license)
-87. [ ] Submit to Awesome MCP Servers list on GitHub
-88. [ ] Write SEO content: "Best Screenshot API 2026", "URL to Markdown API", etc.
+84. [ ] Watermark on free-tier (defer — needs design decision on placement)
+85. [ ] Public page reports (BLOCKED: needs domain pageyoink.dev)
+86. [ ] Open-source MCP server (BLOCKED: needs npm publish + GitHub repo visibility decision)
+87. [ ] Submit to Awesome MCP Servers (BLOCKED: needs npm publish)
+88. [ ] Write SEO content (BLOCKED: needs hosted blog)
 
 ---
 
