@@ -1,0 +1,31 @@
+{
+  "name": "pageyoink-mcp",
+  "version": "0.1.0",
+  "description": "MCP server for PageYoink — give AI agents web page access (screenshots, PDFs, markdown, metadata) via one tool",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "pageyoink-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "keywords": [
+    "mcp",
+    "model-context-protocol",
+    "screenshot",
+    "pdf",
+    "markdown",
+    "web-scraping",
+    "ai-agent",
+    "pageyoink"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.0.0"
+  }
+}

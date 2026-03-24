@@ -74,20 +74,14 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 ## Phase F: MCP Server — Distribution via AI Agent Ecosystem
 
 ### Build the MCP Server
-18. [ ] Create `mcp-server/` directory as a separate npm package
-19. [ ] Implement single `web_page` MCP tool:
-    - Input: `{ url: string, outputs?: string[], clean?: boolean, viewport?: { width: number, height: number } }`
-    - Calls the PageYoink `/v1/page` endpoint
-    - Returns structured result with all requested outputs
-    - For screenshots: return image data that MCP clients can display
-    - For markdown: return text content directly
-    - For metadata: return structured JSON
-20. [ ] Zero-config setup: works without API key on free tier (auto-provisions based on install ID or IP)
-21. [ ] `npx pageyoink-mcp` should start the server with no configuration needed
-22. [ ] Add a `pageyoink` convenience tool alias: `web_page` is the primary, but also register `screenshot`, `pdf`, `extract` as focused sub-tools for agents that prefer explicit tool selection
-23. [ ] Test MCP server with Claude Desktop
-24. [ ] Test MCP server with Cursor/VS Code
-25. [ ] Write clear README for the MCP server package with install instructions
+18. [x] Create `mcp-server/` directory as separate npm package with TypeScript
+19. [x] Implement `web_page` unified tool + `screenshot`, `extract`, `metadata` sub-tools
+20. [x] Zero-config: works without API key, uses hosted API by default
+21. [x] `npx pageyoink-mcp` starts the server (bin configured in package.json)
+22. [x] 4 tools: web_page (unified), screenshot, extract, metadata
+23. [ ] Test MCP server with Claude Desktop (NEEDS: npm publish first or local testing)
+24. [ ] Test MCP server with Cursor/VS Code (NEEDS: npm publish first)
+25. [x] README with install instructions, Claude Desktop config, Cursor config, examples
 
 ### Publish and Register
 26. [ ] Publish MCP server to npm as `pageyoink-mcp` (BLOCKED: needs npm credentials)

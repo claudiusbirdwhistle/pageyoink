@@ -69,10 +69,14 @@ scale (0.1-2.0), maxPages (truncate output)
 
 ## What's NOT Done Yet
 
-### All Active Tasks Complete
-All 18 tasks from docs/tasks.md are done. Remaining work is in the Ice Box (requires human review):
-- WebP output, video capture, CDN caching, anti-bot stealth, AI extraction, MCP server, PDF encryption
-- See docs/competitive-analysis.md for full landscape analysis
+### Current Phase: F (MCP Server) + G (Landing Page Rebuild)
+Phase E (Unified Page API) complete. New endpoints:
+- GET /v1/extract — markdown/text/html extraction (Readability + Turndown)
+- GET /v1/metadata — OG tags, Twitter Cards, JSON-LD, page stats
+- POST /v1/page — unified endpoint (one URL, any combination of outputs)
+- Trial demo now has 4 tabs: Screenshot | PDF | Content | Metadata
+- Security hardening complete (SSRF, browser flags, input validation)
+- 83 tests passing
 
 ### Blocked on Human
 - [ ] Set API_KEYS environment variable in Cloud Run (currently auth disabled)
