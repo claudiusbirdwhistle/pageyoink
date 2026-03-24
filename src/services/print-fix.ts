@@ -3,11 +3,14 @@ import { Page } from "puppeteer";
 /**
  * Apply targeted fixes for Chrome's PDF renderer.
  *
- * Only touches elements that are specifically horizontal scroll containers
- * (carousels) where content is clipped. Does NOT apply blanket CSS rules
- * that could break page layout.
+ * Handles:
+ * 1. Horizontal scroll containers (carousels) where content is clipped
+ * 2. Overlapping absolute/relative positioned elements in print
+ * 3. Headers/mastheads hidden by site print stylesheets
+ * 4. Fixed/sticky elements that don't flow in print
  */
 export async function applyPrintFixes(page: Page): Promise<void> {
+  // Fix 1: Horizontal scroll containers (carousels)
   await page.evaluate(() => {
     const elements = document.querySelectorAll("*");
     for (const el of elements) {
@@ -41,5 +44,45 @@ export async function applyPrintFixes(page: Page): Promise<void> {
         }
       }
     }
+  });
+
+  // Fix 2: Inject print-specific CSS for common layout issues
+  await page.addStyleTag({
+    content: `
+      @media print {
+        /* Force header/masthead visibility — many sites hide these in print */
+        header, [role="banner"] {
+          display: block !important;
+          visibility: visible !important;
+          position: static !important;
+        }
+        header * {
+          visibility: visible !important;
+        }
+
+        /* Convert fixed/sticky elements to static for print flow */
+        [style*="position: fixed"], [style*="position: sticky"] {
+          position: static !important;
+        }
+
+        /* Prevent absolute-positioned elements from overlapping in print */
+        figure, [class*="story-wrapper"], article {
+          position: relative !important;
+          overflow: visible !important;
+        }
+
+        /* Ensure images don't overflow their containers */
+        img, picture, video, figure {
+          max-width: 100% !important;
+          height: auto !important;
+          page-break-inside: avoid;
+        }
+
+        /* Prevent content from being clipped */
+        [style*="overflow: hidden"] {
+          overflow: visible !important;
+        }
+      }
+    `,
   });
 }
