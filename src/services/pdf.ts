@@ -165,7 +165,7 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     // Scroll through page to trigger lazy-loaded images (PDFs always capture full page)
     // For PDFs, scroll the entire page unless user specified a limit
     const scrollDepth = maxScroll ?? Math.ceil(
-      await page.evaluate(() => document.body.scrollHeight / window.innerHeight) + 2
+      await page.evaluate(`document.body.scrollHeight / window.innerHeight`) + 2
     );
     await triggerLazyImages(page, scrollDepth);
 

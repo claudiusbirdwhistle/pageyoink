@@ -137,31 +137,32 @@ const POPUP_SELECTORS = [
 export async function cleanPage(page: Page): Promise<void> {
   const allSelectors = [...COOKIE_BANNER_SELECTORS, ...POPUP_SELECTORS];
 
-  await page.evaluate((selectors) => {
+  // Use string-based script to avoid __name decorator issues in tsx dev mode
+  const script = `(function(selectors) {
     // Phase 1: Hide elements matching known selectors
-    for (const selector of selectors) {
+    for (var i = 0; i < selectors.length; i++) {
       try {
-        const elements = document.querySelectorAll(selector);
-        elements.forEach((el) => {
-          (el as HTMLElement).style.setProperty("display", "none", "important");
-          (el as HTMLElement).style.setProperty("visibility", "hidden", "important");
+        var elements = document.querySelectorAll(selectors[i]);
+        elements.forEach(function(el) {
+          el.style.setProperty("display", "none", "important");
+          el.style.setProperty("visibility", "hidden", "important");
         });
-      } catch {
+      } catch(e) {
         // Invalid selector, skip
       }
     }
 
     // Phase 2: Text-content-based detection for cookie banners
-    // Find fixed/sticky elements containing cookie-related text
-    const fixedElements = document.querySelectorAll(
-      "div, section, aside, dialog, [role='dialog'], [role='alertdialog'], [role='banner'], [role='region']",
+    var fixedElements = document.querySelectorAll(
+      "div, section, aside, dialog, [role='dialog'], [role='alertdialog'], [role='banner'], [role='region']"
     );
-    for (const el of fixedElements) {
-      const style = window.getComputedStyle(el);
+    for (var j = 0; j < fixedElements.length; j++) {
+      var el = fixedElements[j];
+      var style = window.getComputedStyle(el);
       if (style.position !== "fixed" && style.position !== "sticky") continue;
 
-      const text = ((el as HTMLElement).innerText || "").toLowerCase();
-      const hasCookieText =
+      var text = (el.innerText || "").toLowerCase();
+      var hasCookieText =
         (text.includes("cookie") || text.includes("consent")) &&
         (text.includes("accept") ||
           text.includes("decline") ||
@@ -169,74 +170,74 @@ export async function cleanPage(page: Page): Promise<void> {
           text.includes("preferences") ||
           text.includes("manage"));
 
-      // Detect fundraising/donation/subscription popups
-      const hasFundraisingText =
+      var hasFundraisingText =
         (text.includes("donate") ||
           text.includes("donation") ||
           text.includes("contribute") ||
           text.includes("contribution") ||
           text.includes("support us") ||
           text.includes("support our")) &&
-        text.length < 500; // Only match focused prompts, not full articles about donations
+        text.length < 500;
 
       if (hasCookieText || hasFundraisingText) {
-        (el as HTMLElement).style.setProperty("display", "none", "important");
+        el.style.setProperty("display", "none", "important");
       }
     }
 
     // Phase 3: High z-index overlay detection
-    const allElements = document.querySelectorAll(
-      "div, section, aside, dialog",
+    var allElements = document.querySelectorAll(
+      "div, section, aside, dialog"
     );
-    for (const el of allElements) {
-      const style = window.getComputedStyle(el);
-      const zIndex = parseInt(style.zIndex, 10);
-      const position = style.position;
-      const rect = el.getBoundingClientRect();
+    for (var k = 0; k < allElements.length; k++) {
+      var el2 = allElements[k];
+      var style2 = window.getComputedStyle(el2);
+      var zIndex = parseInt(style2.zIndex, 10);
+      var position = style2.position;
+      var rect = el2.getBoundingClientRect();
 
       if (
         zIndex > 9000 &&
         (position === "fixed" || position === "absolute")
       ) {
-        const coversWidth = rect.width > window.innerWidth * 0.5;
-        const coversHeight = rect.height > window.innerHeight * 0.3;
-        // Full-width banner (like cookie notices at top/bottom)
-        const isFullWidthBanner =
+        var coversWidth = rect.width > window.innerWidth * 0.5;
+        var coversHeight = rect.height > window.innerHeight * 0.3;
+        var isFullWidthBanner =
           rect.width > window.innerWidth * 0.9 && rect.height > 40;
 
         if ((coversWidth && coversHeight) || isFullWidthBanner) {
-          (el as HTMLElement).style.setProperty("display", "none", "important");
+          el2.style.setProperty("display", "none", "important");
         }
       }
     }
 
     // Phase 4: Remove backdrop/overlay divs that block interaction
-    for (const el of allElements) {
-      const style = window.getComputedStyle(el);
-      const position = style.position;
-      const rect = el.getBoundingClientRect();
+    for (var m = 0; m < allElements.length; m++) {
+      var el3 = allElements[m];
+      var style3 = window.getComputedStyle(el3);
+      var position3 = style3.position;
+      var rect3 = el3.getBoundingClientRect();
 
       if (
-        (position === "fixed" || position === "absolute") &&
-        rect.width >= window.innerWidth * 0.95 &&
-        rect.height >= window.innerHeight * 0.95
+        (position3 === "fixed" || position3 === "absolute") &&
+        rect3.width >= window.innerWidth * 0.95 &&
+        rect3.height >= window.innerHeight * 0.95
       ) {
-        const bg = style.backgroundColor;
-        const opacity = parseFloat(style.opacity);
+        var bg = style3.backgroundColor;
+        var opacity = parseFloat(style3.opacity);
         if (bg.includes("rgba") || (opacity > 0 && opacity < 1)) {
-          (el as HTMLElement).style.setProperty("display", "none", "important");
+          el3.style.setProperty("display", "none", "important");
         }
       }
     }
 
-    // Remove overflow:hidden on body (often set by modals) but don't
-    // change overflow:visible — that can break print/PDF rendering on
-    // sites like NYTimes where it creates a new formatting context.
+    // Remove overflow:hidden on body (often set by modals)
     if (window.getComputedStyle(document.body).overflow === "hidden") {
       document.body.style.overflow = "auto";
     }
     if (window.getComputedStyle(document.documentElement).overflow === "hidden") {
       document.documentElement.style.overflow = "auto";
     }
-  }, allSelectors);
+  })(${JSON.stringify(allSelectors)})`;
+
+  await page.evaluate(script);
 }

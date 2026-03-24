@@ -57,30 +57,27 @@ export async function waitForPageReady(
       if (!networkIdle) continue;
 
       // Check browser-side signals (DOM, fonts, images, animations)
-      const browserReady = await page.evaluate((stabMs) => {
-        // @ts-ignore — __pageyoink_lastMutation is set by our MutationObserver
-        const lastMutation =
-          (window as unknown as Record<string, number>)
-            .__pageyoink_lastMutation || 0;
-        const domStable = Date.now() - lastMutation > stabMs;
+      // Use string-based script to avoid __name decorator issues in tsx dev mode
+      const browserReady = await page.evaluate(`(function(stabMs) {
+        var lastMutation = window.__pageyoink_lastMutation || 0;
+        var domStable = Date.now() - lastMutation > stabMs;
 
-        const fontsReady = document.fonts.status === "loaded";
+        var fontsReady = document.fonts.status === "loaded";
 
-        const images = Array.from(document.querySelectorAll("img"));
-        const imagesReady = images.every(
-          (img) =>
-            img.complete || img.naturalHeight > 0 || !img.src || img.src.startsWith("data:"),
-        );
+        var images = Array.from(document.querySelectorAll("img"));
+        var imagesReady = images.every(function(img) {
+          return img.complete || img.naturalHeight > 0 || !img.src || img.src.startsWith("data:");
+        });
 
-        const animations = document.getAnimations();
-        const animationsSettled =
+        var animations = document.getAnimations();
+        var animationsSettled =
           animations.length === 0 ||
-          animations.every(
-            (a) => a.playState === "finished" || a.playState === "idle",
-          );
+          animations.every(function(a) {
+            return a.playState === "finished" || a.playState === "idle";
+          });
 
         return domStable && fontsReady && imagesReady && animationsSettled;
-      }, stabilityMs);
+      })(${stabilityMs})`);
 
       if (browserReady) {
         return; // All signals stable — page is ready
@@ -102,13 +99,12 @@ export async function waitForPageReady(
  * that waitForPageReady reads.
  */
 export async function installMutationTracker(page: Page): Promise<void> {
-  await page.evaluate(() => {
-    (window as unknown as Record<string, number>).__pageyoink_lastMutation =
-      Date.now();
+  // Use string-based script to avoid __name decorator issues in tsx dev mode
+  await page.evaluate(`(function() {
+    window.__pageyoink_lastMutation = Date.now();
 
-    const observer = new MutationObserver(() => {
-      (window as unknown as Record<string, number>).__pageyoink_lastMutation =
-        Date.now();
+    var observer = new MutationObserver(function() {
+      window.__pageyoink_lastMutation = Date.now();
     });
 
     if (document.body) {
@@ -116,8 +112,8 @@ export async function installMutationTracker(page: Page): Promise<void> {
         childList: true,
         subtree: true,
         attributes: true,
-        characterData: true,
+        characterData: true
       });
     }
-  });
+  })()`);
 }

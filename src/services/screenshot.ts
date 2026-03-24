@@ -177,7 +177,7 @@ async function attemptScreenshot(
         .map((f) => `@import url('${f}');`)
         .join("\n");
       await page.addStyleTag({ content: fontCss });
-      await page.evaluate(() => document.fonts.ready);
+      await page.evaluate(`document.fonts.ready`);
     }
 
     // Inject custom CSS after page load

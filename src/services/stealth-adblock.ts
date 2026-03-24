@@ -99,53 +99,58 @@ const COMMON_AD_SIZES = [
  * Call this AFTER page is fully loaded and detection scripts have run.
  */
 export async function hideAdsStealthily(page: Page): Promise<void> {
-  await page.evaluate(
-    (selectors: string[], domains: string[], adSizes: number[][]) => {
-      // Phase 1: Move known ad containers offscreen by selector
-      for (const selector of selectors) {
-        try {
-          document.querySelectorAll(selector).forEach((el) => {
-            const h = el as HTMLElement;
-            h.style.setProperty("position", "absolute", "important");
-            h.style.setProperty("left", "-9999px", "important");
-            h.style.setProperty("top", "-9999px", "important");
-            h.style.setProperty("pointer-events", "none", "important");
-          });
-        } catch {
-          /* invalid selector */
-        }
+  // Use string-based script to avoid __name decorator issues in tsx dev mode
+  const script = `(function(selectors, domains, adSizes) {
+    // Phase 1: Move known ad containers offscreen by selector
+    for (var i = 0; i < selectors.length; i++) {
+      try {
+        document.querySelectorAll(selectors[i]).forEach(function(el) {
+          el.style.setProperty("position", "absolute", "important");
+          el.style.setProperty("left", "-9999px", "important");
+          el.style.setProperty("top", "-9999px", "important");
+          el.style.setProperty("pointer-events", "none", "important");
+        });
+      } catch(e) {
+        /* invalid selector */
       }
+    }
 
-      // Phase 2: Move iframes with ad network sources offscreen
-      const iframes = document.querySelectorAll("iframe");
-      for (const iframe of iframes) {
-        const src = iframe.src || iframe.getAttribute("data-src") || "";
-        if (domains.some((d) => src.includes(d))) {
-          iframe.style.setProperty("position", "absolute", "important");
-          iframe.style.setProperty("left", "-9999px", "important");
-          iframe.style.setProperty("top", "-9999px", "important");
-          iframe.style.setProperty("pointer-events", "none", "important");
-        }
+    // Phase 2: Move iframes with ad network sources offscreen
+    var iframes = document.querySelectorAll("iframe");
+    for (var j = 0; j < iframes.length; j++) {
+      var iframe = iframes[j];
+      var src = iframe.src || iframe.getAttribute("data-src") || "";
+      var isAdDomain = false;
+      for (var k = 0; k < domains.length; k++) {
+        if (src.includes(domains[k])) { isAdDomain = true; break; }
       }
+      if (isAdDomain) {
+        iframe.style.setProperty("position", "absolute", "important");
+        iframe.style.setProperty("left", "-9999px", "important");
+        iframe.style.setProperty("top", "-9999px", "important");
+        iframe.style.setProperty("pointer-events", "none", "important");
+      }
+    }
 
-      // Phase 3: Heuristic — move iframes matching common ad dimensions
-      for (const iframe of iframes) {
-        if (iframe.style.position === "absolute") continue; // already handled
-        const rect = iframe.getBoundingClientRect();
-        const isAdSize = adSizes.some(
-          ([w, h]) =>
-            Math.abs(rect.width - w) < 5 && Math.abs(rect.height - h) < 5,
-        );
-        if (isAdSize) {
-          iframe.style.setProperty("position", "absolute", "important");
-          iframe.style.setProperty("left", "-9999px", "important");
-          iframe.style.setProperty("top", "-9999px", "important");
-          iframe.style.setProperty("pointer-events", "none", "important");
+    // Phase 3: Heuristic — move iframes matching common ad dimensions
+    for (var m = 0; m < iframes.length; m++) {
+      var iframe2 = iframes[m];
+      if (iframe2.style.position === "absolute") continue;
+      var rect = iframe2.getBoundingClientRect();
+      var isAdSize = false;
+      for (var n = 0; n < adSizes.length; n++) {
+        if (Math.abs(rect.width - adSizes[n][0]) < 5 && Math.abs(rect.height - adSizes[n][1]) < 5) {
+          isAdSize = true; break;
         }
       }
-    },
-    AD_SELECTORS,
-    AD_DOMAINS,
-    COMMON_AD_SIZES,
-  );
+      if (isAdSize) {
+        iframe2.style.setProperty("position", "absolute", "important");
+        iframe2.style.setProperty("left", "-9999px", "important");
+        iframe2.style.setProperty("top", "-9999px", "important");
+        iframe2.style.setProperty("pointer-events", "none", "important");
+      }
+    }
+  })(${JSON.stringify(AD_SELECTORS)}, ${JSON.stringify(AD_DOMAINS)}, ${JSON.stringify(COMMON_AD_SIZES)})`;
+
+  await page.evaluate(script);
 }

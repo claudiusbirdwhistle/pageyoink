@@ -177,7 +177,7 @@ export async function pageRoute(app: FastifyInstance) {
         // Lazy-load images if screenshot or PDF requested
         if (outputs.includes("screenshot") || outputs.includes("pdf")) {
           const scrollDepth = Math.ceil(
-            await page.evaluate(() => document.body.scrollHeight / window.innerHeight) + 2,
+            await page.evaluate(`document.body.scrollHeight / window.innerHeight`) + 2,
           );
           await triggerLazyImages(page, scrollDepth);
         }

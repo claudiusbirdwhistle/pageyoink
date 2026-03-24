@@ -33,11 +33,14 @@ export async function extractContent(
   format: "markdown" | "text" | "html" = "markdown",
 ): Promise<ExtractResult> {
   // Get the page HTML and URL from the browser
-  const { html, url, title: pageTitle } = await page.evaluate(() => ({
-    html: document.documentElement.outerHTML,
-    url: document.location.href,
-    title: document.title,
-  }));
+  // Use string-based script to avoid __name decorator issues in tsx dev mode
+  const { html, url, title: pageTitle } = await page.evaluate(`(function() {
+    return {
+      html: document.documentElement.outerHTML,
+      url: document.location.href,
+      title: document.title
+    };
+  })()`) as { html: string; url: string; title: string };
 
   // Parse with JSDOM for Readability
   const dom = new JSDOM(html, { url });
@@ -57,13 +60,12 @@ export async function extractContent(
     excerpt = article.excerpt || "";
   } else {
     // Fallback: extract body content directly (Readability couldn't identify article)
-    contentHtml = await page.evaluate(() => {
-      // Remove script, style, nav, footer, header elements for cleaner output
-      const clone = document.body.cloneNode(true) as HTMLElement;
-      const removeSelectors = "script, style, nav, footer, header, [role='navigation'], [role='banner'], [aria-hidden='true']";
-      clone.querySelectorAll(removeSelectors).forEach((el) => el.remove());
+    contentHtml = await page.evaluate(`(function() {
+      var clone = document.body.cloneNode(true);
+      var removeSelectors = "script, style, nav, footer, header, [role='navigation'], [role='banner'], [aria-hidden='true']";
+      clone.querySelectorAll(removeSelectors).forEach(function(el) { el.remove(); });
       return clone.innerHTML;
-    });
+    })()`) as string;
     title = pageTitle;
   }
 
