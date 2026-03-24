@@ -12,6 +12,7 @@ import { usageRoute } from "./routes/usage.js";
 import { diffRoute } from "./routes/diff.js";
 import { extractRoute } from "./routes/extract.js";
 import { metadataRoute } from "./routes/metadata.js";
+import { pageRoute } from "./routes/page.js";
 import { trialRoute } from "./routes/trial.js";
 import { authMiddleware } from "./middleware/auth.js";
 
@@ -77,6 +78,7 @@ export async function buildApp() {
   await app.register(diffRoute);
   await app.register(extractRoute);
   await app.register(metadataRoute);
+  await app.register(pageRoute);
 
   return app;
 }

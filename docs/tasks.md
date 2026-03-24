@@ -57,20 +57,12 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 8. [x] Test: example.com, github.com (OG tags), HN (link counts), SSRF blocking — 5 tests
 
 ### Unified Page Endpoint
-9. [ ] Design the `/v1/page` endpoint response shape — think carefully about this before implementing
-   - Single POST endpoint that accepts url + outputs array
-   - `outputs` can include: screenshot, pdf, markdown, text, html, metadata
-   - All outputs generated from a SINGLE page load (this is the key efficiency claim)
-   - Response returns each requested output
-   - For binary outputs (screenshot, pdf): return base64 or a temporary URL? Design decision needed.
-10. [ ] Implement `POST /v1/page` — the unified endpoint
-    - Loads page once with all options (clean, timeout, viewport, etc.)
-    - Runs extraction pipeline: screenshot → PDF → markdown → metadata as requested
-    - Returns combined response
+9. [x] Design: POST /v1/page with url + outputs array. Binary outputs as base64 in JSON. Single page load.
+10. [x] Implement POST /v1/page — loads page once, extracts screenshot/pdf/markdown/text/html/metadata
 11. [ ] Add caching support to `/v1/page` (same TTL/fresh mechanism as existing endpoints)
-12. [ ] Write comprehensive tests for `/v1/page` with various output combinations
+12. [x] Write tests — 7 tests covering default outputs, selective outputs, PDF, SSRF, viewport validation
 13. [ ] Test unified endpoint against real sites, verify single page load (check timing)
-14. [ ] Update Swagger/OpenAPI docs for all new endpoints
+14. [x] Swagger/OpenAPI docs auto-generated from schema decorators
 
 ### Trial Page Integration
 15. [ ] Add "Content" tab to trial demo — show markdown extraction output
