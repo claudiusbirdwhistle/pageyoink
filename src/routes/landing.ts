@@ -97,84 +97,10 @@ const LANDING_HTML = `<!DOCTYPE html>
           </select>
         </div>
       </div>
-      <details id="pdf-options-panel" style="margin-bottom:16px;background:var(--surface);border-radius:8px;border:1px solid #2a2a3e;padding:0;">
-        <summary style="padding:12px 16px;cursor:pointer;color:var(--muted);font-size:14px;font-weight:600;list-style:none;display:flex;align-items:center;gap:8px;">
-          <span style="transition:transform 0.2s;display:inline-block;" id="pdf-chevron">&#9654;</span> PDF Options
-        </summary>
-        <div style="padding:0 16px 16px;display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-          <div>
-            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Page Size</label>
-            <select id="pdf-format" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-              <option value="A4" selected>A4</option>
-              <option value="Letter">Letter</option>
-              <option value="Legal">Legal</option>
-              <option value="A3">A3</option>
-            </select>
-          </div>
-          <div>
-            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Orientation</label>
-            <select id="pdf-orientation" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-              <option value="portrait" selected>Portrait</option>
-              <option value="landscape">Landscape</option>
-            </select>
-          </div>
-          <div style="grid-column:1/-1;">
-            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Margins <span style="color:#555;">(e.g. 0.5in, 10mm, 1cm)</span></label>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;">
-              <input type="text" id="pdf-margin-top" placeholder="0.5in" style="padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-              <input type="text" id="pdf-margin-right" placeholder="0.5in" style="padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-              <input type="text" id="pdf-margin-bottom" placeholder="0.5in" style="padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-              <input type="text" id="pdf-margin-left" placeholder="0.5in" style="padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-            </div>
-            <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;margin-top:2px;">
-              <span style="color:#555;font-size:11px;text-align:center;">Top</span>
-              <span style="color:#555;font-size:11px;text-align:center;">Right</span>
-              <span style="color:#555;font-size:11px;text-align:center;">Bottom</span>
-              <span style="color:#555;font-size:11px;text-align:center;">Left</span>
-            </div>
-          </div>
-          <div style="grid-column:1/-1;">
-            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Header Template <span style="color:#555;">(HTML — use <span style="font-family:monospace;font-size:11px;">pageNumber, totalPages, date, title, url</span> classes)</span></label>
-            <input type="text" id="pdf-header" placeholder='<div style="font-size:10px;text-align:center;width:100%;"><span class="title"></span></div>' style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-          </div>
-          <div style="grid-column:1/-1;">
-            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Footer Template <span style="color:#555;">(same variables as header)</span></label>
-            <input type="text" id="pdf-footer" placeholder='<div style="font-size:10px;text-align:center;width:100%;"><span class="pageNumber"></span> / <span class="totalPages"></span></div>' style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-          </div>
-          <div>
-            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Watermark Text</label>
-            <input type="text" id="pdf-watermark" placeholder="DRAFT" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-          </div>
-          <div>
-            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Watermark Position</label>
-            <select id="pdf-watermark-pos" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-              <option value="center" selected>Center</option>
-              <option value="top-left">Top Left</option>
-              <option value="top-right">Top Right</option>
-              <option value="bottom-left">Bottom Left</option>
-              <option value="bottom-right">Bottom Right</option>
-            </select>
-          </div>
-          <div>
-            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Page Ranges <span style="color:#555;">(e.g. 1-3, 1,3,5)</span></label>
-            <input type="text" id="pdf-pages" placeholder="All pages" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-          </div>
-          <div>
-            <label style="color:var(--muted);font-size:12px;display:block;margin-bottom:4px;">Viewport Width <span style="color:#555;">(px)</span></label>
-            <input type="number" id="pdf-width" placeholder="1280" style="width:100%;padding:6px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--bg);color:var(--text);font-size:13px;">
-          </div>
-        </div>
-      </details>
-      <script>
-        document.getElementById('pdf-options-panel').addEventListener('toggle', (e) => {
-          document.getElementById('pdf-chevron').style.transform = e.target.open ? 'rotate(90deg)' : '';
-        });
-      </script>
+      <!-- PDF options available via API — keeping demo clean -->
       <div style="display:flex;gap:12px;margin-bottom:20px;">
-        <button onclick="trialCapture('screenshot')"
-          style="padding:12px 24px;border-radius:8px;border:none;background:var(--brand);color:white;font-weight:600;cursor:pointer;font-size:14px;white-space:nowrap;">Screenshot</button>
-        <button onclick="trialCapture('pdf')"
-          style="padding:12px 24px;border-radius:8px;border:none;background:#10b981;color:white;font-weight:600;cursor:pointer;font-size:14px;white-space:nowrap;">PDF</button>
+        <button onclick="captureAll()"
+          style="padding:14px 32px;border-radius:8px;border:none;background:var(--brand);color:white;font-weight:700;cursor:pointer;font-size:16px;white-space:nowrap;letter-spacing:0.3px;">Capture Page</button>
       </div>
       <div id="trial-status" style="color:var(--muted);font-size:14px;margin-bottom:12px;"></div>
       <div id="trial-result" style="display:none;">
@@ -205,29 +131,35 @@ const LANDING_HTML = `<!DOCTYPE html>
       // Tab switching
       document.addEventListener('click', (e) => {
         if (!e.target.classList?.contains('trial-tab')) return;
-        document.querySelectorAll('.trial-tab').forEach((t) => {
-          t.classList.remove('active');
-          t.style.color = 'var(--muted)';
-          t.style.borderBottomColor = 'transparent';
-        });
-        e.target.classList.add('active');
-        e.target.style.color = 'var(--brand)';
-        e.target.style.borderBottomColor = 'var(--brand)';
-        document.querySelectorAll('.tab-content').forEach((c) => { c.style.display = 'none'; });
-        const tabId = 'tab-' + e.target.dataset.tab;
-        const tab = document.getElementById(tabId);
-        if (tab) tab.style.display = '';
+        const tabName = e.target.dataset.tab;
+        activateTab(tabName);
 
-        // Lazy-load content/metadata tabs on first click
-        const rawUrl = document.getElementById('trial-url').value.trim();
-        const fullUrl = rawUrl.match(/^https?:\\/\\//) ? rawUrl : 'https://' + rawUrl;
-        if (e.target.dataset.tab === 'content' && !document.getElementById('trial-extract').textContent) {
-          loadExtract(fullUrl);
-        }
-        if (e.target.dataset.tab === 'metadata' && !document.getElementById('trial-metadata').textContent) {
-          loadMetadata(fullUrl);
+        // PDF tab: generate PDF on first click (lazy)
+        if (tabName === 'pdf' && !document.getElementById('trial-pdf-link').href) {
+          loadPdf();
         }
       });
+
+      async function loadPdf() {
+        const pdfLink = document.getElementById('trial-pdf-link');
+        const pdfTab = document.getElementById('tab-pdf');
+        pdfTab.textContent = 'Generating PDF...';
+        try {
+          const clean = document.getElementById('trial-clean').checked;
+          let params = 'url=' + encodeURIComponent(capturedUrl);
+          if (clean) params += '&clean=true';
+          const resp = await fetch('/trial/pdf?' + params);
+          if (!resp.ok) { pdfTab.textContent = 'PDF generation failed.'; return; }
+          const blob = await resp.blob();
+          const objUrl = URL.createObjectURL(blob);
+          pdfTab.textContent = '';
+          pdfLink.href = objUrl;
+          pdfLink.download = 'document.pdf';
+          pdfLink.textContent = 'Download PDF (' + (blob.size / 1024 / 1024).toFixed(1) + ' MB)';
+          pdfLink.style.display = 'inline-block';
+          pdfTab.appendChild(pdfLink);
+        } catch(e) { pdfTab.textContent = 'Error: ' + e.message; }
+      }
 
       async function loadExtract(url) {
         const el = document.getElementById('trial-extract');
@@ -291,7 +223,9 @@ const LANDING_HTML = `<!DOCTYPE html>
         } catch(e) { el.textContent = 'Error: ' + e.message; }
       }
 
-      async function trialCapture(type) {
+      let capturedUrl = '';
+
+      async function captureAll() {
         const url = document.getElementById('trial-url').value.trim();
         if (!url) return;
         const clean = document.getElementById('trial-clean').checked;
@@ -300,47 +234,26 @@ const LANDING_HTML = `<!DOCTYPE html>
         const result = document.getElementById('trial-result');
         const img = document.getElementById('trial-image');
         const pdfLink = document.getElementById('trial-pdf-link');
-        status.textContent = 'Capturing... (this may take a few seconds)';
+
+        status.textContent = 'Capturing page... (this may take a few seconds)';
         result.style.display = 'none';
-        // Reset tab content for new URL
+
+        // Reset all tab content
         document.getElementById('trial-extract').textContent = '';
         document.getElementById('trial-extract-meta').textContent = '';
         document.getElementById('trial-metadata').textContent = '';
         img.style.display = 'none';
         pdfLink.style.display = 'none';
+
         const fullUrl = url.match(/^https?:\\/\\//) ? url : 'https://' + url;
+        capturedUrl = fullUrl;
         let params = 'url=' + encodeURIComponent(fullUrl);
         if (clean) params += '&clean=true';
         if (adblock) params += '&block_ads=' + adblock;
-        if (type === 'pdf') {
-          const fmt = document.getElementById('pdf-format').value;
-          if (fmt !== 'A4') params += '&format=' + fmt;
-          const orient = document.getElementById('pdf-orientation').value;
-          if (orient === 'landscape') params += '&landscape=true';
-          const mt = document.getElementById('pdf-margin-top').value.trim();
-          const mr = document.getElementById('pdf-margin-right').value.trim();
-          const mb = document.getElementById('pdf-margin-bottom').value.trim();
-          const ml = document.getElementById('pdf-margin-left').value.trim();
-          if (mt) params += '&margin_top=' + encodeURIComponent(mt);
-          if (mr) params += '&margin_right=' + encodeURIComponent(mr);
-          if (mb) params += '&margin_bottom=' + encodeURIComponent(mb);
-          if (ml) params += '&margin_left=' + encodeURIComponent(ml);
-          const header = document.getElementById('pdf-header').value.trim();
-          const footer = document.getElementById('pdf-footer').value.trim();
-          if (header) params += '&header_template=' + encodeURIComponent(header);
-          if (footer) params += '&footer_template=' + encodeURIComponent(footer);
-          const watermark = document.getElementById('pdf-watermark').value.trim();
-          if (watermark) {
-            params += '&watermark=' + encodeURIComponent(watermark);
-            params += '&watermark_position=' + document.getElementById('pdf-watermark-pos').value;
-          }
-          const pages = document.getElementById('pdf-pages').value.trim();
-          if (pages) params += '&page_ranges=' + encodeURIComponent(pages);
-          const width = document.getElementById('pdf-width').value.trim();
-          if (width) params += '&width=' + width;
-        }
+
         try {
-          const resp = await fetch('/trial/' + type + '?' + params);
+          // Take screenshot first (fastest visual feedback)
+          const resp = await fetch('/trial/screenshot?' + params);
           const remaining = resp.headers.get('X-Trial-Remaining');
           if (!resp.ok) {
             const err = await resp.json();
@@ -349,38 +262,39 @@ const LANDING_HTML = `<!DOCTYPE html>
           }
           const blob = await resp.blob();
           const objUrl = URL.createObjectURL(blob);
+
+          // Show results with Screenshot tab active
           result.style.display = 'block';
-          // Show appropriate tab
-          document.querySelectorAll('.trial-tab').forEach((t) => {
-            t.classList.remove('active');
-            t.style.color = 'var(--muted)';
-            t.style.borderBottomColor = 'transparent';
-          });
-          document.querySelectorAll('.tab-content').forEach((c) => { c.style.display = 'none'; });
-          if (type === 'screenshot') {
-            img.src = objUrl;
-            img.style.display = 'block';
-            document.getElementById('tab-screenshot').style.display = '';
-            const ssTab = document.querySelector('[data-tab="screenshot"]');
-            ssTab.classList.add('active');
-            ssTab.style.color = 'var(--brand)';
-            ssTab.style.borderBottomColor = 'var(--brand)';
-            status.textContent = 'Screenshot captured.' + (remaining ? ' ' + remaining + ' free captures remaining today.' : '');
-          } else {
-            pdfLink.href = objUrl;
-            pdfLink.download = 'document.pdf';
-            pdfLink.textContent = 'Download PDF';
-            pdfLink.style.display = 'inline-block';
-            document.getElementById('tab-pdf').style.display = '';
-            const pdfTab = document.querySelector('[data-tab="pdf"]');
-            pdfTab.classList.add('active');
-            pdfTab.style.color = 'var(--brand)';
-            pdfTab.style.borderBottomColor = 'var(--brand)';
-            status.textContent = 'PDF generated.' + (remaining ? ' ' + remaining + ' free captures remaining today.' : '');
-          }
+          img.src = objUrl;
+          img.style.display = 'block';
+
+          // Activate screenshot tab
+          activateTab('screenshot');
+          status.textContent = 'Page captured.' + (remaining ? ' ' + remaining + ' free captures remaining today.' : '') + ' Click tabs to see all outputs.';
+
+          // Start loading content and metadata in the background
+          loadExtract(fullUrl);
+          loadMetadata(fullUrl);
         } catch(e) {
           status.textContent = 'Error: ' + e.message;
         }
+      }
+
+      function activateTab(tabName) {
+        document.querySelectorAll('.trial-tab').forEach((t) => {
+          t.classList.remove('active');
+          t.style.color = 'var(--muted)';
+          t.style.borderBottomColor = 'transparent';
+        });
+        document.querySelectorAll('.tab-content').forEach((c) => { c.style.display = 'none'; });
+        const tab = document.querySelector('[data-tab="' + tabName + '"]');
+        if (tab) {
+          tab.classList.add('active');
+          tab.style.color = 'var(--brand)';
+          tab.style.borderBottomColor = 'var(--brand)';
+        }
+        const content = document.getElementById('tab-' + tabName);
+        if (content) content.style.display = '';
       }
     </script>
 
