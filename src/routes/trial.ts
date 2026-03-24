@@ -2,7 +2,7 @@ import { FastifyInstance, FastifyRequest } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { generatePdf } from "../services/pdf.js";
 import { addWatermark } from "../services/watermark.js";
-import { validateUrl } from "../utils/url.js";
+import { validateUrlSafe } from "../utils/url.js";
 
 // IP-based rate limiting for trial usage
 const trialUsage = new Map<string, { count: number; date: string }>();
@@ -33,9 +33,9 @@ function getRemainingTrials(ip: string): number {
 }
 
 export async function trialRoute(app: FastifyInstance) {
-  // Dev-only: reset trial limits
+  // Dev/test only: reset trial limits. Disabled in production.
   app.delete("/trial/reset", async (_request, reply) => {
-    if (process.env.NODE_ENV === "production" && process.env.API_KEYS) {
+    if (process.env.NODE_ENV === "production" || process.env.API_KEYS) {
       return reply.status(404).send({ error: "Not found" });
     }
     trialUsage.clear();
@@ -79,7 +79,7 @@ export async function trialRoute(app: FastifyInstance) {
 
       const { url: rawUrl, clean, smart_wait, block_ads } = request.query;
 
-      const validated = validateUrl(rawUrl);
+      const validated = await validateUrlSafe(rawUrl);
       if ("error" in validated) {
         return reply.status(400).send({ error: validated.error });
       }
@@ -182,6 +182,13 @@ export async function trialRoute(app: FastifyInstance) {
         max_pages,
         width,
       } = request.query;
+
+      // SSRF-safe URL validation
+      const { checkSsrf } = await import("../utils/ssrf.js");
+      const ssrfError = await checkSsrf(url);
+      if (ssrfError) {
+        return reply.status(400).send({ error: ssrfError });
+      }
 
       try {
         const parsed = new URL(url);

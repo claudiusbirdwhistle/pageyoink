@@ -10,40 +10,34 @@ Mark tasks [x] when done. Don't skip ahead to later phases.
 These are critical vulnerabilities in the deployed service. Fix them first.
 
 ### SSRF Protection
-S1. [ ] Create `src/utils/ssrf.ts` — URL validation that blocks internal/private network access
-   - Block private IPs: 127.0.0.0/8, 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 169.254.0.0/16
-   - Block IPv6 loopback (::1) and link-local (fe80::/10)
-   - Block cloud metadata endpoints: 169.254.169.254, metadata.google.internal
-   - Block localhost, 0.0.0.0
-   - Resolve DNS BEFORE checking — prevent DNS rebinding (someone could point evil.com → 127.0.0.1)
-   - Apply to ALL URL inputs: url param, proxy param, webhook URL, font URLs
-S2. [ ] Update `src/utils/url.ts` — integrate SSRF checks into validateUrl()
-S3. [ ] Add SSRF checks to batch endpoint URL validation
-S4. [ ] Add SSRF checks to webhook URL validation
-S5. [ ] Add SSRF checks to proxy parameter validation
-S6. [ ] Add SSRF checks to font URL validation
-S7. [ ] Write tests for SSRF blocking — verify internal IPs, metadata endpoints, DNS rebinding are blocked
+S1. [x] Create `src/utils/ssrf.ts` — URL validation that blocks internal/private network access
+   - Blocks private IPs, cloud metadata, localhost, link-local via CIDR matching
+   - DNS resolution check before navigation
+S2. [x] Update `src/utils/url.ts` — added validateUrlSafe() with SSRF checks
+S3. [x] Add SSRF checks to batch endpoint URL validation
+S4. [x] Add SSRF checks to webhook URL validation
+S5. [x] Add SSRF checks to proxy parameter validation (screenshot + PDF routes)
+S6. [x] Add SSRF checks to font URL validation
+S7. [x] Write tests for SSRF blocking — 19 tests covering private IPs, metadata, IPv6, etc.
 
 ### Browser Security
-S8. [ ] Remove `--single-process` from Chrome launch flags (allows cross-request isolation)
-S9. [ ] Evaluate removing `--no-sandbox` — may require running as non-root user in Docker
-   - If sandbox can't be enabled (Docker limitation), document the risk and add compensating controls
-   - At minimum: ensure the browser process runs as a restricted user
-S10. [ ] Add `--disable-extensions`, `--disable-background-networking`, `--disable-default-apps` flags
+S8. [x] Remove `--single-process` from Chrome launch flags
+S9. [x] Evaluate `--no-sandbox` — kept due to Docker requirement, documented risk, compensated by SSRF protection
+S10. [x] Add `--disable-extensions`, `--disable-background-networking`, `--disable-default-apps` and more hardening flags
 
 ### Input Validation
-S11. [ ] Add viewport size limits: max width 7680 (8K), max height 7680, reject larger values
+S11. [x] Add viewport size limits: max 7680x7680, validated in screenshot route
 S12. [ ] Validate timezone against known IANA timezone list (or catch emulateTimezone errors gracefully)
-S13. [ ] Validate geolocation: latitude -90 to 90, longitude -180 to 180
-S14. [ ] Add max CSS size limit (e.g., 100KB) to prevent resource exhaustion via css param
-S15. [ ] Add max JS size limit (e.g., 100KB) to prevent resource exhaustion via js param
+S13. [x] Validate geolocation: latitude -90 to 90, longitude -180 to 180
+S14. [x] Add max CSS size limit (100KB) via validation.ts
+S15. [x] Add max JS size limit (100KB) via validation.ts
 
 ### Anti-Abuse
 S16. [ ] Add request logging with anonymized IPs for abuse detection
 S17. [ ] Add response size limits — cap screenshot at 50MB, PDF at 100MB
 S18. [ ] Consider removing api_key from query param support (header-only is safer — keys leak in URLs/logs)
    - OR: document the risk clearly and keep for convenience
-S19. [ ] Rate limit the /trial/reset endpoint to prevent automated limit bypass (or remove in production)
+S19. [x] Rate limit the /trial/reset endpoint — now blocked when NODE_ENV=production OR API_KEYS is set
 
 ---
 

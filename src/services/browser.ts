@@ -3,12 +3,22 @@ import puppeteer, { Browser } from "puppeteer";
 let browser: Browser | null = null;
 
 const BASE_ARGS = [
-  "--no-sandbox",
+  "--no-sandbox",           // Required in Docker containers without user namespace
   "--disable-setuid-sandbox",
   "--disable-dev-shm-usage",
   "--disable-gpu",
   "--disable-software-rasterizer",
-  "--single-process",
+  "--disable-extensions",
+  "--disable-background-networking",
+  "--disable-default-apps",
+  "--disable-sync",
+  "--disable-translate",
+  "--metrics-recording-only",
+  "--no-first-run",
+  // NOTE: --single-process REMOVED — it allows cross-request interference
+  // NOTE: --no-sandbox kept because Docker typically runs as root.
+  // Compensating control: SSRF protection prevents access to internal services.
+  // TODO: Run browser as non-root user in Docker for defense-in-depth.
 ];
 
 /**

@@ -1,7 +1,7 @@
 import { FastifyInstance } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { compareImages } from "../services/diff.js";
-import { validateUrl } from "../utils/url.js";
+import { validateUrlSafe } from "../utils/url.js";
 
 interface DiffBody {
   url1: string;
@@ -56,8 +56,8 @@ export async function diffRoute(app: FastifyInstance) {
         format = "json",
       } = request.body;
 
-      const n1 = validateUrl(url1);
-      const n2 = validateUrl(url2);
+      const n1 = await validateUrlSafe(url1);
+      const n2 = await validateUrlSafe(url2);
       if ("error" in n1) return reply.status(400).send({ error: n1.error });
       if ("error" in n2) return reply.status(400).send({ error: n2.error });
 

@@ -8,6 +8,7 @@ import {
   memGet,
 } from "../services/database.js";
 import crypto from "crypto";
+import { checkSsrf } from "../utils/ssrf.js";
 
 interface BatchItem {
   url: string;
@@ -164,7 +165,7 @@ export async function batchRoute(app: FastifyInstance) {
     async (request, reply) => {
       const { items, webhook } = request.body;
 
-      // Validate all URLs
+      // Validate all URLs (including SSRF checks)
       for (const item of items) {
         try {
           const parsed = new URL(item.url);
@@ -178,9 +179,15 @@ export async function batchRoute(app: FastifyInstance) {
             error: `Invalid URL: ${item.url}`,
           });
         }
+        const ssrfCheck = await checkSsrf(item.url);
+        if (ssrfCheck) {
+          return reply.status(400).send({
+            error: `Blocked URL: ${item.url} — ${ssrfCheck}`,
+          });
+        }
       }
 
-      // Validate webhook URL if provided
+      // Validate webhook URL if provided (including SSRF)
       if (webhook) {
         try {
           const parsed = new URL(webhook);
@@ -192,6 +199,12 @@ export async function batchRoute(app: FastifyInstance) {
         } catch {
           return reply.status(400).send({
             error: "Invalid webhook URL",
+          });
+        }
+        const webhookSsrf = await checkSsrf(webhook);
+        if (webhookSsrf) {
+          return reply.status(400).send({
+            error: `Invalid webhook URL: ${webhookSsrf}`,
           });
         }
       }

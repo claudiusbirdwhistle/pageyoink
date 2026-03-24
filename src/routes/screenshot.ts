@@ -1,7 +1,14 @@
 import { FastifyInstance } from "fastify";
 import { takeScreenshot } from "../services/screenshot.js";
 import { cacheGet, cacheSet } from "../services/cache.js";
-import { validateUrl } from "../utils/url.js";
+import { validateUrlSafe } from "../utils/url.js";
+import { checkSsrf } from "../utils/ssrf.js";
+import {
+  validateViewport,
+  validateCssSize,
+  validateJsSize,
+  validateGeolocation,
+} from "../utils/validation.js";
 
 interface ScreenshotQuery {
   url: string;
@@ -201,9 +208,49 @@ export async function screenshotRoute(app: FastifyInstance) {
         timezone,
       } = request.query;
 
-      const validated = validateUrl(url);
+      const validated = await validateUrlSafe(url);
       if ("error" in validated) {
         return reply.status(400).send({ error: validated.error });
+      }
+
+      // Input validation
+      const parsedWidth = width ? parseInt(width, 10) : undefined;
+      const parsedHeight = height ? parseInt(height, 10) : undefined;
+      const vpError = validateViewport(parsedWidth, parsedHeight);
+      if (vpError) return reply.status(400).send({ error: vpError });
+
+      const cssError = validateCssSize(css);
+      if (cssError) return reply.status(400).send({ error: cssError });
+
+      const jsError = validateJsSize(js);
+      if (jsError) return reply.status(400).send({ error: jsError });
+
+      if (geolocation) {
+        const parts = geolocation.split(",").map(Number);
+        const geoError = validateGeolocation(parts[0], parts[1], parts[2]);
+        if (geoError) return reply.status(400).send({ error: geoError });
+      }
+
+      // SSRF check for proxy URL
+      if (proxy) {
+        const proxyCheck = await checkSsrf(
+          proxy.match(/^https?:\/\//) ? proxy : `http://${proxy}`,
+        );
+        if (proxyCheck) {
+          return reply.status(400).send({ error: `Invalid proxy: ${proxyCheck}` });
+        }
+      }
+
+      // SSRF check for font URLs
+      if (fonts) {
+        for (const fontUrl of fonts.split(",").map((f) => f.trim())) {
+          if (fontUrl) {
+            const fontCheck = await checkSsrf(fontUrl);
+            if (fontCheck) {
+              return reply.status(400).send({ error: `Invalid font URL: ${fontCheck}` });
+            }
+          }
+        }
       }
 
       try {

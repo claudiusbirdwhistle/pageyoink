@@ -2,7 +2,8 @@ import { FastifyInstance } from "fastify";
 import { generatePdf } from "../services/pdf.js";
 import { cacheGet, cacheSet } from "../services/cache.js";
 import { addWatermark, WatermarkOptions } from "../services/watermark.js";
-import { validateUrl } from "../utils/url.js";
+import { validateUrlSafe } from "../utils/url.js";
+import { checkSsrf } from "../utils/ssrf.js";
 
 interface PdfQuery {
   url?: string;
@@ -187,7 +188,7 @@ export async function pdfRoute(app: FastifyInstance) {
         fresh,
       } = request.query;
 
-      const validated = validateUrl(url!);
+      const validated = await validateUrlSafe(url!);
       if ("error" in validated) {
         return reply.status(400).send({ error: validated.error });
       }
@@ -403,6 +404,24 @@ export async function pdfRoute(app: FastifyInstance) {
         return reply
           .status(400)
           .send({ error: "Either html or url must be provided" });
+      }
+
+      // SSRF check for URL in POST body
+      if (body.url) {
+        const urlCheck = await checkSsrf(body.url);
+        if (urlCheck) {
+          return reply.status(400).send({ error: urlCheck });
+        }
+      }
+
+      // SSRF check for proxy in POST body
+      if (body.proxy) {
+        const proxyCheck = await checkSsrf(
+          body.proxy.match(/^https?:\/\//) ? body.proxy : `http://${body.proxy}`,
+        );
+        if (proxyCheck) {
+          return reply.status(400).send({ error: `Invalid proxy: ${proxyCheck}` });
+        }
       }
 
       try {
