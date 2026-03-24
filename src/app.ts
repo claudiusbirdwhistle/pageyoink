@@ -21,6 +21,11 @@ export async function buildApp() {
     logger: process.env.NODE_ENV !== "test",
   });
 
+  // Add request ID to response headers for debugging
+  app.addHook("onSend", async (request, reply) => {
+    reply.header("X-Request-Id", request.id);
+  });
+
   await app.register(cors);
   await app.register(rateLimit, {
     max: parseInt(process.env.RATE_LIMIT_PER_MINUTE || "60", 10),

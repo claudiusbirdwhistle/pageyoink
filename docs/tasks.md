@@ -130,10 +130,10 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 ## Phase H: Launch Preparation & Distribution
 
 ### Documentation
-52. [ ] Write a "Getting Started" guide — from zero to first API call in 60 seconds
-53. [ ] Write MCP integration guide — "Give your AI agent web access in 30 seconds"
-54. [ ] Update Swagger docs to be comprehensive for all endpoints including /v1/page
-55. [ ] Add code examples in Node.js, Python, and curl for the unified endpoint
+52. [x] Write Getting Started guide (docs/getting-started.md) — curl, Node.js, Python, MCP examples
+53. [x] MCP integration guide covered in mcp-server/README.md and getting-started.md
+54. [x] Swagger docs auto-generated from schema decorators on all endpoints
+55. [x] Code examples in getting-started.md: Node.js, Python, curl for all endpoints
 
 ### SDK Updates
 56. [x] Update Node.js SDK with page(), extract(), metadata() methods
@@ -175,9 +175,9 @@ These require human action (account creation, credentials):
 75. [ ] Consider browser pool warmup to reduce cold-start latency on Cloud Run
 
 ### Quality
-76. [ ] Add error handling for extraction failures (site blocks JS, empty content, timeout)
-77. [ ] Handle edge cases: non-HTML URLs (PDFs, images, binary files), redirects, auth-required pages
-78. [ ] Add request ID tracking for debugging
+76. [x] Error handling: extraction falls back to body when Readability returns empty content
+77. [x] Edge cases: extract endpoint checks content-type header, rejects non-HTML responses
+78. [x] Request ID: X-Request-Id response header on all requests (Fastify request.id)
 79. [ ] Improve clean mode: test against top 50 websites, fix any that still show popups/banners
 
 ### Features

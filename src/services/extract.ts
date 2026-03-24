@@ -49,14 +49,14 @@ export async function extractContent(
   let author: string | null = null;
   let excerpt = "";
 
-  if (article && article.content) {
+  if (article && article.content && article.content.trim().length > 0) {
     // Readability found an article
     contentHtml = article.content;
     title = article.title || pageTitle;
     author = article.byline || null;
     excerpt = article.excerpt || "";
   } else {
-    // Fallback: extract body content directly
+    // Fallback: extract body content directly (Readability couldn't identify article)
     contentHtml = await page.evaluate(() => {
       // Remove script, style, nav, footer, header elements for cleaner output
       const clone = document.body.cloneNode(true) as HTMLElement;

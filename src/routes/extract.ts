@@ -86,11 +86,19 @@ export async function extractRoute(app: FastifyInstance) {
       const page = await browser.newPage();
 
       try {
-        await page.goto(validated.url, {
+        const response = await page.goto(validated.url, {
           waitUntil: "load",
           timeout: effectiveTimeout,
         });
         await new Promise((r) => setTimeout(r, 1000));
+
+        // Check for non-HTML content types
+        const contentType = response?.headers()?.["content-type"] || "";
+        if (contentType && !contentType.includes("text/html") && !contentType.includes("text/plain") && !contentType.includes("application/xhtml")) {
+          return reply.status(400).send({
+            error: `URL returned non-HTML content (${contentType.split(";")[0]}). Extraction requires an HTML page.`,
+          });
+        }
 
         if (shouldClean) {
           await cleanPage(page);
