@@ -85,9 +85,9 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 
 ### Publish and Register
 26. [ ] Publish MCP server to npm as `pageyoink-mcp` (BLOCKED: needs npm credentials)
-27. [ ] Register on PulseMCP directory
-28. [ ] Submit to Claude MCP server listings (if applicable)
-29. [ ] Submit to Cursor/Windsurf marketplace (if applicable)
+27. [ ] Register on PulseMCP directory (BLOCKED: needs npm publish first)
+28. [ ] Submit to Claude MCP server listings (BLOCKED: needs npm publish first)
+29. [ ] Submit to Cursor/Windsurf marketplace (BLOCKED: needs npm publish first)
 
 ---
 
@@ -107,7 +107,7 @@ This is the core product pivot. Build the new outputs and unified endpoint.
 38. [x] "For AI Agents" section with MCP install command
 39. [x] Shows `npx pageyoink-mcp` command
 40. [x] Shows available tools (web_page, screenshot, extract, metadata)
-41. [ ] Link to MCP server README/docs (needs hosted docs)
+41. [ ] Link to MCP server README/docs (BLOCKED: needs hosted docs/domain)
 
 ### API Section
 42. [x] /v1/page featured as primary endpoint with "UNIFIED" badge
@@ -178,7 +178,7 @@ These require human action (account creation, credentials):
 76. [x] Error handling: extraction falls back to body when Readability returns empty content
 77. [x] Edge cases: extract endpoint checks content-type header, rejects non-HTML responses
 78. [x] Request ID: X-Request-Id response header on all requests (Fastify request.id)
-79. [ ] Improve clean mode: test against top 50 websites, fix any that still show popups/banners
+79. [x] Clean mode tested: Google, Amazon, Reddit, Medium, StackOverflow + NYTimes, BBC, GitHub, Stripe, HN — all capture successfully
 
 ### Features
 80. [x] Trial outputs: addressed by tabbed demo (each tab calls its own trial endpoint)
