@@ -4,6 +4,40 @@ This is the foundational document of the PageYoink project. It governs how Claud
 
 ---
 
+## What We're Building
+
+### The Vision
+
+**PageYoink: One URL. Everything you need.**
+
+PageYoink is a unified web page API. You give us a URL; we load it in a real browser (handling JavaScript, popups, lazy loading, cookie banners) and return whatever representation you need: screenshot, PDF, markdown, metadata, or all of them at once from a single page load.
+
+### Why This Product
+
+The web data market is exploding ($1B → $4.4B by 2035) driven by AI/LLM demand. Developers building AI agents and RAG pipelines need to turn URLs into usable data — clean text, images, structured metadata. Today this requires 2-4 separate services (Firecrawl for markdown, ScreenshotOne for screenshots, DocRaptor for PDFs, etc.). Nobody offers all outputs from a single page load through a single API.
+
+### The Competitive Landscape
+
+- **Firecrawl** ($14.5M raised, 350K users): Does markdown + screenshots + extraction. No PDF generation. Complex credit pricing. Our main competitor.
+- **Urlbox**: Technically does screenshot + PDF + markdown + metadata from one endpoint. But markets itself as a "screenshot API" — not positioned for AI agents.
+- **Jina Reader**: Simple URL-to-markdown. No screenshots, no PDF, no metadata.
+- **Nobody** has built the clean, opinionated "one MCP tool for all web page outputs" yet.
+
+### Our Angle
+
+We don't out-feature Firecrawl (they have 41 employees and $14.5M). We win on:
+
+1. **Simplicity**: One endpoint, one pricing model, no credit multipliers. "All outputs included" at every tier.
+2. **Efficiency**: Single page load for all outputs. Faster and cheaper than calling separate APIs.
+3. **MCP-first distribution**: The easiest way to give any AI agent web access. `npx pageyoink-mcp` and done.
+4. **Clean captures**: Our 4-phase clean mode (cookie banners, chat widgets, text-content scanning, overlay detection) is genuinely best-in-class and already built.
+
+### Key Documents
+
+Read `docs/competitive-analysis.md` for the full competitive landscape and `docs/market-research.md` (if it exists) for the market research backing these decisions.
+
+---
+
 ## Core Principle
 
 **The repo is the brain.** Claude has no persistent memory between cycles. Everything Claude needs to know — what's been built, what's broken, what to do next — must exist in files within this repository. If it's not written down, it doesn't exist.
@@ -39,7 +73,6 @@ Before doing any planned work, check system health:
    - If error rate is elevated: STOP. Fix this before anything else.
 
 3. Are there external signals?
-   - Check RapidAPI dashboard/reviews if accessible.
    - Check any monitoring endpoints.
 ```
 
@@ -58,17 +91,19 @@ Priority 5: No tasks remain                  → Improve test coverage,
                                                performance, or docs
 ```
 
+**Design before you build:** For any non-trivial feature, THINK about the design before writing code. Consider: How does this fit the existing architecture? What are the edge cases? What's the simplest implementation that works? Write a brief plan (even just a few bullet points in your thinking) before touching code. The goal is clean, intentional implementation — not hacking until it works.
+
 **Scope rule:** Each cycle should accomplish ONE meaningful unit of work. Do not start three things and finish none. A single completed task is worth more than three half-finished ones.
 
 **If a task is too large for one cycle:** Break it into subtasks in `docs/tasks.md`, complete the first subtask, and leave clear notes for the next cycle.
 
 ### Phase 4: Execute (Do the work)
 
-1. **Create or update a branch** if the change is non-trivial.
+1. **Think first.** For features, sketch the design. For bugs, understand the root cause before writing a fix.
 2. **Write tests first** for any new functionality (or at minimum, alongside).
 3. **Make the change.** Keep commits small and atomic.
 4. **Run the full test suite.** Do not commit if tests fail.
-5. **Test against real-world sites** (not just example.com) when modifying screenshot/PDF/clean features.
+5. **Test against real-world sites** (not just example.com) when modifying capture/extraction features.
 6. **Save sample output** to `samples/` for human review when relevant.
 7. **If deploying:** Follow the deployment procedure in `docs/runbook.md`.
 
@@ -104,11 +139,10 @@ This phase is **mandatory.** Never skip it.
 | Document | Purpose |
 |----------|---------|
 | `docs/status.md` | Current project state — what's done, what's next, what's broken |
-| `docs/tasks2.md` | Prioritized work queue |
+| `docs/tasks.md` | Prioritized work queue |
 | `docs/decisions.md` | Why we made key choices (prevents re-litigating) |
 | `docs/runbook.md` | Operational procedures |
 | `docs/competitive-analysis.md` | Feature comparison vs competitors — read before adding features |
-| `docs/DEPLOY.md` | Step-by-step deployment guide (Railway, Render, Fly.io) |
 
 ---
 
@@ -116,7 +150,7 @@ This phase is **mandatory.** Never skip it.
 
 **Never test only against example.com.** It's a trivially simple page that doesn't exercise real-world edge cases.
 
-When modifying screenshot, PDF, or clean mode features, test against:
+When modifying screenshot, PDF, extraction, or clean mode features, test against:
 - A JS-heavy site (e.g., github.com, stripe.com/docs)
 - A content-heavy news site (e.g., bbc.com, nytimes.com)
 - A site with known cookie banners (e.g., hubspot.com)
@@ -127,6 +161,7 @@ Save output to `samples/` for human review. Compare before/after when fixing ren
 **Known rendering issues:**
 - BBC "Weekend Reads" horizontal carousel: images don't render in Chrome's PDF engine due to CSS layout incompatibility with print rendering. This is a Chromium limitation, not a PageYoink bug. Affects all Chrome-based PDF tools.
 - NYTimes: first screenshot attempt may fail with "Connection closed" — retry logic handles this.
+- NYTimes: their print stylesheet hides the masthead/logo. Our print-fix CSS forces headers visible but NYTimes uses high-specificity selectors that override it. Site-specific issue.
 - Stripe Docs: slow renders (~17s) due to long-running network requests.
 
 **TypeScript gotcha:** Never declare named functions inside `page.evaluate()` callbacks — TypeScript's decorator transform adds `__name` which doesn't exist in the browser context. Use anonymous arrow functions or `setInterval` instead.
@@ -138,7 +173,7 @@ Save output to `samples/` for human review. Compare before/after when fixing ren
 ### What Claude Can Do Autonomously
 - Write and commit code
 - Run tests
-- Deploy via git push (if auto-deploy is configured)
+- Deploy via git push (auto-deploy configured via Cloud Build)
 - Update documentation
 - Monitor health endpoints
 - Fix bugs
@@ -146,15 +181,16 @@ Save output to `samples/` for human review. Compare before/after when fixing ren
 - Refactor code for maintainability
 - Respond to errors visible in logs
 - Generate sample output for human review
-- Move icebox tasks to a current phase and complete them
+- Design and implement features listed in the task queue
 
 ### What Requires Human Intervention
-- Creating accounts (RapidAPI, hosting platform, Stripe, domain registrar)
+- Creating accounts (hosting, payment processors, domain registrar)
 - Setting environment variables / secrets on hosting platform
 - DNS configuration
 - Responding to billing issues
 - Decisions that significantly change the product direction
 - Anything requiring authentication credentials Claude doesn't have access to
+- Publishing to npm (if credentials aren't configured)
 
 ### What Claude Should Never Do
 - Delete the production database
@@ -167,19 +203,20 @@ Save output to `samples/` for human review. Compare before/after when fixing ren
 
 ---
 
-## Project Phases (Historical + Current)
+## Project Phases
 
 ```
 Phase A: Foundation                    ✅ COMPLETE
-Phase B: Core Features                 ✅ COMPLETE
-Phase C: Deployment                    ✅ COMPLETE
-Phase D: Monetization                  🔲 BLOCKED (needs RapidAPI + Stripe)
-Phase E: Differentiation               🔲 IN PROGRESS
-Phase F: Competitive Parity            🔲 IN PROGRESS (CSS/JS injection, headers, etc.)
-Phase G: Post-Launch Iteration         🔲 FUTURE (based on customer feedback)
+Phase B: Core Capture Features         ✅ COMPLETE (screenshot, PDF, clean mode, batch, diff)
+Phase C: Deployment                    ✅ COMPLETE (Google Cloud Run)
+Phase D: Competitive Parity            ✅ COMPLETE (CSS/JS injection, headers, caching, ad blocking, etc.)
+Phase E: Unified Page API              🔲 IN PROGRESS — The pivot to "one URL, everything out"
+Phase F: MCP Server                    🔲 NEXT — Distribution via AI agent ecosystem
+Phase G: Landing Page Rebuild          🔲 NEXT — New positioning, multi-output demo
+Phase H: Launch & Distribution         🔲 FUTURE — Product Hunt, HN, integrations
+Phase I: Monetization                  🔲 BLOCKED (needs Stripe + domain)
+Phase J: Polish & Iteration            🔲 FUTURE (based on user feedback)
 ```
-
-Phase F was identified through competitive analysis (see docs/competitive-analysis.md). It covers features that all serious competitors have and we need before launch.
 
 ---
 
@@ -199,6 +236,8 @@ If future-Claude reads the status file and something doesn't make sense:
 ## Anti-Patterns
 
 These are mistakes that autonomous Claude is prone to. Watch for them.
+
+**Coding before thinking:** Jumping straight into implementation without considering the design. For any feature that touches the API surface, think about: the endpoint shape, what the response looks like, how it fits with existing endpoints, what edge cases exist. A few minutes of design prevents hours of rework.
 
 **Yak shaving:** Starting a task, discovering a side issue, chasing that, discovering another, and accomplishing nothing. If a side issue blocks your task, note it in the task queue and either work around it or switch to a clear task.
 
