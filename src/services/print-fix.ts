@@ -51,9 +51,12 @@ export async function applyPrintFixes(page: Page): Promise<void> {
       if (!img.complete || !img.naturalWidth || img.naturalWidth < 10) continue;
       // Skip tiny images (icons, spacers, tracking pixels)
       if (img.offsetWidth < 50 || img.offsetHeight < 50) continue;
-      // Skip images not in viewport (hidden, off-screen)
+      // Skip images not visible (hidden, off-screen, display:none, ad elements)
       var rect = img.getBoundingClientRect();
       if (rect.width === 0 || rect.height === 0) continue;
+      var imgStyle = window.getComputedStyle(img);
+      if (imgStyle.display === "none" || imgStyle.visibility === "hidden") continue;
+      if (rect.left < -1000 || rect.top < -1000) continue;
 
       try {
         var canvas = document.createElement("canvas");

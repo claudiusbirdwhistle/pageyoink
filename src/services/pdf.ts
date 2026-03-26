@@ -210,6 +210,46 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
       await hideAdsStealthily(page);
     }
 
+    // For PDFs, upgrade stealth ad hiding to display:none since
+    // anti-adblock detection doesn't matter in print context.
+    // Also catches ads that the offscreen method doesn't fully hide in print.
+    if (blockAds) {
+      await page.evaluate(`(function() {
+        var selectors = ${JSON.stringify([
+          'ins.adsbygoogle', '[id^="google_ads_"]', '[id^="div-gpt-ad"]',
+          '.google-ad', 'iframe[id^="google_ads_iframe"]', '[data-google-query-id]',
+          '.trc_rbox_container', '[id^="taboola-"]', '.taboola-widget',
+          '.ob-widget', '[class*="outbrain"]', '[class*="advertisement"]',
+          '[class*="ad-banner"]', '[class*="ad-unit"]', '[class*="ad-container"]',
+          '[class*="ad-wrapper"]', '[class*="ad-slot"]', '[class*="sponsored-content"]',
+          '[data-ad-slot]', '[data-ad-unit]', '[aria-label="advertisement" i]',
+        ])};
+        for (var i = 0; i < selectors.length; i++) {
+          try {
+            document.querySelectorAll(selectors[i]).forEach(function(el) {
+              el.style.setProperty("display", "none", "important");
+            });
+          } catch(e) {}
+        }
+        // Also hide ad iframes by domain
+        var adDomains = ${JSON.stringify([
+          "doubleclick.net", "googlesyndication.com", "googleadservices.com",
+          "amazon-adsystem.com", "taboola.com", "outbrain.com", "media.net",
+          "adnxs.com", "criteo.com", "pubmatic.com",
+        ])};
+        var iframes = document.querySelectorAll("iframe");
+        for (var j = 0; j < iframes.length; j++) {
+          var src = iframes[j].src || "";
+          for (var k = 0; k < adDomains.length; k++) {
+            if (src.includes(adDomains[k])) {
+              iframes[j].style.setProperty("display", "none", "important");
+              break;
+            }
+          }
+        }
+      })()`);
+    }
+
     // Apply print-mode CSS fixes (carousel overflow, flex-wrap, etc.)
     await applyPrintFixes(page);
 
