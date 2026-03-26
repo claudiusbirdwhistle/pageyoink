@@ -3,17 +3,31 @@ import { Page } from "puppeteer";
 const DEFAULT_MAX_SCROLL_SCREENS = 10;
 const MAX_SCROLL_TIME_MS = 15_000;
 
+export interface LazyLoadOptions {
+  maxScrollScreens?: number;
+  skipPhase2?: boolean;
+  imageWaitTimeout?: number;
+  postPaintDelay?: number;
+}
+
 /**
  * Scroll through the page to trigger lazy-loaded images,
  * then scroll back to top and wait for all images to finish loading.
  * Caps scrolling to avoid infinite scroll traps.
  *
  * @param maxScrollScreens - Max viewport heights to scroll (default 10)
+ * @param opts - Adaptive options from page analysis
  */
 export async function triggerLazyImages(
   page: Page,
   maxScrollScreens: number = DEFAULT_MAX_SCROLL_SCREENS,
+  opts: LazyLoadOptions = {},
 ): Promise<void> {
+  const {
+    skipPhase2 = false,
+    imageWaitTimeout = 10000,
+    postPaintDelay = 1000,
+  } = opts;
   // Phase 1: Scroll through the page to trigger lazy loading
   // Use string-based script to avoid __name decorator issues in tsx dev mode
   await page.evaluate(`(function(maxScreens, maxTimeMs) {
@@ -60,28 +74,31 @@ export async function triggerLazyImages(
   // Phase 2: Scroll again slowly to let intersection observers fire
   // Some sites (NYTimes) use JS intersection observers that need elements
   // to be in the viewport briefly for content to render
-  const phase2TimeMs = Math.min(MAX_SCROLL_TIME_MS, 10_000);
-  await page.evaluate(`(function(maxTimeMs) {
-    return new Promise(function(resolve) {
-      var viewportHeight = window.innerHeight;
-      var scrollHeight = document.body.scrollHeight;
-      var step = viewportHeight * 0.5;
-      var startTime = Date.now();
-      var y = 0;
+  // Skip for short pages or pages with no lazy images
+  if (!skipPhase2) {
+    const phase2TimeMs = Math.min(MAX_SCROLL_TIME_MS, 10_000);
+    await page.evaluate(`(function(maxTimeMs) {
+      return new Promise(function(resolve) {
+        var viewportHeight = window.innerHeight;
+        var scrollHeight = document.body.scrollHeight;
+        var step = viewportHeight * 0.5;
+        var startTime = Date.now();
+        var y = 0;
 
-      function scrollNext() {
-        if (y >= scrollHeight || Date.now() - startTime > maxTimeMs) {
-          window.scrollTo(0, 0);
-          resolve();
-          return;
+        function scrollNext() {
+          if (y >= scrollHeight || Date.now() - startTime > maxTimeMs) {
+            window.scrollTo(0, 0);
+            resolve();
+            return;
+          }
+          window.scrollTo(0, y);
+          y += step;
+          setTimeout(scrollNext, 150);
         }
-        window.scrollTo(0, y);
-        y += step;
-        setTimeout(scrollNext, 150);
-      }
-      scrollNext();
-    });
-  })(${phase2TimeMs})`);
+        scrollNext();
+      });
+    })(${phase2TimeMs})`);
+  }
 
   // Phase 3: Force all lazy images to load eagerly
   await page.evaluate(`(function() {
@@ -125,10 +142,10 @@ export async function triggerLazyImages(
 
     return Promise.race([
       Promise.all(promises),
-      new Promise(function(resolve) { setTimeout(resolve, 10000); })
+      new Promise(function(resolve) { setTimeout(resolve, ${imageWaitTimeout}); })
     ]);
   })()`);
 
   // Phase 5: Wait for browser to finish painting
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, postPaintDelay));
 }

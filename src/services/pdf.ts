@@ -6,6 +6,7 @@ import { triggerLazyImages } from "./lazy-load.js";
 import { enableAdBlocking } from "./adblock.js";
 import { hideAdsStealthily } from "./stealth-adblock.js";
 import { applyPrintFixes } from "./print-fix.js";
+import { analyzePage, getAdaptiveDelays } from "./page-analysis.js";
 
 export interface PdfOptions {
   url?: string;
@@ -138,14 +139,17 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
         waitUntil: "load",
         timeout: effectiveTimeout,
       });
-      await new Promise((r) => setTimeout(r, 1000));
     } else if (html) {
       await page.setContent(html, {
         waitUntil: "load",
         timeout: effectiveTimeout,
       });
-      await new Promise((r) => setTimeout(r, 500));
     }
+
+    // Adaptive delay based on page complexity
+    const analysis = await analyzePage(page);
+    const delays = getAdaptiveDelays(analysis);
+    await new Promise((r) => setTimeout(r, html ? 300 : delays.postLoadDelay));
 
     // Install mutation tracker for smart_wait (must be after goto/setContent)
     if (smartWait) {
@@ -167,7 +171,11 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     const scrollDepth = maxScroll ?? Math.ceil(
       await page.evaluate(`document.body.scrollHeight / window.innerHeight`) + 2
     );
-    await triggerLazyImages(page, scrollDepth);
+    await triggerLazyImages(page, scrollDepth, {
+      skipPhase2: delays.skipPhase2Scroll,
+      imageWaitTimeout: delays.imageWaitTimeout,
+      postPaintDelay: delays.postPaintDelay,
+    });
 
     if (smartWait) {
       await waitForPageReady(page, Math.min(effectiveTimeout, 10_000));

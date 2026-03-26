@@ -4,6 +4,7 @@ import { waitForPageReady, installMutationTracker } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
 import { enableAdBlocking } from "./adblock.js";
 import { hideAdsStealthily } from "./stealth-adblock.js";
+import { analyzePage, getAdaptiveDelays } from "./page-analysis.js";
 
 export interface ScreenshotOptions {
   url: string;
@@ -164,8 +165,13 @@ async function attemptScreenshot(
     });
 
     notify("loaded");
-    // Allow 1s for post-load rendering (CSS transitions, JS-injected content)
-    await new Promise((r) => setTimeout(r, 1000));
+
+    // Adaptive delay: analyze page complexity to determine optimal timings
+    const analysis = await analyzePage(page);
+    const delays = getAdaptiveDelays(analysis);
+
+    // Post-load rendering delay (CSS transitions, JS-injected content)
+    await new Promise((r) => setTimeout(r, delays.postLoadDelay));
 
     // Install mutation tracker for smart_wait (must be after goto)
     if (smartWait) {
@@ -208,7 +214,11 @@ async function attemptScreenshot(
     // Scroll through page to trigger lazy-loaded images
     if (fullPage || smartWait) {
       notify("scrolling");
-      await triggerLazyImages(page, maxScroll);
+      await triggerLazyImages(page, maxScroll, {
+        skipPhase2: delays.skipPhase2Scroll,
+        imageWaitTimeout: delays.imageWaitTimeout,
+        postPaintDelay: delays.postPaintDelay,
+      });
     }
 
     if (smartWait) {
