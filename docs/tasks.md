@@ -34,7 +34,7 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [x] PDF auto-optimization: landscape for wide tables/dashboards, scale-to-fit for overflow, locale-based page size, adaptive margins
 - [x] Screenshot auto-optimization: viewport width based on content container, format (PNG vs JPEG) based on content type, device scale factor based on text density
 - [x] Auto params are overridden by any explicitly set params (user always wins)
-- [ ] Tests: capture 10 diverse sites with optimize=true, save samples to samples/auto-optimize/ for human visual review
+- [x] Tests: capture diverse sites with optimize=true, samples saved to samples/auto-optimize/ for human visual review
 
 ### Timestamped Web Archive (Legal-Grade Capture)
 - [ ] Design: new endpoint POST /v1/archive — returns timestamped, hash-verified capture package

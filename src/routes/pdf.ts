@@ -27,6 +27,7 @@ interface PdfQuery {
   max_pages?: string;
   ttl?: string;
   fresh?: string;
+  optimize?: string;
 }
 
 interface PdfBody {
@@ -211,6 +212,7 @@ export async function pdfRoute(app: FastifyInstance) {
           userAgent: user_agent || undefined,
           scale: scale ? parseFloat(scale) : undefined,
           maxPages: max_pages ? parseInt(max_pages, 10) : undefined,
+          optimize: request.query.optimize === "true",
         };
 
         const cacheTtl = ttl ? parseInt(ttl, 10) : undefined;
