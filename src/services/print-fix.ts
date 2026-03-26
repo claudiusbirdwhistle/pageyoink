@@ -40,7 +40,45 @@ export async function applyPrintFixes(page: Page): Promise<void> {
     }
   })()`);
 
-  // Fix 2: Inject print-specific CSS for common layout issues
+  // Fix 2: Replace images with high-quality canvases for PDF rendering.
+  // Chrome's PDF engine aggressively compresses <img> elements but preserves
+  // <canvas> content at higher quality. This can increase PDF size significantly
+  // but produces much sharper images.
+  await page.evaluate(`(function() {
+    var imgs = document.querySelectorAll("img");
+    for (var i = 0; i < imgs.length; i++) {
+      var img = imgs[i];
+      if (!img.complete || !img.naturalWidth || img.naturalWidth < 10) continue;
+      // Skip tiny images (icons, spacers, tracking pixels)
+      if (img.offsetWidth < 50 || img.offsetHeight < 50) continue;
+      // Skip images not in viewport (hidden, off-screen)
+      var rect = img.getBoundingClientRect();
+      if (rect.width === 0 || rect.height === 0) continue;
+
+      try {
+        var canvas = document.createElement("canvas");
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.style.width = img.offsetWidth + "px";
+        canvas.style.height = img.offsetHeight + "px";
+        canvas.style.maxWidth = "100%";
+        canvas.style.height = "auto";
+        canvas.style.display = img.style.display || "inline";
+
+        var ctx = canvas.getContext("2d");
+        if (ctx) {
+          ctx.imageSmoothingEnabled = true;
+          ctx.imageSmoothingQuality = "high";
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          img.parentNode.replaceChild(canvas, img);
+        }
+      } catch(e) {
+        // CORS or other error — skip this image, keep the original
+      }
+    }
+  })()`);
+
+  // Fix 3: Inject print-specific CSS for common layout issues
   await page.addStyleTag({
     content: `
       @media print {
@@ -65,8 +103,8 @@ export async function applyPrintFixes(page: Page): Promise<void> {
           overflow: visible !important;
         }
 
-        /* Ensure images don't overflow their containers */
-        img, picture, video, figure {
+        /* Ensure images and canvases don't overflow their containers */
+        img, canvas, picture, video, figure {
           max-width: 100% !important;
           height: auto !important;
           page-break-inside: avoid;
