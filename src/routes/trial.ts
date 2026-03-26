@@ -11,24 +11,31 @@ import { checkSsrf } from "../utils/ssrf.js";
 import { classifyNavigationError } from "../utils/errors.js";
 import { progressStart, progressUpdate, progressEnd } from "../services/progress.js";
 
-// IP-based rate limiting for trial usage
-const trialUsage = new Map<string, { count: number; date: string }>();
+// IP-based rate limiting for trial usage.
+// A "capture" is one URL — all output types (screenshot, PDF, extract, metadata)
+// from the same URL count as a single trial usage.
+const trialUsage = new Map<string, { urls: Set<string>; date: string }>();
 const TRIAL_LIMIT_PER_DAY = 5;
 
-function checkTrialLimit(ip: string): boolean {
+function checkTrialLimit(ip: string, url: string): boolean {
   const today = new Date().toISOString().split("T")[0];
   const usage = trialUsage.get(ip);
 
   if (!usage || usage.date !== today) {
-    trialUsage.set(ip, { count: 1, date: today });
+    trialUsage.set(ip, { urls: new Set([url]), date: today });
     return true;
   }
 
-  if (usage.count >= TRIAL_LIMIT_PER_DAY) {
+  // Same URL as a previous request today — doesn't count as new usage
+  if (usage.urls.has(url)) {
+    return true;
+  }
+
+  if (usage.urls.size >= TRIAL_LIMIT_PER_DAY) {
     return false;
   }
 
-  usage.count++;
+  usage.urls.add(url);
   return true;
 }
 
@@ -36,7 +43,7 @@ function getRemainingTrials(ip: string): number {
   const today = new Date().toISOString().split("T")[0];
   const usage = trialUsage.get(ip);
   if (!usage || usage.date !== today) return TRIAL_LIMIT_PER_DAY;
-  return Math.max(0, TRIAL_LIMIT_PER_DAY - usage.count);
+  return Math.max(0, TRIAL_LIMIT_PER_DAY - usage.urls.size);
 }
 
 export async function trialRoute(app: FastifyInstance) {
@@ -76,15 +83,14 @@ export async function trialRoute(app: FastifyInstance) {
       reply,
     ) => {
       const ip = request.ip;
+      const { url: rawUrl, clean, smart_wait, block_ads } = request.query;
 
-      if (!checkTrialLimit(ip)) {
+      if (!checkTrialLimit(ip, rawUrl)) {
         return reply.status(429).send({
-          error: `Trial limit reached (${TRIAL_LIMIT_PER_DAY} per day). Sign up for an API key for unlimited access.`,
+          error: `Trial limit reached (${TRIAL_LIMIT_PER_DAY} unique URLs per day). Sign up for an API key for unlimited access.`,
           remaining: 0,
         });
       }
-
-      const { url: rawUrl, clean, smart_wait, block_ads } = request.query;
 
       const validated = await validateUrlSafe(rawUrl);
       if ("error" in validated) {
@@ -171,14 +177,6 @@ export async function trialRoute(app: FastifyInstance) {
       reply,
     ) => {
       const ip = request.ip;
-
-      if (!checkTrialLimit(ip)) {
-        return reply.status(429).send({
-          error: `Trial limit reached (${TRIAL_LIMIT_PER_DAY} per day). Sign up for an API key for unlimited access.`,
-          remaining: 0,
-        });
-      }
-
       const {
         url,
         clean,
@@ -199,6 +197,13 @@ export async function trialRoute(app: FastifyInstance) {
         max_pages,
         width,
       } = request.query;
+
+      if (!checkTrialLimit(ip, url)) {
+        return reply.status(429).send({
+          error: `Trial limit reached (${TRIAL_LIMIT_PER_DAY} unique URLs per day). Sign up for an API key for unlimited access.`,
+          remaining: 0,
+        });
+      }
 
       // SSRF-safe URL validation
       const ssrfError = await checkSsrf(url);
@@ -289,13 +294,14 @@ export async function trialRoute(app: FastifyInstance) {
       reply,
     ) => {
       const ip = request.ip;
-      if (!checkTrialLimit(ip)) {
+      const { url: rawUrl, format, clean } = request.query;
+
+      if (!checkTrialLimit(ip, rawUrl)) {
         return reply.status(429).send({
-          error: `Trial limit reached (${TRIAL_LIMIT_PER_DAY} per day).`,
+          error: `Trial limit reached (${TRIAL_LIMIT_PER_DAY} unique URLs per day).`,
         });
       }
 
-      const { url: rawUrl, format, clean } = request.query;
       const validated = await validateUrlSafe(rawUrl);
       if ("error" in validated) {
         return reply.status(400).send({ error: validated.error });
@@ -339,13 +345,14 @@ export async function trialRoute(app: FastifyInstance) {
       reply,
     ) => {
       const ip = request.ip;
-      if (!checkTrialLimit(ip)) {
+      const { url: rawUrl } = request.query;
+
+      if (!checkTrialLimit(ip, rawUrl)) {
         return reply.status(429).send({
-          error: `Trial limit reached (${TRIAL_LIMIT_PER_DAY} per day).`,
+          error: `Trial limit reached (${TRIAL_LIMIT_PER_DAY} unique URLs per day).`,
         });
       }
 
-      const { url: rawUrl } = request.query;
       const validated = await validateUrlSafe(rawUrl);
       if ("error" in validated) {
         return reply.status(400).send({ error: validated.error });
