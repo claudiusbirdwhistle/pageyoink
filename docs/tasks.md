@@ -46,7 +46,7 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [ ] Product Hunt listing (NEEDS: account + domain)
 - [ ] Hacker News Show HN post (NEEDS: live domain)
 - [ ] LangChain, CrewAI, n8n integrations (NEEDS: external repos)
-- [ ] Watermark on free-tier
+- [x] Watermark on free-tier (subtle "PageYoink Trial" on trial screenshots)
 - [ ] Public reports, open-source MCP, Awesome MCP, SEO content (NEEDS: domain/npm)
 
 ### Monetization

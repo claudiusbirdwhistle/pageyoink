@@ -10,6 +10,7 @@ import { validateUrlSafe } from "../utils/url.js";
 import { checkSsrf } from "../utils/ssrf.js";
 import { classifyNavigationError } from "../utils/errors.js";
 import { progressStart, progressUpdate, progressEnd } from "../services/progress.js";
+import sharp from "sharp";
 
 // IP-based rate limiting for trial usage.
 // A "capture" is one URL — all output types (screenshot, PDF, extract, metadata)
@@ -44,6 +45,20 @@ function getRemainingTrials(ip: string): number {
   const usage = trialUsage.get(ip);
   if (!usage || usage.date !== today) return TRIAL_LIMIT_PER_DAY;
   return Math.max(0, TRIAL_LIMIT_PER_DAY - usage.urls.size);
+}
+
+async function addTrialWatermark(imageBuffer: Buffer): Promise<Buffer> {
+  const metadata = await sharp(imageBuffer).metadata();
+  const w = metadata.width || 1280;
+  const h = metadata.height || 720;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}">
+    <text x="${w - 10}" y="${h - 10}" font-family="sans-serif" font-size="14"
+      fill="rgba(255,255,255,0.5)" text-anchor="end">PageYoink Trial</text>
+  </svg>`;
+  return sharp(imageBuffer)
+    .composite([{ input: Buffer.from(svg), left: 0, top: 0 }])
+    .png()
+    .toBuffer();
 }
 
 export async function trialRoute(app: FastifyInstance) {
@@ -119,11 +134,12 @@ export async function trialRoute(app: FastifyInstance) {
         });
 
         progressUpdate(reqId, "complete");
+        const watermarked = await addTrialWatermark(result.buffer);
         return reply
-          .header("Content-Type", result.contentType)
+          .header("Content-Type", "image/png")
           .header("X-Trial-Remaining", String(getRemainingTrials(ip)))
           .header("X-Request-Id", reqId)
-          .send(result.buffer);
+          .send(watermarked);
       } catch (err) {
         progressUpdate(reqId, "error");
         const classified = classifyNavigationError(err);
