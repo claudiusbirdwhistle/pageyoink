@@ -3,6 +3,25 @@ import { createHash, randomUUID } from "crypto";
 import { getBrowser } from "./browser.js";
 import { convertToPdfA, isGhostscriptAvailable } from "./pdfa.js";
 
+// RFC 3161 timestamping — dynamically imported since it uses CJS
+async function timestampPdf(pdfBuffer: Buffer): Promise<Buffer> {
+  try {
+    const { timestampPdfLTA } = await import("pdf-rfc3161");
+    const result = await timestampPdfLTA({
+      pdf: new Uint8Array(pdfBuffer),
+      tsa: {
+        url: process.env.TSA_URL || "http://freetsa.org/tsr",
+        hashAlgorithm: "SHA-256",
+        timeout: 10_000,
+      },
+    });
+    return Buffer.from(result.pdf);
+  } catch {
+    // TSA unavailable or error — return original PDF
+    return pdfBuffer;
+  }
+}
+
 export interface ArchiveResult {
   warc: Buffer;
   metadata: ArchiveMetadata;
@@ -193,6 +212,9 @@ export async function captureArchive(
         // Fall back to standard PDF if conversion fails
       }
     }
+
+    // Apply RFC 3161 timestamp to PDF
+    pdfBuffer = await timestampPdf(pdfBuffer);
 
     const metadata: ArchiveMetadata = {
       url,

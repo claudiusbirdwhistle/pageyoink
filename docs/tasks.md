@@ -16,7 +16,7 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [x] Design: new endpoint POST /v1/archive — returns timestamped, hash-verified capture package
 - [x] WARC format (ISO 28500) capture: full HTTP request/response pairs, headers, content
 - [x] SHA-256 hashing of all captured content with hash chain
-- [ ] RFC 3161 timestamp integration — submit content hash to a TSA (DigiCert or similar)
+- [x] RFC 3161 timestamp integration — pdf-rfc3161 library, FreeTSA.org default, configurable via TSA_URL env var
 - [x] Full metadata recording: DNS resolution, resolved IP, TLS certificate details, HTTP headers, capture system info
 - [x] Separate capture path with zero page manipulation (no clean mode, no CSS/JS injection)
 - [x] PDF/A export with embedded timestamp and signature (depends on PDF/A task above)
