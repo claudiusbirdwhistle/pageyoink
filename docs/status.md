@@ -1,7 +1,7 @@
 # Project Status
 
 ## Last Updated
-2026-03-24
+2026-03-25
 
 ## System State
 - **Deployed:** Yes — Google Cloud Run (us-east1)
@@ -82,6 +82,13 @@
 - [ ] Create Product Hunt and Hacker News listings
 - [ ] Build LangChain/CrewAI integrations
 
+### Performance & UX (completed 2026-03-25)
+- Adaptive capture pipeline: short/medium/long page classification with adaptive delays
+- Live elapsed timer + progress stage tracking on landing page
+- Status endpoint: GET /internal/status/:requestId
+- Parallel metadata + content extraction in unified endpoint
+- Browser pre-warm on server startup
+
 ### Remaining Audit Tasks (categories 9-12)
 - Build & ops (I1-I5): Docker testing, health checks, graceful shutdown, env docs
 - SDK & docs (J1-J6): TypeScript types, SDK docs, CHANGELOG
@@ -90,7 +97,6 @@
 
 ### Deferred (Post-Launch)
 - Caching for /v1/page endpoint
-- Parallel extraction optimization
 - Social share preview renderer
 - Responsive multi-viewport preview
 - Table extraction as JSON
