@@ -11,10 +11,13 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [ ] Capture progress tracking: track pipeline stages (navigating → loaded → scrolling → rendering → complete) per request ID in memory
 - [ ] Status endpoint: GET /internal/status/:requestId returns current stage + elapsed time
 - [ ] Landing page: poll status endpoint during capture, show current stage to user
-- [ ] Reduce hardcoded 1s post-load delays — make adaptive or shorter for simple pages
-- [ ] Skip lazy image scrolling when page has no lazy-loaded images
-- [ ] Reduce image wait timeout from 10s to 3-5s
-- [ ] Skip second scroll pass (Phase 2) when Phase 1 found no new content loading
+- [ ] Adaptive capture pipeline based on page length:
+  - After page.goto, measure scrollHeight/innerHeight to classify page: short (<3 viewports), medium (3-10), long (10+)
+  - Short pages: reduce post-load delay to 300ms, single quick scroll or skip scroll entirely, short image wait
+  - Medium pages: standard single scroll pass, moderate image wait
+  - Long pages: full double scroll (Phase 1 + Phase 2 for intersection observers), extended image wait
+  - After scrolling, count still-loading images and scale wait to actual pending count instead of fixed 10s
+  - IMPORTANT: do not remove delays entirely — they exist to handle JS hydration, lazy loading, and intersection observers. Only reduce them when page content clearly doesn't need them.
 - [ ] Optimize parallel extraction in unified endpoint
 - [ ] Browser pool warmup (Cloud Run min-instances)
 
