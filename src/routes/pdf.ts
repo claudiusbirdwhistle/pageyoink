@@ -5,6 +5,7 @@ import { addWatermark, WatermarkOptions } from "../services/watermark.js";
 import { validateUrlSafe } from "../utils/url.js";
 import { classifyNavigationError } from "../utils/errors.js";
 import { checkSsrf } from "../utils/ssrf.js";
+import { convertToPdfA, isGhostscriptAvailable } from "../services/pdfa.js";
 
 interface PdfQuery {
   url?: string;
@@ -28,6 +29,7 @@ interface PdfQuery {
   ttl?: string;
   fresh?: string;
   optimize?: string;
+  pdfa?: string;
 }
 
 interface PdfBody {
@@ -234,13 +236,25 @@ export async function pdfRoute(app: FastifyInstance) {
           timeout: timeout ? parseInt(timeout, 10) : undefined,
         });
 
-        cacheSet(captureParams, result.buffer, "application/pdf", cacheTtl);
+        let finalBuffer = result.buffer;
+
+        // PDF/A conversion via Ghostscript
+        if (request.query.pdfa === "true") {
+          if (await isGhostscriptAvailable()) {
+            const level = (request.query.pdfa as string) === "1b" ? "1b" : (request.query.pdfa as string) === "3b" ? "3b" : "2b";
+            finalBuffer = await convertToPdfA(finalBuffer, level);
+          } else {
+            return reply.status(501).send({ error: "PDF/A conversion requires Ghostscript, which is not installed on this server." });
+          }
+        }
+
+        cacheSet(captureParams, finalBuffer, "application/pdf", cacheTtl);
 
         return reply
           .header("Content-Type", "application/pdf")
           .header("X-Cache", "MISS")
-          .header("Content-Disposition", 'inline; filename="document.pdf"')
-          .send(result.buffer);
+          .header("Content-Disposition", `inline; filename="document${request.query.pdfa === "true" ? "-pdfa" : ""}.pdf"`)
+          .send(finalBuffer);
       } catch (err) {
         const classified = classifyNavigationError(err);
         request.log.error({ err }, "PDF generation failed");

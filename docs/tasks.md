@@ -7,12 +7,10 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 ## Pending — Can Be Done Autonomously
 
 ### Features
-- [ ] Social share preview
-- [ ] Responsive preview
-- [ ] Screenshot annotation API (arrows, boxes, blur regions)
+- [x] Screenshot annotation API (arrows, boxes, blur regions, highlights, text labels)
 - [x] Anti-bot stealth mode (puppeteer-extra stealth plugin)
 - [ ] PDF table of contents auto-generation from heading structure
-- [ ] PDF/A archival format support (add Ghostscript to Docker, `pdfa=true` parameter)
+- [x] PDF/A archival format support (pdfa=true parameter, Ghostscript conversion)
 
 ### Timestamped Web Archive (Legal-Grade Capture)
 - [x] Design: new endpoint POST /v1/archive — returns timestamped, hash-verified capture package
@@ -21,13 +19,16 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [ ] RFC 3161 timestamp integration — submit content hash to a TSA (DigiCert or similar)
 - [x] Full metadata recording: DNS resolution, resolved IP, TLS certificate details, HTTP headers, capture system info
 - [x] Separate capture path with zero page manipulation (no clean mode, no CSS/JS injection)
-- [ ] PDF/A export with embedded timestamp and signature (depends on PDF/A task above)
+- [x] PDF/A export with embedded timestamp and signature (depends on PDF/A task above)
 - [x] Response format: ZIP containing WARC file, PDF render, metadata JSON, checksum
 - [x] Legal disclaimers: clear documentation that this is technical proof, not legal certification
 - [x] Tests: verify ZIP format, hash integrity, SSRF blocking
 
 ### Structured Extraction (remaining)
 - [ ] Pricing: determine credit cost for LLM-backed vs free JSON-LD-only extractions
+
+### Landing page
+- [ ] Create functional demos for all the services we offer, while maintaining a clean UI.
 
 ---
 

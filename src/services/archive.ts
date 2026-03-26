@@ -1,6 +1,7 @@
 import { Page } from "puppeteer";
 import { createHash, randomUUID } from "crypto";
 import { getBrowser } from "./browser.js";
+import { convertToPdfA, isGhostscriptAvailable } from "./pdfa.js";
 
 export interface ArchiveResult {
   warc: Buffer;
@@ -176,13 +177,22 @@ export async function captureArchive(
     );
 
     // Generate PDF (no print fixes, no manipulation)
-    const pdfBuffer = Buffer.from(
+    let pdfBuffer = Buffer.from(
       await page.pdf({
         format: "A4",
         printBackground: true,
         margin: { top: "0.5in", right: "0.5in", bottom: "0.5in", left: "0.5in" },
       }),
     );
+
+    // Convert to PDF/A for archival if Ghostscript is available
+    if (await isGhostscriptAvailable()) {
+      try {
+        pdfBuffer = await convertToPdfA(pdfBuffer, "2b");
+      } catch {
+        // Fall back to standard PDF if conversion fails
+      }
+    }
 
     const metadata: ArchiveMetadata = {
       url,
