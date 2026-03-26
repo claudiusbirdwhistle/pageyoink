@@ -434,6 +434,26 @@ const LANDING_HTML = `<!DOCTYPE html>
 
       var capturedUrl = '';
       var captureStartTime = 0;
+      var elapsedTimerId = null;
+
+      function startElapsedTimer(statusEl) {
+        stopElapsedTimer();
+        elapsedTimerId = setInterval(function() {
+          var secs = ((Date.now() - captureStartTime) / 1000).toFixed(1);
+          statusEl.textContent = '';
+          var sp = document.createElement('span');
+          sp.className = 'spinner';
+          statusEl.appendChild(sp);
+          statusEl.appendChild(document.createTextNode(' Capturing... ' + secs + 's'));
+        }, 100);
+      }
+
+      function stopElapsedTimer() {
+        if (elapsedTimerId) {
+          clearInterval(elapsedTimerId);
+          elapsedTimerId = null;
+        }
+      }
 
       async function captureAll() {
         var url = document.getElementById('trial-url').value.trim();
@@ -451,8 +471,8 @@ const LANDING_HTML = `<!DOCTYPE html>
         captureBtn.textContent = 'Capturing...';
         captureStartTime = Date.now();
 
-        // C3: Show loading spinner
-        showSpinner(status, 'Capturing page... (this may take a few seconds)');
+        // Live elapsed timer during capture
+        startElapsedTimer(status);
         result.style.display = 'none';
 
         // Reset all tab content
@@ -474,6 +494,7 @@ const LANDING_HTML = `<!DOCTYPE html>
           var resp = await fetch('/trial/screenshot?' + params);
           var remaining = resp.headers.get('X-Trial-Remaining');
           if (!resp.ok) {
+            stopElapsedTimer();
             var err = await resp.json();
             showError(status, err.error || 'Capture failed');
             return;
@@ -481,7 +502,8 @@ const LANDING_HTML = `<!DOCTYPE html>
           var blob = await resp.blob();
           var objUrl = URL.createObjectURL(blob);
 
-          // C6: Show capture timing
+          // Stop timer and show final timing
+          stopElapsedTimer();
           var elapsed = ((Date.now() - captureStartTime) / 1000).toFixed(1);
 
           // Show results with Screenshot tab active
@@ -505,6 +527,7 @@ const LANDING_HTML = `<!DOCTYPE html>
           loadExtract(fullUrl);
           loadMetadata(fullUrl);
         } catch(e) {
+          stopElapsedTimer();
           showError(status, 'Error: ' + e.message);
         } finally {
           // C5: Re-enable button
