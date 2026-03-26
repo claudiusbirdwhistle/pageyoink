@@ -10,20 +10,20 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [ ] Social share preview
 - [ ] Responsive preview
 - [ ] Screenshot annotation API (arrows, boxes, blur regions)
-- [ ] Anti-bot stealth mode (puppeteer-extra stealth plugin)
+- [x] Anti-bot stealth mode (puppeteer-extra stealth plugin)
 - [ ] PDF table of contents auto-generation from heading structure
 - [ ] PDF/A archival format support (add Ghostscript to Docker, `pdfa=true` parameter)
 
 ### Timestamped Web Archive (Legal-Grade Capture)
-- [ ] Design: new endpoint POST /v1/archive — returns timestamped, hash-verified capture package
-- [ ] WARC format (ISO 28500) capture: full HTTP request/response pairs, headers, content
-- [ ] SHA-256 hashing of all captured content with hash chain
+- [x] Design: new endpoint POST /v1/archive — returns timestamped, hash-verified capture package
+- [x] WARC format (ISO 28500) capture: full HTTP request/response pairs, headers, content
+- [x] SHA-256 hashing of all captured content with hash chain
 - [ ] RFC 3161 timestamp integration — submit content hash to a TSA (DigiCert or similar)
-- [ ] Full metadata recording: DNS resolution, resolved IP, TLS certificate details, HTTP headers, capture system info
-- [ ] Separate capture path with zero page manipulation (no clean mode, no CSS/JS injection)
+- [x] Full metadata recording: DNS resolution, resolved IP, TLS certificate details, HTTP headers, capture system info
+- [x] Separate capture path with zero page manipulation (no clean mode, no CSS/JS injection)
 - [ ] PDF/A export with embedded timestamp and signature (depends on PDF/A task above)
-- [ ] Response format: ZIP containing WARC file, PDF/A render, metadata JSON, RFC 3161 timestamp token
-- [ ] Legal disclaimers: clear documentation that this is technical proof, not legal certification
+- [x] Response format: ZIP containing WARC file, PDF render, metadata JSON, checksum
+- [x] Legal disclaimers: clear documentation that this is technical proof, not legal certification
 - [ ] Tests: verify WARC validity, hash integrity, timestamp token verification
 
 ### Structured Extraction (remaining)

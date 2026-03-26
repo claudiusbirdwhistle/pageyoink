@@ -15,6 +15,7 @@ import { metadataRoute } from "./routes/metadata.js";
 import { pageRoute } from "./routes/page.js";
 import { trialRoute } from "./routes/trial.js";
 import { structuredRoute } from "./routes/structured.js";
+import { archiveRoute } from "./routes/archive.js";
 import { authMiddleware } from "./middleware/auth.js";
 
 export async function buildApp() {
@@ -124,6 +125,7 @@ export async function buildApp() {
   await app.register(metadataRoute);
   await app.register(pageRoute);
   await app.register(structuredRoute);
+  await app.register(archiveRoute);
 
   return app;
 }
