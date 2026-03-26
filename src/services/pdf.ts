@@ -223,6 +223,8 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
           '[class*="ad-banner"]', '[class*="ad-unit"]', '[class*="ad-container"]',
           '[class*="ad-wrapper"]', '[class*="ad-slot"]', '[class*="sponsored-content"]',
           '[data-ad-slot]', '[data-ad-unit]', '[aria-label="advertisement" i]',
+          // BBC-specific
+          '.dotcom-ad', '.dotcom-slot', '[id^="dotcom-"]',
         ])};
         for (var i = 0; i < selectors.length; i++) {
           try {
