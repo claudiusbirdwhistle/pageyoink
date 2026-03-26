@@ -219,29 +219,38 @@ export async function pageRoute(app: FastifyInstance) {
         // Build response with requested outputs
         const result: Record<string, unknown> = {};
 
-        // Metadata (fast, no rendering needed)
+        // Phase 1: Parallel read-only operations (metadata + content extraction)
+        // These only read the DOM and don't modify the page, so they can run in parallel
+        const parallelTasks: Promise<void>[] = [];
+
         if (outputs.includes("metadata")) {
-          result.metadata = await extractMetadata(page);
+          parallelTasks.push(
+            extractMetadata(page).then((meta) => { result.metadata = meta; }),
+          );
         }
 
-        // Content extraction (markdown/text/html)
         const extractFormats = ["markdown", "text", "html"];
         const requestedExtracts = outputs.filter((o) => extractFormats.includes(o));
         if (requestedExtracts.length > 0) {
-          // Use specified format, or infer from first requested extract type
           const format = (body.extractFormat || requestedExtracts[0]) as "markdown" | "text" | "html";
-          const extracted = await extractContent(page, format);
-          // Put under the format key name
-          result[format] = {
-            content: extracted.content,
-            title: extracted.title,
-            wordCount: extracted.wordCount,
-            excerpt: extracted.excerpt,
-            author: extracted.author,
-          };
+          parallelTasks.push(
+            extractContent(page, format).then((extracted) => {
+              result[format] = {
+                content: extracted.content,
+                title: extracted.title,
+                wordCount: extracted.wordCount,
+                excerpt: extracted.excerpt,
+                author: extracted.author,
+              };
+            }),
+          );
         }
 
-        // Screenshot
+        if (parallelTasks.length > 0) {
+          await Promise.all(parallelTasks);
+        }
+
+        // Phase 2: Screenshot (before print fixes modify the page)
         if (outputs.includes("screenshot")) {
           const screenshotBuffer = await page.screenshot({
             type: "png",
@@ -254,7 +263,7 @@ export async function pageRoute(app: FastifyInstance) {
           };
         }
 
-        // PDF
+        // Phase 3: PDF (last — applyPrintFixes modifies the page)
         if (outputs.includes("pdf")) {
           await applyPrintFixes(page);
           const pdfBuffer = await page.pdf({
