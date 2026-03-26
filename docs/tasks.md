@@ -49,13 +49,13 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [ ] Tests: verify WARC validity, hash integrity, timestamp token verification
 
 ### Structured Extraction (Hybrid: JSON-LD first, LLM fallback)
-- [ ] Design: extend POST /v1/extract with `schema` parameter (user-defined JSON shape)
-- [ ] Step 1: Extract JSON-LD, microdata, schema.org, Open Graph from page (extend metadata.ts)
-- [ ] Step 2: Schema mapper — match structured data fields to user's requested schema
-- [ ] Step 3: LLM fallback — for unfilled fields, send relevant HTML chunk to LLM
-- [ ] LLM integration: support user-supplied API key (`x-llm-api-key` header) for Anthropic/OpenAI
-- [ ] LLM integration: proxy mode with our own Anthropic key (metered/charged per extraction)
-- [ ] Auto-extract mode: `"extract": "auto"` returns all structured data without a schema
+- [x] Design: POST /v1/extract/structured with `schema` parameter (user-defined JSON shape)
+- [x] Step 1: Extract JSON-LD, microdata, schema.org, Open Graph from page
+- [x] Step 2: Schema mapper — match structured data fields to user's requested schema
+- [x] Step 3: LLM fallback — for unfilled fields, send relevant HTML chunk to Anthropic API
+- [x] LLM integration: support user-supplied API key (`llm_api_key` in request body) for Anthropic
+- [x] LLM integration: proxy mode with server's own ANTHROPIC_API_KEY env var
+- [x] Auto-extract mode: omit schema to return all structured data found on page
 - [ ] Add `structured` as output type in POST /v1/page unified endpoint
 - [ ] Tests: product pages, articles, recipes, events — JSON-LD path and LLM fallback
 - [ ] Pricing: determine credit cost for LLM-backed vs free JSON-LD-only extractions
