@@ -31,6 +31,18 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [ ] 93. PDF table of contents auto-generation from heading structure
 - [ ] 95. PDF/A archival format support (add Ghostscript to Docker, `pdfa=true` parameter)
 
+### Timestamped Web Archive (Legal-Grade Capture)
+- [ ] 114. Design: new endpoint POST /v1/archive — returns timestamped, hash-verified capture package
+- [ ] 115. WARC format (ISO 28500) capture: full HTTP request/response pairs, headers, content
+- [ ] 116. SHA-256 hashing of all captured content with hash chain
+- [ ] 117. RFC 3161 timestamp integration — submit content hash to a TSA (DigiCert or similar)
+- [ ] 118. Full metadata recording: DNS resolution, resolved IP, TLS certificate details, HTTP headers, capture system info
+- [ ] 119. Separate capture path with zero page manipulation (no clean mode, no CSS/JS injection)
+- [ ] 120. PDF/A export with embedded timestamp and signature (builds on task 95)
+- [ ] 121. Response format: ZIP containing WARC file, PDF/A render, metadata JSON, RFC 3161 timestamp token
+- [ ] 122. Legal disclaimers: clear documentation that this is technical proof, not legal certification
+- [ ] 123. Tests: verify WARC validity, hash integrity, timestamp token verification
+
 ### Structured Extraction (Hybrid: JSON-LD first, LLM fallback)
 - [ ] 96. Design: extend POST /v1/extract with `schema` parameter (user-defined JSON shape)
 - [ ] 97. Step 1: Extract JSON-LD, microdata, schema.org, Open Graph from page (extend metadata.ts)
@@ -80,5 +92,4 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 ## Ice Box — Requires human approval
 
 - [ ] Self-hosted Docker image (open core model)
-- [ ] Certified legal capture with cryptographic timestamps
 - [ ] Webhook transforms (capture → POST to user's endpoint)
