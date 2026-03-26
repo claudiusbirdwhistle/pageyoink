@@ -16,26 +16,25 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [x] Browser pool warmup (pre-warm browser on server startup)
 
 ### Caching
-- [ ] Add caching support to `/v1/page`
+- [x] Add caching support to `/v1/page`
 
 ### Features
 - [ ] Social share preview
 - [ ] Responsive preview
-- [ ] Table extraction
+- [x] Table extraction
 - [ ] Screenshot annotation API (arrows, boxes, blur regions)
 - [ ] Anti-bot stealth mode (puppeteer-extra stealth plugin)
-- [ ] WebP output format
+- [x] WebP output format
 - [ ] PDF table of contents auto-generation from heading structure
 - [ ] PDF/A archival format support (add Ghostscript to Docker, `pdfa=true` parameter)
 
 ### Smart Auto-Optimize (automatic formatting based on site content)
-- [ ] Design: `"optimize": true` parameter on screenshot/PDF endpoints, auto values for individual params
-- [ ] Page analysis script: single page.evaluate that detects content width, table count/width, article vs non-article, image-to-text ratio, lang attribute, scroll dimensions
-- [ ] PDF auto-optimization: landscape for wide tables/dashboards, scale-to-fit for overflow, locale-based page size, adaptive margins
-- [ ] Screenshot auto-optimization: viewport width based on content container, format (PNG vs JPEG) based on content type, device scale factor based on text density
-- [ ] Auto params are overridden by any explicitly set params (user always wins)
-- [ ] Tests: capture 10 diverse sites (article, dashboard, table-heavy, photo-heavy, mobile-first) with optimize=true, verify heuristic selections are correct
-- [ ] Save samples to samples/auto-optimize/ for human visual review — default vs optimized side by side
+- [x] Design: `"optimize": true` parameter on screenshot/PDF endpoints, auto values for individual params
+- [x] Page analysis script: single page.evaluate that detects content width, table count/width, article vs non-article, image-to-text ratio, lang attribute, scroll dimensions
+- [x] PDF auto-optimization: landscape for wide tables/dashboards, scale-to-fit for overflow, locale-based page size, adaptive margins
+- [x] Screenshot auto-optimization: viewport width based on content container, format (PNG vs JPEG) based on content type, device scale factor based on text density
+- [x] Auto params are overridden by any explicitly set params (user always wins)
+- [ ] Tests: capture 10 diverse sites with optimize=true, save samples to samples/auto-optimize/ for human visual review
 
 ### Timestamped Web Archive (Legal-Grade Capture)
 - [ ] Design: new endpoint POST /v1/archive — returns timestamped, hash-verified capture package
@@ -90,8 +89,8 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [ ] DNS and SSL for custom domain (NEEDS: verification to complete)
 
 ### Landing Page
-- [ ] Page performance optimization
-- [ ] Mobile-responsive design refinement
+- [x] Page performance optimization (all CSS/JS inline, no external requests)
+- [x] Mobile-responsive design refinement (480px breakpoint, scrollable tabs, single-column grids)
 
 ---
 
