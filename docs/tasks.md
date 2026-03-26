@@ -15,6 +15,8 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [ ] 111. Skip lazy image scrolling when page has no lazy-loaded images
 - [ ] 112. Reduce image wait timeout from 10s to 3-5s
 - [ ] 113. Skip second scroll pass (Phase 2) when Phase 1 found no new content loading
+- [ ] 74. Optimize parallel extraction in unified endpoint
+- [ ] 75. Browser pool warmup (Cloud Run min-instances)
 
 ### Caching
 - [ ] 11. Add caching support to `/v1/page`
@@ -79,9 +81,4 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 
 - [ ] Self-hosted Docker image (open core model)
 - [ ] Certified legal capture with cryptographic timestamps
-- [ ] Video capture (MP4/GIF scrolling)
-- [ ] PDF encryption
-- [ ] Change monitoring with webhooks (needs persistent infrastructure)
 - [ ] Webhook transforms (capture → POST to user's endpoint)
-- [ ] 74. Optimize parallel extraction
-- [ ] 75. Browser pool warmup
