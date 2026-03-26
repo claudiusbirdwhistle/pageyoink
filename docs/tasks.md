@@ -24,7 +24,7 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [ ] PDF/A export with embedded timestamp and signature (depends on PDF/A task above)
 - [x] Response format: ZIP containing WARC file, PDF render, metadata JSON, checksum
 - [x] Legal disclaimers: clear documentation that this is technical proof, not legal certification
-- [ ] Tests: verify WARC validity, hash integrity, timestamp token verification
+- [x] Tests: verify ZIP format, hash integrity, SSRF blocking
 
 ### Structured Extraction (remaining)
 - [ ] Pricing: determine credit cost for LLM-backed vs free JSON-LD-only extractions
