@@ -4,7 +4,7 @@ import { waitForPageReady, installMutationTracker } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
 import { enableAdBlocking } from "./adblock.js";
 import { hideAdsStealthily } from "./stealth-adblock.js";
-import { analyzePage, getAdaptiveDelays } from "./page-analysis.js";
+import { analyzePage, getAdaptiveDelays, getOptimizedParams } from "./page-analysis.js";
 
 export interface ScreenshotOptions {
   url: string;
@@ -34,6 +34,7 @@ export interface ScreenshotOptions {
   timezone?: string;
   fonts?: string[];
   onProgress?: (stage: string) => void;
+  optimize?: boolean;
 }
 
 export interface ScreenshotResult {
@@ -103,6 +104,7 @@ async function attemptScreenshot(
     timezone,
     fonts,
     onProgress,
+    optimize = false,
   } = options;
 
   const notify = onProgress || (() => {});
@@ -170,6 +172,21 @@ async function attemptScreenshot(
     const analysis = await analyzePage(page);
     const delays = getAdaptiveDelays(analysis);
 
+    // Auto-optimize: apply optimized params if enabled and not explicitly set
+    let effectiveFormat = format;
+    if (optimize) {
+      const optimized = getOptimizedParams(analysis);
+      if (!format) effectiveFormat = optimized.screenshotFormat;
+      // If viewport wasn't explicitly set, resize to optimized width
+      if (!width && optimized.screenshotWidth > (page.viewport()?.width || 1280)) {
+        await page.setViewport({
+          width: optimized.screenshotWidth,
+          height: page.viewport()?.height || 720,
+          deviceScaleFactor: deviceScaleFactor || optimized.screenshotDeviceScaleFactor,
+        });
+      }
+    }
+
     // Post-load rendering delay (CSS transitions, JS-injected content)
     await new Promise((r) => setTimeout(r, delays.postLoadDelay));
 
@@ -235,8 +252,9 @@ async function attemptScreenshot(
       await hideAdsStealthily(page);
     }
 
+    const renderFormat = effectiveFormat || "png";
     const effectiveQuality =
-      (format === "jpeg" || format === "webp") && quality !== undefined
+      (renderFormat === "jpeg" || renderFormat === "webp") && quality !== undefined
         ? Math.min(Math.max(quality, 1), 100)
         : undefined;
 
@@ -244,30 +262,29 @@ async function attemptScreenshot(
     let buffer: Buffer;
 
     if (selector) {
-      // Element capture: screenshot a specific DOM element
       const element = await page.$(selector);
       if (!element) {
         throw new Error(`Element not found for selector: ${selector}`);
       }
       buffer = (await element.screenshot({
-        type: format,
+        type: renderFormat,
         encoding: "binary",
         quality: effectiveQuality,
-        omitBackground: transparentBg && format === "png",
+        omitBackground: transparentBg && renderFormat === "png",
       })) as Buffer;
     } else {
       buffer = (await page.screenshot({
-        type: format,
+        type: renderFormat,
         fullPage,
         encoding: "binary",
         quality: effectiveQuality,
-        omitBackground: transparentBg && format === "png",
+        omitBackground: transparentBg && renderFormat === "png",
       })) as Buffer;
     }
 
     return {
       buffer,
-      contentType: format === "png" ? "image/png" : format === "webp" ? "image/webp" : "image/jpeg",
+      contentType: renderFormat === "png" ? "image/png" : renderFormat === "webp" ? "image/webp" : "image/jpeg",
     };
   } finally {
     await page.close();

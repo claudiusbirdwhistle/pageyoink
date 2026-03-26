@@ -6,7 +6,7 @@ import { triggerLazyImages } from "./lazy-load.js";
 import { enableAdBlocking } from "./adblock.js";
 import { hideAdsStealthily } from "./stealth-adblock.js";
 import { applyPrintFixes } from "./print-fix.js";
-import { analyzePage, getAdaptiveDelays } from "./page-analysis.js";
+import { analyzePage, getAdaptiveDelays, getOptimizedParams } from "./page-analysis.js";
 
 export interface PdfOptions {
   url?: string;
@@ -37,6 +37,7 @@ export interface PdfOptions {
   pageRanges?: string;
   scale?: number;
   maxPages?: number;
+  optimize?: boolean;
 }
 
 export interface PdfResult {
@@ -103,6 +104,7 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     pageRanges,
     scale,
     maxPages,
+    optimize = false,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
@@ -154,6 +156,20 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     // Adaptive delay based on page complexity
     const analysis = await analyzePage(page);
     const delays = getAdaptiveDelays(analysis);
+
+    // Auto-optimize: apply optimized PDF params if enabled and not explicitly set
+    let effectiveFormat = format;
+    let effectiveLandscape = landscape;
+    let effectiveScale = scale;
+    let effectiveMargin = margin;
+    if (optimize) {
+      const optimized = getOptimizedParams(analysis);
+      if (!format) effectiveFormat = optimized.pdfFormat as typeof format;
+      if (!landscape) effectiveLandscape = optimized.pdfLandscape;
+      if (scale === undefined) effectiveScale = optimized.pdfScale;
+      if (!margin) effectiveMargin = { top: optimized.pdfMargin, right: optimized.pdfMargin, bottom: optimized.pdfMargin, left: optimized.pdfMargin };
+    }
+
     await new Promise((r) => setTimeout(r, html ? 300 : delays.postLoadDelay));
 
     // Install mutation tracker for smart_wait (must be after goto/setContent)
@@ -198,10 +214,10 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     await applyPrintFixes(page);
 
     const pdfOptions: Parameters<typeof page.pdf>[0] = {
-      format,
-      landscape,
+      format: effectiveFormat,
+      landscape: effectiveLandscape,
       printBackground,
-      margin: margin || {
+      margin: effectiveMargin || {
         top: displayHeaderFooter ? "1in" : "0.5in",
         right: "0.5in",
         bottom: displayHeaderFooter ? "1in" : "0.5in",
@@ -209,8 +225,8 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
       },
     };
 
-    if (scale !== undefined) {
-      const clampedScale = Math.max(0.1, Math.min(2.0, scale));
+    if (effectiveScale !== undefined) {
+      const clampedScale = Math.max(0.1, Math.min(2.0, effectiveScale));
       pdfOptions.scale = clampedScale;
     }
 

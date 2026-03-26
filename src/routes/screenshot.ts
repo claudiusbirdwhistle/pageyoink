@@ -37,6 +37,7 @@ interface ScreenshotQuery {
   fonts?: string;
   proxy?: string;
   geolocation?: string;
+  optimize?: string;
   timezone?: string;
 }
 
@@ -149,6 +150,10 @@ const screenshotQuerySchema = {
       type: "string" as const,
       description: "Spoof browser timezone. IANA timezone ID. Example: America/New_York, Europe/London, Asia/Tokyo.",
     },
+    optimize: {
+      type: "string" as const,
+      description: "Auto-optimize capture parameters based on page content. Pass 'true' to enable. Analyzes content width, tables, images, and article structure to select best format, viewport, and scale. Explicit params override auto-detected values.",
+    },
   },
 };
 
@@ -207,6 +212,7 @@ export async function screenshotRoute(app: FastifyInstance) {
         proxy,
         geolocation,
         timezone,
+        optimize,
       } = request.query;
 
       const validated = await validateUrlSafe(url);
@@ -295,6 +301,7 @@ export async function screenshotRoute(app: FastifyInstance) {
               })()
             : undefined,
           timezone: timezone || undefined,
+          optimize: optimize === "true",
         };
 
         const cacheTtl = ttl ? parseInt(ttl, 10) : undefined;

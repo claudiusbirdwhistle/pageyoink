@@ -7,6 +7,11 @@ export interface PageAnalysis {
   viewportPages: number;
   lazyImageCount: number;
   totalImageCount: number;
+  contentWidth: number;
+  wideTableCount: number;
+  isArticle: boolean;
+  imageToTextRatio: number;
+  lang: string | null;
 }
 
 /**
@@ -30,12 +35,54 @@ export async function analyzePage(page: Page): Promise<PageAnalysis> {
       }
     }
 
+    // Content width detection
+    var mainContent = document.querySelector("main, article, [role='main'], .content, #content");
+    var contentWidth = 0;
+    if (mainContent) {
+      contentWidth = mainContent.scrollWidth;
+    } else {
+      contentWidth = document.body.scrollWidth;
+    }
+
+    // Wide table detection
+    var allTables = document.querySelectorAll("table");
+    var wideTableCount = 0;
+    for (var t = 0; t < allTables.length; t++) {
+      if (allTables[t].scrollWidth > 800) wideTableCount++;
+    }
+
+    // Article detection (heuristic: has article tag, or long text content with headings)
+    var hasArticleTag = !!document.querySelector("article");
+    var headingCount = document.querySelectorAll("h1, h2, h3").length;
+    var textLength = (document.body.innerText || "").length;
+    var isArticle = hasArticleTag || (headingCount >= 2 && textLength > 2000);
+
+    // Image to text ratio
+    var imageArea = 0;
+    for (var j = 0; j < images.length; j++) {
+      var rect = images[j].getBoundingClientRect();
+      imageArea += rect.width * rect.height;
+    }
+    var pageArea = scrollHeight * (window.innerWidth || 1280);
+    var imageToTextRatio = pageArea > 0 ? imageArea / pageArea : 0;
+
+    var lang = document.documentElement.lang || null;
+
     return {
       viewportPages: viewportPages,
       totalImageCount: totalImageCount,
-      lazyImageCount: lazyImageCount
+      lazyImageCount: lazyImageCount,
+      contentWidth: contentWidth,
+      wideTableCount: wideTableCount,
+      isArticle: isArticle,
+      imageToTextRatio: imageToTextRatio,
+      lang: lang
     };
-  })()`) as { viewportPages: number; totalImageCount: number; lazyImageCount: number };
+  })()`) as {
+    viewportPages: number; totalImageCount: number; lazyImageCount: number;
+    contentWidth: number; wideTableCount: number; isArticle: boolean;
+    imageToTextRatio: number; lang: string | null;
+  };
 
   let complexity: PageComplexity;
   if (result.viewportPages < 3) {
@@ -51,6 +98,67 @@ export async function analyzePage(page: Page): Promise<PageAnalysis> {
     viewportPages: Math.round(result.viewportPages * 10) / 10,
     lazyImageCount: result.lazyImageCount,
     totalImageCount: result.totalImageCount,
+    contentWidth: result.contentWidth,
+    wideTableCount: result.wideTableCount,
+    isArticle: result.isArticle,
+    imageToTextRatio: Math.round(result.imageToTextRatio * 100) / 100,
+    lang: result.lang,
+  };
+}
+
+export interface OptimizedParams {
+  // PDF params
+  pdfLandscape: boolean;
+  pdfFormat: "A4" | "Letter";
+  pdfScale: number;
+  pdfMargin: string;
+  // Screenshot params
+  screenshotFormat: "png" | "jpeg" | "webp";
+  screenshotWidth: number;
+  screenshotDeviceScaleFactor: number;
+}
+
+/**
+ * Generate optimized capture parameters based on page analysis.
+ * Explicit user params always override these recommendations.
+ */
+export function getOptimizedParams(analysis: PageAnalysis): OptimizedParams {
+  // PDF orientation: landscape for wide tables/dashboards
+  const pdfLandscape = analysis.wideTableCount >= 2 ||
+    (analysis.contentWidth > 1100 && !analysis.isArticle);
+
+  // PDF page size: locale-based
+  const lang = (analysis.lang || "").toLowerCase();
+  const isUSLocale = lang.startsWith("en-us") || lang === "en" || lang === "";
+  const pdfFormat = isUSLocale ? "Letter" : "A4";
+
+  // PDF scale: shrink to fit if content overflows
+  let pdfScale = 1.0;
+  if (analysis.contentWidth > 900) {
+    pdfScale = Math.max(0.6, 900 / analysis.contentWidth);
+  }
+
+  // PDF margins: narrower for dense content, wider for articles
+  const pdfMargin = analysis.isArticle ? "0.75in" : "0.4in";
+
+  // Screenshot format: JPEG for photo-heavy, PNG for text/UI
+  const screenshotFormat: "png" | "jpeg" | "webp" =
+    analysis.imageToTextRatio > 0.3 ? "jpeg" : "png";
+
+  // Screenshot width: match content container width, min 1280
+  const screenshotWidth = Math.max(1280, Math.min(analysis.contentWidth + 40, 1920));
+
+  // Device scale factor: 2x for text-heavy (sharp text), 1x for photo-heavy (smaller files)
+  const screenshotDeviceScaleFactor = analysis.imageToTextRatio > 0.4 ? 1 : 2;
+
+  return {
+    pdfLandscape,
+    pdfFormat,
+    pdfScale: Math.round(pdfScale * 100) / 100,
+    pdfMargin,
+    screenshotFormat,
+    screenshotWidth,
+    screenshotDeviceScaleFactor,
   };
 }
 
