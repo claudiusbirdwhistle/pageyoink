@@ -9,6 +9,7 @@ import { cleanPage } from "../services/cleanup.js";
 import { validateUrlSafe } from "../utils/url.js";
 import { checkSsrf } from "../utils/ssrf.js";
 import { classifyNavigationError } from "../utils/errors.js";
+import { progressStart, progressUpdate, progressEnd } from "../services/progress.js";
 
 // IP-based rate limiting for trial usage
 const trialUsage = new Map<string, { count: number; date: string }>();
@@ -91,6 +92,9 @@ export async function trialRoute(app: FastifyInstance) {
       }
       const url = validated.url;
 
+      const reqId = (request.headers["x-request-id"] as string) || String(request.id);
+      progressStart(reqId);
+
       try {
         const result = await takeScreenshot({
           url,
@@ -105,15 +109,22 @@ export async function trialRoute(app: FastifyInstance) {
               ? ("stealth" as const)
               : false,
           timeout: 30000,
+          onProgress: (stage) => progressUpdate(reqId, stage as "navigating"),
         });
 
+        progressUpdate(reqId, "complete");
         return reply
           .header("Content-Type", result.contentType)
           .header("X-Trial-Remaining", String(getRemainingTrials(ip)))
+          .header("X-Request-Id", reqId)
           .send(result.buffer);
       } catch (err) {
+        progressUpdate(reqId, "error");
         const classified = classifyNavigationError(err);
         return reply.status(classified.statusCode).send({ error: classified.message });
+      } finally {
+        // Clean up after a short delay so the frontend can read the final status
+        setTimeout(() => progressEnd(reqId), 5000);
       }
     },
   );

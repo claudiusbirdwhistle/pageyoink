@@ -1,5 +1,6 @@
 import { FastifyInstance } from "fastify";
 import { getUsageStats } from "../services/usage.js";
+import { progressGet } from "../services/progress.js";
 
 const startTime = Date.now();
 
@@ -27,4 +28,15 @@ export async function healthRoute(app: FastifyInstance) {
       usage: stats,
     };
   });
+
+  app.get<{ Params: { requestId: string } }>(
+    "/internal/status/:requestId",
+    async (request, reply) => {
+      const entry = progressGet(request.params.requestId);
+      if (!entry) {
+        return reply.status(404).send({ error: "Request not found or expired" });
+      }
+      return entry;
+    },
+  );
 }

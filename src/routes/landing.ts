@@ -435,17 +435,55 @@ const LANDING_HTML = `<!DOCTYPE html>
       var capturedUrl = '';
       var captureStartTime = 0;
       var elapsedTimerId = null;
+      var progressPollId = null;
+      var currentStage = 'navigating';
+      var currentRequestId = null;
+
+      var stageLabels = {
+        navigating: 'Loading page',
+        loaded: 'Page loaded, processing',
+        scrolling: 'Scrolling for lazy images',
+        cleaning: 'Removing overlays',
+        rendering: 'Rendering capture',
+        extracting: 'Extracting content',
+        complete: 'Complete',
+        error: 'Error'
+      };
 
       function startElapsedTimer(statusEl) {
         stopElapsedTimer();
+        currentStage = 'navigating';
         elapsedTimerId = setInterval(function() {
           var secs = ((Date.now() - captureStartTime) / 1000).toFixed(1);
+          var label = stageLabels[currentStage] || 'Capturing';
           statusEl.textContent = '';
           var sp = document.createElement('span');
           sp.className = 'spinner';
           statusEl.appendChild(sp);
-          statusEl.appendChild(document.createTextNode(' Capturing... ' + secs + 's'));
+          statusEl.appendChild(document.createTextNode(' ' + label + '... ' + secs + 's'));
         }, 100);
+      }
+
+      function startProgressPolling(requestId) {
+        stopProgressPolling();
+        currentRequestId = requestId;
+        progressPollId = setInterval(function() {
+          if (!currentRequestId) return;
+          fetch('/internal/status/' + currentRequestId)
+            .then(function(r) { return r.ok ? r.json() : null; })
+            .then(function(data) {
+              if (data && data.stage) currentStage = data.stage;
+            })
+            .catch(function() {});
+        }, 500);
+      }
+
+      function stopProgressPolling() {
+        if (progressPollId) {
+          clearInterval(progressPollId);
+          progressPollId = null;
+        }
+        currentRequestId = null;
       }
 
       function stopElapsedTimer() {
@@ -453,6 +491,7 @@ const LANDING_HTML = `<!DOCTYPE html>
           clearInterval(elapsedTimerId);
           elapsedTimerId = null;
         }
+        stopProgressPolling();
       }
 
       async function captureAll() {
@@ -490,8 +529,14 @@ const LANDING_HTML = `<!DOCTYPE html>
         if (adblock) params += '&block_ads=' + adblock;
 
         try {
+          // Generate request ID for progress tracking
+          var reqId = 'trial-' + Date.now() + '-' + Math.random().toString(36).substr(2, 6);
+          startProgressPolling(reqId);
+
           // Take screenshot first (fastest visual feedback)
-          var resp = await fetch('/trial/screenshot?' + params);
+          var resp = await fetch('/trial/screenshot?' + params, {
+            headers: { 'X-Request-Id': reqId }
+          });
           var remaining = resp.headers.get('X-Trial-Remaining');
           if (!resp.ok) {
             stopElapsedTimer();

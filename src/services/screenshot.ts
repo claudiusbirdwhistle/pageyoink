@@ -32,6 +32,7 @@ export interface ScreenshotOptions {
   geolocation?: { latitude: number; longitude: number; accuracy?: number };
   timezone?: string;
   fonts?: string[];
+  onProgress?: (stage: string) => void;
 }
 
 export interface ScreenshotResult {
@@ -100,8 +101,10 @@ async function attemptScreenshot(
     geolocation,
     timezone,
     fonts,
+    onProgress,
   } = options;
 
+  const notify = onProgress || (() => {});
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
 
   const proxyBrowser = proxy ? await launchProxyBrowser(proxy) : null;
@@ -154,15 +157,13 @@ async function attemptScreenshot(
       deviceScaleFactor,
     });
 
-    // Use 'load' event + short render delay instead of 'networkidle2'.
-    // networkidle2 waits for ALL background requests (analytics, ads, tracking)
-    // which adds 5-15s without improving visual quality.
-    // Customers who need full network idle can use smart_wait=true.
+    notify("navigating");
     await page.goto(url, {
       waitUntil: "load",
       timeout: effectiveTimeout,
     });
 
+    notify("loaded");
     // Allow 1s for post-load rendering (CSS transitions, JS-injected content)
     await new Promise((r) => setTimeout(r, 1000));
 
@@ -206,6 +207,7 @@ async function attemptScreenshot(
 
     // Scroll through page to trigger lazy-loaded images
     if (fullPage || smartWait) {
+      notify("scrolling");
       await triggerLazyImages(page, maxScroll);
     }
 
@@ -214,6 +216,7 @@ async function attemptScreenshot(
     }
 
     if (clean) {
+      notify("cleaning");
       await cleanPage(page);
     }
 
@@ -227,6 +230,7 @@ async function attemptScreenshot(
         ? Math.min(Math.max(quality, 1), 100)
         : undefined;
 
+    notify("rendering");
     let buffer: Buffer;
 
     if (selector) {
