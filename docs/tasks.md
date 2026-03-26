@@ -56,7 +56,7 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [x] LLM integration: support user-supplied API key (`llm_api_key` in request body) for Anthropic
 - [x] LLM integration: proxy mode with server's own ANTHROPIC_API_KEY env var
 - [x] Auto-extract mode: omit schema to return all structured data found on page
-- [ ] Add `structured` as output type in POST /v1/page unified endpoint
+- [x] Add `structured` as output type in POST /v1/page unified endpoint
 - [ ] Tests: product pages, articles, recipes, events — JSON-LD path and LLM fallback
 - [ ] Pricing: determine credit cost for LLM-backed vs free JSON-LD-only extractions
 

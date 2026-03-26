@@ -12,6 +12,7 @@ import { validateUrlSafe } from "../utils/url.js";
 import { validateViewport, validateCssSize, validateJsSize } from "../utils/validation.js";
 import { classifyNavigationError } from "../utils/errors.js";
 import { jsonCacheGet, jsonCacheSet } from "../services/json-cache.js";
+import { extractStructuredData } from "../services/structured-extract.js";
 
 interface PageBody {
   url: string;
@@ -32,7 +33,7 @@ interface PageBody {
 }
 
 const DEFAULT_OUTPUTS = ["screenshot", "markdown", "metadata"];
-const VALID_OUTPUTS = new Set(["screenshot", "pdf", "markdown", "text", "html", "metadata"]);
+const VALID_OUTPUTS = new Set(["screenshot", "pdf", "markdown", "text", "html", "metadata", "structured"]);
 
 export async function pageRoute(app: FastifyInstance) {
   app.post<{ Body: PageBody }>(
@@ -250,6 +251,14 @@ export async function pageRoute(app: FastifyInstance) {
                 excerpt: extracted.excerpt,
                 author: extracted.author,
               };
+            }),
+          );
+        }
+
+        if (outputs.includes("structured")) {
+          parallelTasks.push(
+            extractStructuredData(page).then((structured) => {
+              result.structured = structured;
             }),
           );
         }
