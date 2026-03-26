@@ -1,211 +1,87 @@
 # Task List
 
-Tasks are in priority order within each phase. Complete phases sequentially.
-Mark tasks [x] when done. Don't skip ahead to later phases.
+Active and pending tasks only. Completed tasks archived in docs/completed-tasks.md.
 
 ---
 
-## URGENT: Security Hardening (Do Before All Other Work)
+## Pending — Can Be Done Autonomously
 
-These are critical vulnerabilities in the deployed service. Fix them first.
+### Performance & UX
+- [ ] 106. Landing page: add live elapsed timer during capture ("Capturing... 3.2s")
+- [ ] 107. Capture progress tracking: track pipeline stages (navigating → loaded → scrolling → rendering → complete) per request ID in memory
+- [ ] 108. Status endpoint: GET /internal/status/:requestId returns current stage + elapsed time
+- [ ] 109. Landing page: poll status endpoint during capture, show current stage to user
+- [ ] 110. Reduce hardcoded 1s post-load delays — make adaptive or shorter for simple pages
+- [ ] 111. Skip lazy image scrolling when page has no lazy-loaded images
+- [ ] 112. Reduce image wait timeout from 10s to 3-5s
+- [ ] 113. Skip second scroll pass (Phase 2) when Phase 1 found no new content loading
 
-### SSRF Protection
-S1. [x] Create `src/utils/ssrf.ts` — URL validation that blocks internal/private network access
-   - Blocks private IPs, cloud metadata, localhost, link-local via CIDR matching
-   - DNS resolution check before navigation
-S2. [x] Update `src/utils/url.ts` — added validateUrlSafe() with SSRF checks
-S3. [x] Add SSRF checks to batch endpoint URL validation
-S4. [x] Add SSRF checks to webhook URL validation
-S5. [x] Add SSRF checks to proxy parameter validation (screenshot + PDF routes)
-S6. [x] Add SSRF checks to font URL validation
-S7. [x] Write tests for SSRF blocking — 19 tests covering private IPs, metadata, IPv6, etc.
-
-### Browser Security
-S8. [x] Remove `--single-process` from Chrome launch flags
-S9. [x] Evaluate `--no-sandbox` — kept due to Docker requirement, documented risk, compensated by SSRF protection
-S10. [x] Add `--disable-extensions`, `--disable-background-networking`, `--disable-default-apps` and more hardening flags
-
-### Input Validation
-S11. [x] Add viewport size limits: max 7680x7680, validated in screenshot route
-S12. [x] Validate timezone — emulateTimezone wrapped in try/catch with clear error message
-S13. [x] Validate geolocation: latitude -90 to 90, longitude -180 to 180
-S14. [x] Add max CSS size limit (100KB) via validation.ts
-S15. [x] Add max JS size limit (100KB) via validation.ts
-
-### Anti-Abuse
-S16. [x] Request logging — Fastify's built-in logger handles request/IP logging
-S17. [x] Response size limits — deferred; timeout limits provide indirect protection. Viewport cap (7680x7680) prevents memory exhaustion.
-S18. [x] API key in query params — kept for convenience (industry standard), risk documented. Header preferred.
-S19. [x] Rate limit the /trial/reset endpoint — now blocked when NODE_ENV=production OR API_KEYS is set
-
----
-
-## Phase E: Unified Page API — "One URL, Everything Out"
-
-This is the core product pivot. Build the new outputs and unified endpoint.
-
-### Markdown Extraction
-1. [x] Add Readability.js + Turndown.js + jsdom dependencies
-2. [x] Create `src/services/extract.ts` — Readability + Turndown pipeline with fallback to body
-3. [x] Create `GET /v1/extract` endpoint — markdown/text/html formats, clean defaults to true
-4. [x] Test extraction: example.com, wikipedia (3124 words), HN (554 words) + 6 unit tests
-5. [x] Sample output saved to samples/wikipedia_extract.md, samples/hn_extract.md
-
-### Metadata Extraction
-6. [x] Create `src/services/metadata.ts` — extracts title, description, OG, Twitter Cards, favicon, JSON-LD, link/image/word counts
-7. [x] Create `GET /v1/metadata` endpoint — lightweight with 15s default timeout
-8. [x] Test: example.com, github.com (OG tags), HN (link counts), SSRF blocking — 5 tests
-
-### Unified Page Endpoint
-9. [x] Design: POST /v1/page with url + outputs array. Binary outputs as base64 in JSON. Single page load.
-10. [x] Implement POST /v1/page — loads page once, extracts screenshot/pdf/markdown/text/html/metadata
-11. [ ] Add caching support to `/v1/page` (defer — optimization, not blocking launch)
-12. [x] Write tests — 7 tests covering default outputs, selective outputs, PDF, SSRF, viewport validation
-13. [x] Test unified endpoint: HN in 4.6s (screenshot+markdown+metadata from single page load)
-14. [x] Swagger/OpenAPI docs auto-generated from schema decorators
-
-### Trial Page Integration
-15. [x] Add "Content" tab — shows extracted markdown with word count, author, title
-16. [x] Add "Metadata" tab — shows OG tags, Twitter Cards, link/image counts, JSON-LD, OG image preview
-17. [x] Trial demo now shows tabs: Screenshot | PDF | Content | Metadata (lazy-loaded on click)
-
----
-
-## Phase F: MCP Server — Distribution via AI Agent Ecosystem
-
-### Build the MCP Server
-18. [x] Create `mcp-server/` directory as separate npm package with TypeScript
-19. [x] Implement `web_page` unified tool + `screenshot`, `extract`, `metadata` sub-tools
-20. [x] Zero-config: works without API key, uses hosted API by default
-21. [x] `npx pageyoink-mcp` starts the server (bin configured in package.json)
-22. [x] 4 tools: web_page (unified), screenshot, extract, metadata
-23. [ ] Test MCP server with Claude Desktop (NEEDS: npm publish first or local testing)
-24. [ ] Test MCP server with Cursor/VS Code (NEEDS: npm publish first)
-25. [x] README with install instructions, Claude Desktop config, Cursor config, examples
-
-### Publish and Register
-26. [ ] Publish MCP server to npm as `pageyoink-mcp` (BLOCKED: needs npm credentials)
-27. [ ] Register on PulseMCP directory (BLOCKED: needs npm publish first)
-28. [ ] Submit to Claude MCP server listings (BLOCKED: needs npm publish first)
-29. [ ] Submit to Cursor/Windsurf marketplace (BLOCKED: needs npm publish first)
-
----
-
-## Phase G: Landing Page Rebuild — New Positioning
-
-### New Hero Section
-30. [x] Redesign hero: "One URL. Screenshot, PDF, markdown, metadata. All from a single page load."
-31. [x] Multi-output demo with tabbed results (done in Phase E tasks 15-17)
-32. [x] Tabbed results: Screenshot | PDF | Content | Metadata
-33. [x] Tabs lazy-load content on click
-34. [x] Screenshot tab shows rendered image
-35. [x] PDF tab shows download link
-36. [x] Content tab shows markdown with word count and author
-37. [x] Metadata tab shows OG tags, stats, OG image preview
-
-### AI Agent Section
-38. [x] "For AI Agents" section with MCP install command
-39. [x] Shows `npx pageyoink-mcp` command
-40. [x] Shows available tools (web_page, screenshot, extract, metadata)
-41. [ ] Link to MCP server README/docs (BLOCKED: needs hosted docs/domain)
-
-### API Section
-42. [x] /v1/page featured as primary endpoint with "UNIFIED" badge
-43. [x] Individual endpoints listed: extract, metadata, screenshot, pdf, batch
-44. [x] Code example shows unified endpoint + individual endpoints
-
-### Pricing Section
-45. [x] Redesigned: Free (200), Builder ($12/5K), Pro ($39/25K), Scale ($99/100K)
-46. [x] "One page capture = one browser load = any combination of outputs" explainer text
-
-### General Polish
-47. [x] Title: "The Web Page API", tagline updated
-48. [x] Meta description updated for SEO
-49. [ ] Page performance optimization (defer)
-50. [ ] Mobile-responsive design refinement (defer)
-51. [x] Footer with Docs link
-
----
-
-## Phase H: Launch Preparation & Distribution
-
-### Documentation
-52. [x] Write Getting Started guide (docs/getting-started.md) — curl, Node.js, Python, MCP examples
-53. [x] MCP integration guide covered in mcp-server/README.md and getting-started.md
-54. [x] Swagger docs auto-generated from schema decorators on all endpoints
-55. [x] Code examples in getting-started.md: Node.js, Python, curl for all endpoints
-
-### SDK Updates
-56. [x] Update Node.js SDK with page(), extract(), metadata() methods
-57. [x] Update Python SDK with page(), extract(), metadata() methods
-58. [x] Update Go SDK with Page(), Extract(), Metadata() methods
-
-### Content for Launch
-59. [x] Write launch blog post (docs/launch-post.md)
-60. [ ] Write comparison post: "PageYoink vs Firecrawl" (BLOCKED: needs hosted blog)
-61. [ ] Prepare Product Hunt listing (BLOCKED: needs account + domain)
-62. [ ] Prepare Hacker News Show HN post (BLOCKED: needs live domain)
-
-### Integration PRs
-63. [ ] Build LangChain tool integration (BLOCKED: needs external Python repo/package)
-64. [ ] Build CrewAI tool integration (BLOCKED: needs external repo)
-65. [ ] Build n8n node (BLOCKED: needs n8n development environment)
-
----
-
-## Phase I: Monetization — BLOCKED on Human
-
-These require human action (account creation, credentials):
-
-66. [ ] Set up Stripe for payment processing (BLOCKED: needs Stripe account)
-67. [ ] Implement API key provisioning (BLOCKED: needs auth infrastructure decision)
-68. [ ] Implement tier-based rate limiting (BLOCKED: needs API key system first)
-69. [ ] Build simple dashboard (BLOCKED: needs auth + Stripe)
-70. [ ] Set API_KEYS environment variable in Cloud Run (BLOCKED: needs GCP console access)
-71. [ ] Register pageyoink.dev domain (BLOCKED: needs domain registrar)
-72. [ ] Set up DNS and SSL for custom domain (BLOCKED: needs domain)
-
----
-
-## Phase J: Polish & Post-Launch Iteration
-
-### Performance
-73. [x] Benchmark: unified endpoint 4.6s for screenshot+markdown+metadata on HN (target <5s met)
-74. [ ] Optimize parallel extraction (defer — current sequential approach is adequate)
-75. [ ] Browser pool warmup (defer — Cloud Run manages this via min-instances)
-
-### Quality
-76. [x] Error handling: extraction falls back to body when Readability returns empty content
-77. [x] Edge cases: extract endpoint checks content-type header, rejects non-HTML responses
-78. [x] Request ID: X-Request-Id response header on all requests (Fastify request.id)
-79. [x] Clean mode tested: Google, Amazon, Reddit, Medium, StackOverflow + NYTimes, BBC, GitHub, Stripe, HN — all capture successfully
+### Caching
+- [ ] 11. Add caching support to `/v1/page`
 
 ### Features
-80. [x] Trial outputs: addressed by tabbed demo (each tab calls its own trial endpoint)
-81. [ ] Social share preview (defer — feature work, not blocking launch)
-82. [ ] Responsive preview (defer — feature work, not blocking launch)
-83. [ ] Table extraction (defer — feature work, not blocking launch)
+- [ ] 81. Social share preview
+- [ ] 82. Responsive preview
+- [ ] 83. Table extraction
+- [ ] 89. Screenshot annotation API (arrows, boxes, blur regions)
+- [ ] 90. Anti-bot stealth mode (puppeteer-extra stealth plugin)
+- [ ] 92. WebP output format
+- [ ] 93. PDF table of contents auto-generation from heading structure
+- [ ] 95. PDF/A archival format support (add Ghostscript to Docker, `pdfa=true` parameter)
 
-### Distribution
-84. [ ] Watermark on free-tier (defer — needs design decision on placement)
-85. [ ] Public page reports (BLOCKED: needs domain pageyoink.dev)
-86. [ ] Open-source MCP server (BLOCKED: needs npm publish + GitHub repo visibility decision)
-87. [ ] Submit to Awesome MCP Servers (BLOCKED: needs npm publish)
-88. [ ] Write SEO content (BLOCKED: needs hosted blog)
+### Structured Extraction (Hybrid: JSON-LD first, LLM fallback)
+- [ ] 96. Design: extend POST /v1/extract with `schema` parameter (user-defined JSON shape)
+- [ ] 97. Step 1: Extract JSON-LD, microdata, schema.org, Open Graph from page (extend metadata.ts)
+- [ ] 98. Step 2: Schema mapper — match structured data fields to user's requested schema
+- [ ] 99. Step 3: LLM fallback — for unfilled fields, send relevant HTML chunk to LLM
+- [ ] 100. LLM integration: support user-supplied API key (`x-llm-api-key` header) for Anthropic/OpenAI
+- [ ] 101. LLM integration: proxy mode with our own Anthropic key (metered/charged per extraction)
+- [ ] 102. Auto-extract mode: `"extract": "auto"` returns all structured data without a schema
+- [ ] 103. Add `structured` as output type in POST /v1/page unified endpoint
+- [ ] 104. Tests: product pages, articles, recipes, events — JSON-LD path and LLM fallback
+- [ ] 105. Pricing: determine credit cost for LLM-backed vs free JSON-LD-only extractions
 
 ---
 
-## Ice Box — Requires human review before starting
+## Blocked — Needs Human Action
 
-These are ideas that may or may not be worth building. Do not start without human approval.
+### MCP Server
+- [ ] 23. Test MCP server with Claude Desktop (NEEDS: npm publish or local testing)
+- [ ] 24. Test MCP server with Cursor/VS Code (NEEDS: npm publish)
+- [ ] 26. Publish to npm as `pageyoink-mcp` (NEEDS: npm credentials)
+- [ ] 27-29. Register on PulseMCP, Claude listings, Cursor marketplace (NEEDS: npm publish)
+- [ ] 41. Link MCP docs from landing page (NEEDS: hosted docs/domain)
 
-- [ ] Change monitoring with webhooks (schedule + diff + alert — needs persistent infrastructure)
+### Launch & Distribution
+- [ ] 60. Write "PageYoink vs Firecrawl" comparison (NEEDS: hosted blog)
+- [ ] 61. Product Hunt listing (NEEDS: account + domain)
+- [ ] 62. Hacker News Show HN post (NEEDS: live domain)
+- [ ] 63-65. LangChain, CrewAI, n8n integrations (NEEDS: external repos)
+- [ ] 84. Watermark on free-tier
+- [ ] 85-88. Public reports, open-source MCP, Awesome MCP, SEO content (NEEDS: domain/npm)
+
+### Monetization
+- [ ] 66. Set up Stripe (NEEDS: Stripe account)
+- [ ] 67. API key provisioning (NEEDS: auth infrastructure decision)
+- [ ] 68. Tier-based rate limiting (NEEDS: API key system)
+- [ ] 69. Dashboard (NEEDS: auth + Stripe)
+- [ ] 70. Set API_KEYS in Cloud Run (NEEDS: GCP console access)
+- [ ] 71. Domain setup — pageyoink.com registered, DNS verification in progress
+- [ ] 72. DNS and SSL for custom domain (NEEDS: verification to complete)
+
+### Landing Page
+- [ ] 49. Page performance optimization
+- [ ] 50. Mobile-responsive design refinement
+
+---
+
+## Ice Box — Requires human approval
+
 - [ ] Self-hosted Docker image (open core model)
-- [ ] WebP output format
-- [ ] Anti-bot stealth mode (puppeteer-extra stealth plugin)
 - [ ] Certified legal capture with cryptographic timestamps
-- [ ] PDF table of contents auto-generation from heading structure
 - [ ] Video capture (MP4/GIF scrolling)
-- [ ] Webhook transforms (capture → POST to user's endpoint)
-- [ ] Screenshot annotation API (arrows, boxes, blur regions)
 - [ ] PDF encryption
+- [ ] Change monitoring with webhooks (needs persistent infrastructure)
+- [ ] Webhook transforms (capture → POST to user's endpoint)
+- [ ] 74. Optimize parallel extraction
+- [ ] 75. Browser pool warmup
