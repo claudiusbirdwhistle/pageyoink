@@ -112,6 +112,11 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
   const page = await browser.newPage();
 
   try {
+    // Set desktop retina viewport so sites serve high-resolution images
+    // Without this, Puppeteer defaults to 800x600 at 1x DPR and sites
+    // serve mobile/low-res images via srcset/picture elements
+    await page.setViewport({ width: 1280, height: 720, deviceScaleFactor: 2 });
+
     if (blockAds === true) {
       await enableAdBlocking(page);
     }
