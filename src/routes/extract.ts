@@ -1,6 +1,6 @@
 import { FastifyInstance, FastifyRequest } from "fastify";
 import { getBrowser, launchProxyBrowser } from "../services/browser.js";
-import { extractContent, ExtractResult } from "../services/extract.js";
+import { extractContent, extractTables, ExtractResult } from "../services/extract.js";
 import { cleanPage } from "../services/cleanup.js";
 import { validateUrlSafe } from "../utils/url.js";
 import { classifyNavigationError } from "../utils/errors.js";
@@ -10,6 +10,7 @@ interface ExtractQuery {
   format?: "markdown" | "text" | "html";
   clean?: string;
   timeout?: string;
+  tables?: string;
 }
 
 export async function extractRoute(app: FastifyInstance) {
@@ -44,6 +45,11 @@ export async function extractRoute(app: FastifyInstance) {
               description:
                 "Max time in ms to wait for page load. Default: 30000. Max: 60000.",
             },
+            tables: {
+              type: "string",
+              description:
+                "Extract HTML tables as structured JSON arrays. Pass 'true' to include tables in response.",
+            },
           },
         },
         response: {
@@ -71,6 +77,7 @@ export async function extractRoute(app: FastifyInstance) {
         format = "markdown",
         clean,
         timeout,
+        tables,
       } = request.query;
 
       const validated = await validateUrlSafe(url);
@@ -111,7 +118,14 @@ export async function extractRoute(app: FastifyInstance) {
         }
 
         const result = await extractContent(page, format);
-        return reply.send({ ...result, ...(httpStatus ? { httpStatus } : {}) });
+        const response_data: Record<string, unknown> = { ...result, ...(httpStatus ? { httpStatus } : {}) };
+
+        // Extract tables as structured JSON if requested
+        if (tables === "true") {
+          response_data.tables = await extractTables(page);
+        }
+
+        return reply.send(response_data);
       } catch (err) {
         const classified = classifyNavigationError(err);
         request.log.error({ err }, "Extraction failed");

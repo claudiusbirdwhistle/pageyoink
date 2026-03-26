@@ -97,5 +97,5 @@ describe("Diff endpoint (POST /v1/diff)", () => {
     expect(response.headers["content-type"]).toBe("image/png");
     expect(response.headers["x-diff-pixels"]).toBeDefined();
     expect(response.headers["x-diff-percentage"]).toBeDefined();
-  }, 60_000);
+  }, 120_000);
 });

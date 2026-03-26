@@ -149,3 +149,60 @@ export async function extractContent(
   if (warning) result.warning = warning;
   return result;
 }
+
+export interface TableData {
+  headers: string[];
+  rows: string[][];
+  caption?: string;
+}
+
+/**
+ * Extract all HTML tables from a loaded page as structured JSON.
+ */
+export async function extractTables(page: Page): Promise<TableData[]> {
+  return await page.evaluate(`(function() {
+    var tables = document.querySelectorAll("table");
+    var result = [];
+    for (var t = 0; t < tables.length; t++) {
+      var table = tables[t];
+      var caption = table.querySelector("caption");
+      var headerRow = table.querySelector("thead tr") || table.querySelector("tr");
+      var headers = [];
+      if (headerRow) {
+        var ths = headerRow.querySelectorAll("th");
+        if (ths.length > 0) {
+          for (var h = 0; h < ths.length; h++) {
+            headers.push((ths[h].textContent || "").trim());
+          }
+        } else {
+          var tds = headerRow.querySelectorAll("td");
+          for (var h2 = 0; h2 < tds.length; h2++) {
+            headers.push((tds[h2].textContent || "").trim());
+          }
+        }
+      }
+
+      var bodyRows = table.querySelectorAll("tbody tr");
+      if (bodyRows.length === 0) {
+        bodyRows = table.querySelectorAll("tr");
+      }
+      var rows = [];
+      var startIdx = (headerRow && bodyRows[0] === headerRow) ? 1 : 0;
+      for (var r = startIdx; r < bodyRows.length; r++) {
+        var cells = bodyRows[r].querySelectorAll("td, th");
+        var row = [];
+        for (var c = 0; c < cells.length; c++) {
+          row.push((cells[c].textContent || "").trim());
+        }
+        if (row.length > 0) rows.push(row);
+      }
+
+      if (headers.length > 0 || rows.length > 0) {
+        var entry = { headers: headers, rows: rows };
+        if (caption) entry.caption = (caption.textContent || "").trim();
+        result.push(entry);
+      }
+    }
+    return result;
+  })()`) as TableData[];
+}
