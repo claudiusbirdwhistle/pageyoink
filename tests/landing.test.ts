@@ -31,7 +31,7 @@ describe("Landing page", () => {
     expect(response.body).toContain("Capture Page");
   });
 
-  it("contains all 4 tabs", async () => {
+  it("contains all 5 tabs", async () => {
     const response = await app.inject({
       method: "GET",
       url: "/",
@@ -41,6 +41,7 @@ describe("Landing page", () => {
     expect(body).toContain('data-tab="pdf"');
     expect(body).toContain('data-tab="content"');
     expect(body).toContain('data-tab="metadata"');
+    expect(body).toContain('data-tab="structured"');
   });
 
   it("contains updated branding", async () => {

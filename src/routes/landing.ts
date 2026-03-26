@@ -156,6 +156,7 @@ const LANDING_HTML = `<!DOCTYPE html>
           <button class="trial-tab" data-tab="pdf" style="padding:10px 20px;border:none;background:transparent;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">PDF</button>
           <button class="trial-tab" data-tab="content" style="padding:10px 20px;border:none;background:transparent;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">Content</button>
           <button class="trial-tab" data-tab="metadata" style="padding:10px 20px;border:none;background:transparent;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">Metadata</button>
+          <button class="trial-tab" data-tab="structured" style="padding:10px 20px;border:none;background:transparent;color:var(--muted);font-weight:600;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;">Structured</button>
         </div>
         <div style="background:var(--surface);border-radius:0 0 12px 12px;border:1px solid #2a2a3e;border-top:none;padding:16px;">
           <div id="tab-screenshot" class="tab-content" style="text-align:center;">
@@ -170,6 +171,9 @@ const LANDING_HTML = `<!DOCTYPE html>
           </div>
           <div id="tab-metadata" class="tab-content" style="display:none;">
             <div id="trial-metadata" style="font-size:13px;color:var(--text);"></div>
+          </div>
+          <div id="tab-structured" class="tab-content" style="display:none;">
+            <div id="trial-structured" style="font-size:13px;color:var(--text);max-height:500px;overflow-y:auto;"></div>
           </div>
         </div>
       </div>
@@ -432,6 +436,116 @@ const LANDING_HTML = `<!DOCTYPE html>
         } catch(e) { showError(el, 'Error: ' + e.message); }
       }
 
+      async function loadStructured(url) {
+        var el = document.getElementById('trial-structured');
+        showSpinner(el, 'Extracting structured data...');
+        try {
+          var resp = await fetch('/v1/extract/structured', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: url })
+          });
+          if (!resp.ok) {
+            var errData = await resp.json().catch(function() { return {}; });
+            showError(el, 'Structured extraction failed' + (errData.error ? ': ' + errData.error : ''));
+            return;
+          }
+          var data = await resp.json();
+          el.textContent = '';
+
+          // Schema types badge
+          if (data.schemaTypes && data.schemaTypes.length > 0) {
+            var typesDiv = document.createElement('div');
+            typesDiv.style.cssText = 'margin-bottom:16px;';
+            var label = document.createElement('span');
+            label.style.cssText = 'color:var(--muted);font-weight:600;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;';
+            label.textContent = 'Schema.org Types: ';
+            typesDiv.appendChild(label);
+            for (var i = 0; i < data.schemaTypes.length; i++) {
+              var badge = document.createElement('span');
+              badge.style.cssText = 'background:var(--brand);color:white;padding:2px 8px;border-radius:4px;font-size:12px;font-weight:600;margin-right:6px;';
+              badge.textContent = data.schemaTypes[i];
+              typesDiv.appendChild(badge);
+            }
+            el.appendChild(typesDiv);
+          }
+
+          // JSON-LD section
+          if (data.jsonLd && data.jsonLd.length > 0) {
+            var ldSection = document.createElement('div');
+            ldSection.style.cssText = 'margin-bottom:16px;';
+            var ldTitle = document.createElement('div');
+            ldTitle.style.cssText = 'color:var(--brand);font-weight:700;font-size:14px;margin-bottom:8px;';
+            ldTitle.textContent = 'JSON-LD (' + data.jsonLd.length + ' item' + (data.jsonLd.length > 1 ? 's' : '') + ')';
+            ldSection.appendChild(ldTitle);
+            var pre = document.createElement('pre');
+            pre.style.cssText = 'background:#12121f;padding:12px;border-radius:8px;overflow-x:auto;font-size:12px;color:#a0a0d0;border:1px solid #2a2a3e;max-height:300px;overflow-y:auto;';
+            pre.textContent = JSON.stringify(data.jsonLd, null, 2);
+            ldSection.appendChild(pre);
+            el.appendChild(ldSection);
+          }
+
+          // Open Graph section
+          if (data.og && Object.keys(data.og).length > 0) {
+            var ogSection = document.createElement('div');
+            ogSection.style.cssText = 'margin-bottom:16px;';
+            var ogTitle = document.createElement('div');
+            ogTitle.style.cssText = 'color:var(--brand);font-weight:700;font-size:14px;margin-bottom:8px;';
+            ogTitle.textContent = 'Open Graph';
+            ogSection.appendChild(ogTitle);
+            var ogGrid = document.createElement('div');
+            ogGrid.style.cssText = 'display:grid;grid-template-columns:120px 1fr;gap:6px 12px;';
+            var ogKeys = Object.keys(data.og);
+            for (var j = 0; j < ogKeys.length; j++) {
+              var k = document.createElement('div');
+              k.style.cssText = 'color:var(--muted);font-weight:600;font-size:12px;';
+              k.textContent = 'og:' + ogKeys[j];
+              var v = document.createElement('div');
+              v.style.cssText = 'font-size:13px;word-break:break-all;';
+              v.textContent = data.og[ogKeys[j]];
+              ogGrid.appendChild(k);
+              ogGrid.appendChild(v);
+            }
+            ogSection.appendChild(ogGrid);
+            el.appendChild(ogSection);
+          }
+
+          // Meta tags section
+          if (data.meta && Object.keys(data.meta).length > 0) {
+            var metaSection = document.createElement('div');
+            var metaTitle = document.createElement('div');
+            metaTitle.style.cssText = 'color:var(--brand);font-weight:700;font-size:14px;margin-bottom:8px;';
+            metaTitle.textContent = 'Meta Tags (' + Object.keys(data.meta).length + ')';
+            metaSection.appendChild(metaTitle);
+            var metaGrid = document.createElement('div');
+            metaGrid.style.cssText = 'display:grid;grid-template-columns:140px 1fr;gap:6px 12px;';
+            var metaKeys = Object.keys(data.meta);
+            for (var m = 0; m < Math.min(metaKeys.length, 20); m++) {
+              var mk = document.createElement('div');
+              mk.style.cssText = 'color:var(--muted);font-weight:600;font-size:12px;';
+              mk.textContent = metaKeys[m];
+              var mv = document.createElement('div');
+              mv.style.cssText = 'font-size:13px;word-break:break-all;';
+              mv.textContent = String(data.meta[metaKeys[m]]).substring(0, 200);
+              metaGrid.appendChild(mk);
+              metaGrid.appendChild(mv);
+            }
+            if (metaKeys.length > 20) {
+              var more = document.createElement('div');
+              more.style.cssText = 'grid-column:1/-1;color:var(--muted);font-size:12px;margin-top:4px;';
+              more.textContent = '... and ' + (metaKeys.length - 20) + ' more';
+              metaGrid.appendChild(more);
+            }
+            metaSection.appendChild(metaGrid);
+            el.appendChild(metaSection);
+          }
+
+          if (!el.children.length) {
+            el.textContent = 'No structured data found on this page.';
+          }
+        } catch(e) { showError(el, 'Error: ' + e.message); }
+      }
+
       var capturedUrl = '';
       var captureStartTime = 0;
       var elapsedTimerId = null;
@@ -518,6 +632,7 @@ const LANDING_HTML = `<!DOCTYPE html>
         document.getElementById('trial-extract').textContent = '';
         document.getElementById('trial-extract-meta').textContent = '';
         document.getElementById('trial-metadata').textContent = '';
+        document.getElementById('trial-structured').textContent = '';
         img.style.display = 'none';
         pdfLink.style.display = 'none';
         pdfLink.removeAttribute('href');
@@ -568,9 +683,10 @@ const LANDING_HTML = `<!DOCTYPE html>
             ' Click tabs to see all outputs.'
           ));
 
-          // Start loading content and metadata in the background
+          // Start loading content, metadata, and structured data in the background
           loadExtract(fullUrl);
           loadMetadata(fullUrl);
+          loadStructured(fullUrl);
         } catch(e) {
           stopElapsedTimer();
           showError(status, 'Error: ' + e.message);
