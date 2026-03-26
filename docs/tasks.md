@@ -31,6 +31,15 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 - [ ] 93. PDF table of contents auto-generation from heading structure
 - [ ] 95. PDF/A archival format support (add Ghostscript to Docker, `pdfa=true` parameter)
 
+### Smart Auto-Optimize (automatic formatting based on site content)
+- [ ] 124. Design: `"optimize": true` parameter on screenshot/PDF endpoints, auto values for individual params
+- [ ] 125. Page analysis script: single page.evaluate that detects content width, table count/width, article vs non-article, image-to-text ratio, lang attribute, scroll dimensions
+- [ ] 126. PDF auto-optimization: landscape for wide tables/dashboards, scale-to-fit for overflow, locale-based page size, adaptive margins
+- [ ] 127. Screenshot auto-optimization: viewport width based on content container, format (PNG vs JPEG) based on content type, device scale factor based on text density
+- [ ] 128. Auto params are overridden by any explicitly set params (user always wins)
+- [ ] 129. Tests: capture 10 diverse sites (article, dashboard, table-heavy, photo-heavy, mobile-first) with optimize=true, verify heuristic selections are correct
+- [ ] 130. Save samples to samples/auto-optimize/ for human visual review — default vs optimized side by side
+
 ### Timestamped Web Archive (Legal-Grade Capture)
 - [ ] 114. Design: new endpoint POST /v1/archive — returns timestamped, hash-verified capture package
 - [ ] 115. WARC format (ISO 28500) capture: full HTTP request/response pairs, headers, content
