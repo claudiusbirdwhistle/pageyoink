@@ -11,6 +11,7 @@ import { applyPrintFixes } from "../services/print-fix.js";
 import { validateUrlSafe } from "../utils/url.js";
 import { validateViewport, validateCssSize, validateJsSize } from "../utils/validation.js";
 import { classifyNavigationError } from "../utils/errors.js";
+import { jsonCacheGet, jsonCacheSet } from "../services/json-cache.js";
 
 interface PageBody {
   url: string;
@@ -138,6 +139,13 @@ export async function pageRoute(app: FastifyInstance) {
 
       const effectiveTimeout = Math.min(body.timeout || 30_000, 60_000);
       const shouldClean = body.clean !== false; // Default true
+
+      // Check cache
+      const cacheParams = { url: validated.url, outputs, clean: shouldClean, blockAds: body.blockAds, viewport: body.viewport };
+      const cached = jsonCacheGet(cacheParams);
+      if (cached) {
+        return reply.header("X-Cache", "HIT").send(cached);
+      }
 
       // G2: Retry logic for browser crashes
       const maxRetries = 2;
@@ -282,7 +290,10 @@ export async function pageRoute(app: FastifyInstance) {
         result.url = validated.url;
         result.outputs = outputs;
 
-        return reply.send(result);
+        // Cache the response
+        jsonCacheSet(cacheParams, result as Record<string, unknown>);
+
+        return reply.header("X-Cache", "MISS").send(result);
         } catch (err) {
           lastError = err;
           const msg = err instanceof Error ? err.message : String(err);

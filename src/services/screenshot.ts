@@ -8,7 +8,7 @@ import { analyzePage, getAdaptiveDelays } from "./page-analysis.js";
 
 export interface ScreenshotOptions {
   url: string;
-  format?: "png" | "jpeg";
+  format?: "png" | "jpeg" | "webp";
   quality?: number;
   fullPage?: boolean;
   width?: number;
@@ -236,7 +236,7 @@ async function attemptScreenshot(
     }
 
     const effectiveQuality =
-      format === "jpeg" && quality !== undefined
+      (format === "jpeg" || format === "webp") && quality !== undefined
         ? Math.min(Math.max(quality, 1), 100)
         : undefined;
 
@@ -267,7 +267,7 @@ async function attemptScreenshot(
 
     return {
       buffer,
-      contentType: format === "png" ? "image/png" : "image/jpeg",
+      contentType: format === "png" ? "image/png" : format === "webp" ? "image/webp" : "image/jpeg",
     };
   } finally {
     await page.close();

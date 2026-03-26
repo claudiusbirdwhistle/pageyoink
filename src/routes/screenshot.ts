@@ -50,7 +50,7 @@ const screenshotQuerySchema = {
     },
     format: {
       type: "string" as const,
-      enum: ["png", "jpeg"],
+      enum: ["png", "jpeg", "webp"],
       description: "Output image format. Default: png.",
     },
     quality: {
