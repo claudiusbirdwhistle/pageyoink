@@ -1,5 +1,5 @@
 import { buildApp } from "./app.js";
-import { closeBrowser } from "./services/browser.js";
+import { getBrowser, closeBrowser } from "./services/browser.js";
 import { closeDb } from "./services/database.js";
 
 const PORT = parseInt(process.env.PORT || "3000", 10);
@@ -24,6 +24,13 @@ async function start() {
   try {
     await app.listen({ port: PORT, host: HOST });
     console.log(`PageYoink API running on ${HOST}:${PORT}`);
+
+    // Pre-warm browser so first request doesn't pay cold start cost
+    getBrowser().then(() => {
+      console.log("Browser pre-warmed and ready.");
+    }).catch((err) => {
+      console.warn("Browser pre-warm failed (will retry on first request):", err);
+    });
   } catch (err) {
     app.log.error(err);
     process.exit(1);
