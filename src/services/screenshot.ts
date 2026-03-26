@@ -1,4 +1,4 @@
-import { getBrowser, launchProxyBrowser } from "./browser.js";
+import { getBrowser, getStealthBrowser, launchProxyBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady, installMutationTracker } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
@@ -35,6 +35,7 @@ export interface ScreenshotOptions {
   fonts?: string[];
   onProgress?: (stage: string) => void;
   optimize?: boolean;
+  stealth?: boolean;
 }
 
 export interface ScreenshotResult {
@@ -105,13 +106,14 @@ async function attemptScreenshot(
     fonts,
     onProgress,
     optimize = false,
+    stealth = false,
   } = options;
 
   const notify = onProgress || (() => {});
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
 
   const proxyBrowser = proxy ? await launchProxyBrowser(proxy) : null;
-  const browser = proxyBrowser || (await getBrowser());
+  const browser = proxyBrowser || (stealth ? await getStealthBrowser() : await getBrowser());
   const page = await browser.newPage();
 
   try {

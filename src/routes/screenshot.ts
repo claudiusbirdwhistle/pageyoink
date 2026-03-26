@@ -39,6 +39,7 @@ interface ScreenshotQuery {
   geolocation?: string;
   optimize?: string;
   timezone?: string;
+  stealth?: string;
 }
 
 const screenshotQuerySchema = {
@@ -152,7 +153,11 @@ const screenshotQuerySchema = {
     },
     optimize: {
       type: "string" as const,
-      description: "Auto-optimize capture parameters based on page content. Pass 'true' to enable. Analyzes content width, tables, images, and article structure to select best format, viewport, and scale. Explicit params override auto-detected values.",
+      description: "Auto-optimize capture parameters based on page content. Pass 'true' to enable.",
+    },
+    stealth: {
+      type: "string" as const,
+      description: "Use stealth browser mode to evade bot detection (Cloudflare, DataDome, etc.). Pass 'true' to enable. Slightly slower than default mode.",
     },
   },
 };
@@ -213,6 +218,7 @@ export async function screenshotRoute(app: FastifyInstance) {
         geolocation,
         timezone,
         optimize,
+        stealth,
       } = request.query;
 
       const validated = await validateUrlSafe(url);
@@ -302,6 +308,7 @@ export async function screenshotRoute(app: FastifyInstance) {
             : undefined,
           timezone: timezone || undefined,
           optimize: optimize === "true",
+          stealth: stealth === "true",
         };
 
         const cacheTtl = ttl ? parseInt(ttl, 10) : undefined;

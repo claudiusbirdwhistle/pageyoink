@@ -1,6 +1,12 @@
 import puppeteer, { Browser } from "puppeteer";
+import puppeteerExtra from "puppeteer-extra";
+import StealthPlugin from "puppeteer-extra-plugin-stealth";
+
+// Register stealth plugin with puppeteer-extra
+puppeteerExtra.use(StealthPlugin());
 
 let browser: Browser | null = null;
+let stealthBrowser: Browser | null = null;
 
 const BASE_ARGS = [
   "--no-sandbox",           // Required in Docker containers without user namespace
@@ -38,6 +44,24 @@ export async function getBrowser(): Promise<Browser> {
 }
 
 /**
+ * Get the shared stealth browser instance.
+ * Uses puppeteer-extra with stealth plugin to evade bot detection.
+ * Bypasses basic Cloudflare, DataDome, and similar anti-bot systems.
+ */
+export async function getStealthBrowser(): Promise<Browser> {
+  if (stealthBrowser && stealthBrowser.connected) {
+    return stealthBrowser;
+  }
+
+  stealthBrowser = await puppeteerExtra.launch({
+    headless: true,
+    args: BASE_ARGS,
+  }) as unknown as Browser;
+
+  return stealthBrowser;
+}
+
+/**
  * Launch a temporary browser with a proxy server.
  * Caller is responsible for closing it after use.
  *
@@ -54,5 +78,9 @@ export async function closeBrowser(): Promise<void> {
   if (browser) {
     await browser.close();
     browser = null;
+  }
+  if (stealthBrowser) {
+    await stealthBrowser.close();
+    stealthBrowser = null;
   }
 }

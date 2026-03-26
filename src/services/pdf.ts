@@ -1,5 +1,5 @@
 import { PDFDocument } from "pdf-lib";
-import { getBrowser, launchProxyBrowser } from "./browser.js";
+import { getBrowser, getStealthBrowser, launchProxyBrowser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady, installMutationTracker } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
@@ -38,6 +38,7 @@ export interface PdfOptions {
   scale?: number;
   maxPages?: number;
   optimize?: boolean;
+  stealth?: boolean;
 }
 
 export interface PdfResult {
@@ -105,12 +106,13 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     scale,
     maxPages,
     optimize = false,
+    stealth = false,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
 
   const proxyBrowser = proxy ? await launchProxyBrowser(proxy) : null;
-  const browser = proxyBrowser || (await getBrowser());
+  const browser = proxyBrowser || (stealth ? await getStealthBrowser() : await getBrowser());
   const page = await browser.newPage();
 
   try {
