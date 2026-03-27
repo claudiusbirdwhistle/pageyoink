@@ -126,8 +126,8 @@ export async function trialRoute(app: FastifyInstance) {
           smartWait: smart_wait === "true",
           blockAds: block_ads === "true"
             ? true
-            : block_ads === "stealth"
-              ? ("stealth" as const)
+            : block_ads === "cosmetic"
+              ? ("cosmetic" as const)
               : false,
           timeout: 30000,
           onProgress: (stage) => progressUpdate(reqId, stage as "navigating"),
@@ -260,8 +260,8 @@ export async function trialRoute(app: FastifyInstance) {
           smartWait: smart_wait === "true",
           blockAds: block_ads === "true"
             ? true
-            : block_ads === "stealth"
-              ? ("stealth" as const)
+            : block_ads === "cosmetic"
+              ? ("cosmetic" as const)
               : false,
           margin,
           headerTemplate: header_template,

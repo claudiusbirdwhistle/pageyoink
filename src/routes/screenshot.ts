@@ -39,7 +39,7 @@ interface ScreenshotQuery {
   geolocation?: string;
   optimize?: string;
   timezone?: string;
-  stealth?: string;
+  antibot?: string;
 }
 
 const screenshotQuerySchema = {
@@ -93,7 +93,7 @@ const screenshotQuerySchema = {
     },
     block_ads: {
       type: "string" as const,
-      description: "Block ads. 'true' = aggressive network-level blocking via Ghostery engine (fast, but detectable by anti-adblock scripts on sites like The Guardian, Forbes). 'stealth' = lets all requests through, hides ad elements visually after page load (slower, but undetectable by anti-adblock scripts). Default: disabled.",
+      description: "Block ads. 'true' = aggressive network-level blocking via Ghostery engine (fast, but detectable by anti-adblock scripts on sites like The Guardian, Forbes). 'cosmetic' = lets all requests through, hides ad elements visually after page load (slower, but undetectable by anti-adblock scripts). Default: disabled.",
     },
     viewports: {
       type: "string" as const,
@@ -155,9 +155,9 @@ const screenshotQuerySchema = {
       type: "string" as const,
       description: "Auto-optimize capture parameters based on page content. Pass 'true' to enable.",
     },
-    stealth: {
+    antibot: {
       type: "string" as const,
-      description: "Use stealth browser mode to evade bot detection (Cloudflare, DataDome, etc.). Pass 'true' to enable. Slightly slower than default mode.",
+      description: "Anti-bot evasion mode to bypass Cloudflare, DataDome, etc. Pass 'true' to enable. Slightly slower than default mode.",
     },
   },
 };
@@ -218,7 +218,7 @@ export async function screenshotRoute(app: FastifyInstance) {
         geolocation,
         timezone,
         optimize,
-        stealth,
+        antibot,
       } = request.query;
 
       const validated = await validateUrlSafe(url);
@@ -285,7 +285,7 @@ export async function screenshotRoute(app: FastifyInstance) {
           clean: clean === "true",
           smartWait: smart_wait === "true",
           maxScroll: max_scroll ? parseInt(max_scroll, 10) : undefined,
-          blockAds: block_ads === "true" ? true : block_ads === "stealth" ? "stealth" as const : false,
+          blockAds: block_ads === "true" ? true : block_ads === "cosmetic" ? "cosmetic" as const : false,
           viewports: viewports ? parseInt(viewports, 10) : undefined,
           css: css || undefined,
           js: js || undefined,
@@ -308,7 +308,7 @@ export async function screenshotRoute(app: FastifyInstance) {
             : undefined,
           timezone: timezone || undefined,
           optimize: optimize === "true",
-          stealth: stealth === "true",
+          antibot: antibot === "true",
         };
 
         const cacheTtl = ttl ? parseInt(ttl, 10) : undefined;

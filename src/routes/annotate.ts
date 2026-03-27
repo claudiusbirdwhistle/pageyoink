@@ -11,8 +11,8 @@ interface AnnotateBody {
   height?: number;
   fullPage?: boolean;
   clean?: boolean;
-  blockAds?: boolean | "stealth";
-  stealth?: boolean;
+  blockAds?: boolean | "cosmetic";
+  antibot?: boolean;
 }
 
 export async function annotateRoute(app: FastifyInstance) {
@@ -59,8 +59,8 @@ export async function annotateRoute(app: FastifyInstance) {
             height: { type: "number", description: "Viewport height. Default: 720." },
             fullPage: { type: "boolean", description: "Capture full scrollable page." },
             clean: { type: "boolean", description: "Remove overlays before capture." },
-            blockAds: { description: "Block ads. true for network blocking, 'stealth' for visual hiding." },
-            stealth: { type: "boolean", description: "Use stealth mode for bot-protected sites." },
+            blockAds: { description: "Block ads. true for network blocking, 'cosmetic' for visual hiding." },
+            antibot: { type: "boolean", description: "Anti-bot evasion for Cloudflare/DataDome-protected sites." },
           },
         },
       },
@@ -74,7 +74,7 @@ export async function annotateRoute(app: FastifyInstance) {
         fullPage = false,
         clean = false,
         blockAds = false,
-        stealth = false,
+        antibot = false,
       } = request.body;
 
       const validated = await validateUrlSafe(rawUrl);
@@ -91,7 +91,7 @@ export async function annotateRoute(app: FastifyInstance) {
           fullPage,
           clean,
           blockAds,
-          stealth,
+          antibot,
         });
 
         const annotated = await annotateScreenshot(result.buffer, annotations);

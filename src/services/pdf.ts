@@ -24,7 +24,7 @@ export interface PdfOptions {
   clean?: boolean;
   smartWait?: boolean;
   maxScroll?: number;
-  blockAds?: boolean | "stealth";
+  blockAds?: boolean | "cosmetic";
   css?: string;
   js?: string;
   headers?: Record<string, string>;
@@ -38,7 +38,7 @@ export interface PdfOptions {
   scale?: number;
   maxPages?: number;
   optimize?: boolean;
-  stealth?: boolean;
+  antibot?: boolean;
 }
 
 export interface PdfResult {
@@ -106,13 +106,13 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     scale,
     maxPages,
     optimize = false,
-    stealth = false,
+    antibot = false,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
 
   const proxyBrowser = proxy ? await launchProxyBrowser(proxy) : null;
-  const browser = proxyBrowser || (stealth ? await getStealthBrowser() : await getBrowser());
+  const browser = proxyBrowser || (antibot ? await getStealthBrowser() : await getBrowser());
   const page = await browser.newPage();
 
   try {
@@ -208,11 +208,11 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
       await cleanPage(page);
     }
 
-    if (blockAds === "stealth") {
+    if (blockAds === "cosmetic") {
       await hideAdsStealthily(page);
     }
 
-    // For PDFs, upgrade stealth ad hiding to display:none since
+    // For PDFs, upgrade cosmetic ad hiding to display:none since
     // anti-adblock detection doesn't matter in print context.
     // Also catches ads that the offscreen method doesn't fully hide in print.
     if (blockAds) {

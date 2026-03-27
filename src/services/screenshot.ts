@@ -18,7 +18,7 @@ export interface ScreenshotOptions {
   clean?: boolean;
   smartWait?: boolean;
   maxScroll?: number;
-  blockAds?: boolean | "stealth";
+  blockAds?: boolean | "cosmetic";
   viewports?: number;
   css?: string;
   js?: string;
@@ -35,7 +35,7 @@ export interface ScreenshotOptions {
   fonts?: string[];
   onProgress?: (stage: string) => void;
   optimize?: boolean;
-  stealth?: boolean;
+  antibot?: boolean;
 }
 
 export interface ScreenshotResult {
@@ -106,14 +106,14 @@ async function attemptScreenshot(
     fonts,
     onProgress,
     optimize = false,
-    stealth = false,
+    antibot = false,
   } = options;
 
   const notify = onProgress || (() => {});
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
 
   const proxyBrowser = proxy ? await launchProxyBrowser(proxy) : null;
-  const browser = proxyBrowser || (stealth ? await getStealthBrowser() : await getBrowser());
+  const browser = proxyBrowser || (antibot ? await getStealthBrowser() : await getBrowser());
   const page = await browser.newPage();
 
   try {
@@ -250,7 +250,7 @@ async function attemptScreenshot(
     }
 
     // Stealth ad blocking: move ad elements offscreen after detection scripts ran
-    if (blockAds === "stealth") {
+    if (blockAds === "cosmetic") {
       await hideAdsStealthily(page);
     }
 

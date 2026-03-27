@@ -140,8 +140,8 @@ const LANDING_HTML = `<!DOCTYPE html>
           <span>Ad Block:</span>
           <select id="trial-adblock" style="padding:4px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:13px;">
             <option value="">Off</option>
-            <option value="true">On (network)</option>
-            <option value="stealth">Stealth (undetectable)</option>
+            <option value="true">Network</option>
+            <option value="cosmetic">Cosmetic</option>
           </select>
         </div>
       </div>

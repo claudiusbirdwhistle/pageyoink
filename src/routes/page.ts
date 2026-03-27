@@ -19,7 +19,7 @@ interface PageBody {
   outputs?: string[];
   clean?: boolean;
   smartWait?: boolean;
-  blockAds?: boolean | "stealth";
+  blockAds?: boolean | "cosmetic";
   viewport?: { width?: number; height?: number };
   timeout?: number;
   css?: string;
@@ -66,7 +66,7 @@ export async function pageRoute(app: FastifyInstance) {
               description: "Wait for DOM stability, fonts, images, animations. Default: false.",
             },
             blockAds: {
-              description: "true = network blocking, 'stealth' = visual hiding.",
+              description: "true = network blocking, 'cosmetic' = visual hiding.",
             },
             viewport: {
               type: "object",
@@ -221,7 +221,7 @@ export async function pageRoute(app: FastifyInstance) {
         }
 
         // Stealth ad blocking (post-render)
-        if (body.blockAds === "stealth") {
+        if (body.blockAds === "cosmetic") {
           await hideAdsStealthily(page);
         }
 

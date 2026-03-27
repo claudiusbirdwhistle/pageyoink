@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Landing Page Demo Mockup — PageYoink</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    :root { --brand: #6366f1; --bg: #0f0f1a; --surface: #1a1a2e; --text: #e0e0f0; --muted: #8888a0; --green: #10b981; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+    .container { max-width: 960px; margin: 0 auto; padding: 24px; }
+    h1 { font-size: 32px; margin-bottom: 8px; }
+    h1 span { color: var(--brand); }
+    h2 { font-size: 22px; margin: 40px 0 16px; color: var(--brand); }
+    h3 { font-size: 16px; margin: 24px 0 8px; }
+    p { color: var(--muted); margin-bottom: 12px; }
+    .note { background: #1a1a2e; border-left: 3px solid var(--brand); padding: 12px 16px; margin: 12px 0; font-size: 13px; color: var(--muted); border-radius: 0 8px 8px 0; }
+    .mockup { background: var(--surface); border: 1px solid #2a2a3e; border-radius: 12px; padding: 20px; margin: 16px 0; }
+    .mockup-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--brand); font-weight: 700; margin-bottom: 12px; }
+
+    /* URL bar mockup */
+    .url-bar { display: flex; gap: 12px; margin-bottom: 16px; }
+    .url-input { flex: 1; padding: 12px 16px; border-radius: 8px; border: 1px solid #2a2a3e; background: #12121f; color: var(--text); font-size: 15px; }
+    .btn { padding: 12px 24px; border-radius: 8px; border: none; background: var(--brand); color: white; font-weight: 700; font-size: 15px; cursor: default; }
+    .btn-sm { padding: 8px 16px; font-size: 13px; }
+
+    /* Options row */
+    .options { display: flex; gap: 16px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+    .option { display: flex; align-items: center; gap: 6px; color: var(--muted); font-size: 13px; }
+    .checkbox { width: 16px; height: 16px; accent-color: var(--brand); }
+    select { padding: 4px 8px; border-radius: 6px; border: 1px solid #2a2a3e; background: var(--surface); color: var(--text); font-size: 13px; }
+
+    /* Tabs */
+    .tabs { display: flex; gap: 0; border-bottom: 2px solid #2a2a3e; margin-bottom: 0; overflow-x: auto; }
+    .tab { padding: 10px 18px; border: none; background: transparent; color: var(--muted); font-weight: 600; font-size: 13px; cursor: default; border-bottom: 2px solid transparent; margin-bottom: -2px; white-space: nowrap; }
+    .tab.active { color: var(--brand); border-bottom-color: var(--brand); }
+    .tab-content { background: var(--surface); border: 1px solid #2a2a3e; border-top: none; border-radius: 0 0 12px 12px; padding: 20px; min-height: 200px; }
+
+    /* Content placeholders */
+    .placeholder { background: #12121f; border-radius: 8px; border: 1px dashed #2a2a3e; display: flex; align-items: center; justify-content: center; color: var(--muted); font-size: 14px; }
+    .placeholder.screenshot { height: 300px; }
+    .placeholder.pdf { height: 100px; }
+    .placeholder.content { height: 200px; text-align: left; padding: 16px; display: block; }
+    .placeholder.structured { height: 250px; text-align: left; padding: 16px; display: block; font-family: monospace; font-size: 12px; }
+    .placeholder.tables { height: 180px; }
+    .placeholder.annotation { height: 300px; position: relative; }
+    .placeholder.diff { height: 300px; }
+
+    /* Annotation mockup overlays */
+    .ann-box { position: absolute; border: 3px solid #ff0000; border-radius: 4px; }
+    .ann-arrow { position: absolute; color: #00ff00; font-size: 24px; }
+    .ann-blur { position: absolute; background: rgba(100,100,100,0.7); border-radius: 4px; backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; font-size: 11px; }
+    .ann-text { position: absolute; background: rgba(0,0,0,0.8); color: #ffff00; padding: 2px 8px; border-radius: 4px; font-weight: 700; font-size: 14px; }
+
+    /* Diff mockup */
+    .diff-side { display: inline-block; width: 48%; vertical-align: top; }
+    .diff-label { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 4px; }
+    .diff-placeholder { background: #12121f; border-radius: 8px; height: 200px; display: flex; align-items: center; justify-content: center; color: var(--muted); border: 1px dashed #2a2a3e; }
+    .diff-stats { text-align: center; margin-top: 12px; font-size: 13px; }
+    .diff-stats span { color: var(--brand); font-weight: 700; }
+
+    /* Section divider */
+    .divider { border: none; border-top: 1px solid #2a2a3e; margin: 40px 0; }
+
+    /* Two-column for clean comparison */
+    .comparison { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .comparison .label { font-size: 12px; color: var(--muted); text-align: center; margin-bottom: 8px; }
+
+    /* Toggle group */
+    .toggle-group { display: flex; gap: 0; background: #12121f; border-radius: 8px; padding: 2px; margin-bottom: 12px; display: inline-flex; }
+    .toggle-btn { padding: 6px 16px; border: none; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; border-radius: 6px; cursor: default; }
+    .toggle-btn.active { background: var(--brand); color: white; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Page<span>Yoink</span> — Demo Layout Mockup</h1>
+    <p>This is a visual mockup showing how the landing page demo could be reorganized to showcase all features.</p>
+
+    <hr class="divider">
+
+    <!-- ============================================ -->
+    <h2>Section 1: Main Capture Demo</h2>
+    <p>The primary "Try It Now" demo. Same URL bar as current, but with reorganized tabs.</p>
+    <!-- ============================================ -->
+
+    <div class="mockup">
+      <div class="mockup-label">Try It Now</div>
+
+      <div class="url-bar">
+        <input class="url-input" value="https://en.wikipedia.org/wiki/Web_scraping" readonly>
+        <button class="btn">Capture Page</button>
+      </div>
+
+      <div class="options">
+        <label class="option"><input type="checkbox" class="checkbox" checked> Remove Overlays</label>
+        <div class="option">
+          <span>Ad Block:</span>
+          <select><option>Off</option><option>On</option><option>Stealth</option></select>
+        </div>
+        <label class="option"><input type="checkbox" class="checkbox"> Auto-Optimize</label>
+        <label class="option"><input type="checkbox" class="checkbox"> Stealth Mode</label>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active">Screenshot</div>
+        <div class="tab">PDF</div>
+        <div class="tab">Content</div>
+        <div class="tab">Tables</div>
+        <div class="tab">Structured</div>
+      </div>
+
+      <div class="tab-content">
+        <div class="note">
+          <strong>Screenshot tab</strong> — same as current. Shows the captured page image.<br>
+          <strong>PDF tab</strong> — same as current. Download link.<br>
+          <strong>Content tab</strong> — rendered markdown, same as current.<br>
+          <strong>Tables tab</strong> — NEW. Shows HTML tables extracted as clean JSON arrays. Only visible if the page has tables.<br>
+          <strong>Structured tab</strong> — same as current. JSON-LD, OG tags, meta.
+        </div>
+        <div class="placeholder screenshot">[ Screenshot of captured page ]</div>
+      </div>
+    </div>
+
+    <div class="note">
+      <strong>Changes from current:</strong> Added "Tables" tab (conditionally shown only when page has tables). Moved stealth and optimize to checkbox options instead of separate features. Keeps the tab count manageable.
+    </div>
+
+    <!-- ============================================ -->
+    <h2>Section 2: Clean Mode Comparison</h2>
+    <p>Side-by-side showing popup/banner removal. Uses the same captured URL.</p>
+    <!-- ============================================ -->
+
+    <div class="mockup">
+      <div class="mockup-label">Clean Capture Demo</div>
+
+      <div class="toggle-group">
+        <div class="toggle-btn">Before</div>
+        <div class="toggle-btn active">After</div>
+      </div>
+
+      <div class="comparison">
+        <div>
+          <div class="label">Without Clean Mode</div>
+          <div class="placeholder screenshot" style="height:220px;">
+            [ Screenshot with cookie banners,<br>chat widgets, popups visible ]
+          </div>
+        </div>
+        <div>
+          <div class="label">With Clean Mode</div>
+          <div class="placeholder screenshot" style="height:220px;">
+            [ Same page, overlays removed ]
+          </div>
+        </div>
+      </div>
+
+      <div class="note" style="margin-top:12px;">
+        Captures the same page twice — once raw, once with clean=true. Shows the 4-phase detection (cookie banners, chat widgets, high z-index overlays, backdrop removal). Best demoed on a site like hubspot.com or bbc.com.
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <h2>Section 3: Screenshot Annotation</h2>
+    <p>Interactive demo where users can add annotations to a captured screenshot.</p>
+    <!-- ============================================ -->
+
+    <div class="mockup">
+      <div class="mockup-label">Annotate Screenshots</div>
+
+      <div style="display:flex;gap:12px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="btn btn-sm" style="background:#ef4444;">Box</button>
+        <button class="btn btn-sm" style="background:#22c55e;">Arrow</button>
+        <button class="btn btn-sm" style="background:#3b82f6;">Highlight</button>
+        <button class="btn btn-sm" style="background:#8b5cf6;">Text</button>
+        <button class="btn btn-sm" style="background:#6b7280;">Blur</button>
+      </div>
+
+      <div class="placeholder annotation" style="height:300px;background:#1a1a2e;">
+        <span style="color:var(--muted);z-index:1;">[ Captured screenshot with annotations overlaid ]</span>
+
+        <!-- Mock annotations -->
+        <div class="ann-box" style="top:40px;left:60px;width:200px;height:80px;"></div>
+        <div class="ann-text" style="top:20px;left:60px;">Bug: misaligned header</div>
+        <div class="ann-arrow" style="top:150px;left:300px;">&#8594;</div>
+        <div class="ann-blur" style="top:180px;left:400px;width:150px;height:60px;">[ blurred ]</div>
+      </div>
+
+      <div class="note" style="margin-top:12px;">
+        User captures a page, then clicks annotation tools to add boxes, arrows, text labels, highlights, and blur regions. Useful for bug reports, QA feedback, and visual documentation. Could be a separate page (/demo/annotate) rather than inline to keep the main demo clean.
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <h2>Section 4: Visual Diff</h2>
+    <p>Compare two URLs or two versions of the same page.</p>
+    <!-- ============================================ -->
+
+    <div class="mockup">
+      <div class="mockup-label">Visual Diff</div>
+
+      <div class="url-bar">
+        <input class="url-input" value="https://example.com" readonly style="font-size:13px;">
+        <span style="color:var(--muted);padding:12px 0;">vs</span>
+        <input class="url-input" value="https://example.org" readonly style="font-size:13px;">
+        <button class="btn btn-sm">Compare</button>
+      </div>
+
+      <div style="text-align:center;">
+        <div class="diff-side">
+          <div class="diff-label">URL 1</div>
+          <div class="diff-placeholder">[ Screenshot 1 ]</div>
+        </div>
+        <span style="color:var(--muted);padding:0 4px;">→</span>
+        <div class="diff-side">
+          <div class="diff-label">Diff Overlay</div>
+          <div class="diff-placeholder" style="border-color:#ef4444;">[ Changed pixels in red ]</div>
+        </div>
+      </div>
+
+      <div class="diff-stats">
+        <span>2.4%</span> pixels changed &middot; <span>1,847</span> diff pixels &middot; <span>76,800</span> total
+      </div>
+
+      <div class="note" style="margin-top:12px;">
+        Two URL inputs, side-by-side result showing original and diff overlay. Stats below. Could also be a separate page (/demo/diff).
+      </div>
+    </div>
+
+    <!-- ============================================ -->
+    <hr class="divider">
+    <h2>Layout Options</h2>
+    <!-- ============================================ -->
+
+    <div class="mockup">
+      <div class="mockup-label">Option A: Everything on one page</div>
+      <p>All 4 sections stacked vertically on the landing page. Pros: everything visible, impressive feature list. Cons: long page, may overwhelm new visitors.</p>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-label">Option B: Main demo + linked sub-pages</div>
+      <p>Section 1 (main capture) stays on landing page. Sections 2-4 become linked demo pages:</p>
+      <ul style="color:var(--muted);font-size:14px;margin:8px 0 8px 24px;">
+        <li>/demo/clean — Clean mode comparison</li>
+        <li>/demo/annotate — Screenshot annotation playground</li>
+        <li>/demo/diff — Visual diff tool</li>
+      </ul>
+      <p>Landing page shows cards linking to each demo. Pros: clean landing page, each demo gets full attention. Cons: more clicks to explore.</p>
+    </div>
+
+    <div class="mockup">
+      <div class="mockup-label">Option C: Tabbed demo sections</div>
+      <p>One demo area with a top-level tab selector: Capture | Compare | Annotate | Diff. Each tab shows its own demo UI. Pros: contained, no page navigation. Cons: complex UI, only one demo visible at a time.</p>
+    </div>
+
+    <!-- ============================================ -->
+    <hr class="divider">
+    <h2>Features Described (Not Demoed)</h2>
+    <p>These are listed in feature cards or the API docs section, not as interactive demos:</p>
+    <!-- ============================================ -->
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:16px 0;">
+      <div class="mockup" style="margin:0;">
+        <strong>PDF/A Archival</strong>
+        <p style="font-size:13px;">ISO-standard archival PDFs with embedded fonts. Add <code>pdfa=true</code> to any PDF request.</p>
+      </div>
+      <div class="mockup" style="margin:0;">
+        <strong>Timestamped Archive</strong>
+        <p style="font-size:13px;">SHA-256 hashed, RFC 3161 timestamped capture packages. WARC + PDF/A + metadata in one ZIP.</p>
+      </div>
+      <div class="mockup" style="margin:0;">
+        <strong>Stealth Mode</strong>
+        <p style="font-size:13px;">Bypass bot detection on Cloudflare-protected sites. Add <code>stealth=true</code>.</p>
+      </div>
+      <div class="mockup" style="margin:0;">
+        <strong>Auto-Optimize</strong>
+        <p style="font-size:13px;">Smart format, viewport, and scale selection based on page content analysis.</p>
+      </div>
+      <div class="mockup" style="margin:0;">
+        <strong>Structured Extraction</strong>
+        <p style="font-size:13px;">Define a JSON schema, get typed data back. JSON-LD first, LLM fallback for missing fields.</p>
+      </div>
+      <div class="mockup" style="margin:0;">
+        <strong>MCP Server</strong>
+        <p style="font-size:13px;">Give any AI agent web access. <code>npx pageyoink-mcp</code></p>
+      </div>
+    </div>
+
+  </div>
+</body>
+</html>

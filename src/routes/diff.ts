@@ -11,7 +11,7 @@ interface DiffBody {
   height?: number;
   fullPage?: boolean;
   clean?: boolean;
-  blockAds?: boolean | "stealth";
+  blockAds?: boolean | "cosmetic";
   threshold?: number;
   format?: "json" | "image";
 }
