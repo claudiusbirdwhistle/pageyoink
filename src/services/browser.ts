@@ -74,6 +74,18 @@ export async function launchProxyBrowser(proxy: string): Promise<Browser> {
   });
 }
 
+/**
+ * Launch a temporary browser with HTTP/2 disabled.
+ * Used as fallback when sites have HTTP/2 protocol errors.
+ * Caller is responsible for closing it after use.
+ */
+export async function launchHttp1Browser(): Promise<Browser> {
+  return puppeteer.launch({
+    headless: true,
+    args: [...BASE_ARGS, "--disable-http2"],
+  });
+}
+
 export async function closeBrowser(): Promise<void> {
   if (browser) {
     await browser.close();

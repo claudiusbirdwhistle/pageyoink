@@ -49,6 +49,14 @@ export function classifyNavigationError(err: unknown): {
     };
   }
 
+  // HTTP/2 protocol errors
+  if (msg.includes("ERR_HTTP2_PROTOCOL_ERROR")) {
+    return {
+      statusCode: 502,
+      message: "HTTP/2 protocol error from the target site. Retrying with HTTP/1.1.",
+    };
+  }
+
   // Navigation timeout — could be client or server, treat as 504
   if (msg.includes("Navigation timeout") || msg.includes("TimeoutError")) {
     return {

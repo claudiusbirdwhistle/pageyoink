@@ -1,4 +1,4 @@
-import { getBrowser, getStealthBrowser, launchProxyBrowser } from "./browser.js";
+import { getBrowser, getStealthBrowser, launchProxyBrowser, launchHttp1Browser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady, installMutationTracker } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
@@ -59,6 +59,16 @@ export async function takeScreenshot(
       return await attemptScreenshot(options);
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
+
+      // HTTP/2 protocol errors: retry with HTTP/2 disabled
+      if (lastError.message.includes("ERR_HTTP2_PROTOCOL_ERROR")) {
+        try {
+          return await attemptScreenshot({ ...options, _disableHttp2: true } as ScreenshotOptions & { _disableHttp2: boolean });
+        } catch {
+          throw lastError;
+        }
+      }
+
       const isTransient =
         lastError.message.includes("Connection closed") ||
         lastError.message.includes("crashed") ||
@@ -75,7 +85,7 @@ export async function takeScreenshot(
 }
 
 async function attemptScreenshot(
-  options: ScreenshotOptions,
+  options: ScreenshotOptions & { _disableHttp2?: boolean },
 ): Promise<ScreenshotResult> {
   const {
     url,
@@ -112,8 +122,9 @@ async function attemptScreenshot(
   const notify = onProgress || (() => {});
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
 
+  const http1Browser = (options as { _disableHttp2?: boolean })._disableHttp2 ? await launchHttp1Browser() : null;
   const proxyBrowser = proxy ? await launchProxyBrowser(proxy) : null;
-  const browser = proxyBrowser || (antibot ? await getStealthBrowser() : await getBrowser());
+  const browser = http1Browser || proxyBrowser || (antibot ? await getStealthBrowser() : await getBrowser());
   const page = await browser.newPage();
 
   try {
@@ -299,6 +310,9 @@ async function attemptScreenshot(
     await page.close();
     if (proxyBrowser) {
       await proxyBrowser.close();
+    }
+    if (http1Browser) {
+      await http1Browser.close();
     }
   }
 }

@@ -1,5 +1,5 @@
 import { PDFDocument } from "pdf-lib";
-import { getBrowser, getStealthBrowser, launchProxyBrowser } from "./browser.js";
+import { getBrowser, getStealthBrowser, launchProxyBrowser, launchHttp1Browser } from "./browser.js";
 import { cleanPage } from "./cleanup.js";
 import { waitForPageReady, installMutationTracker } from "./readiness.js";
 import { triggerLazyImages } from "./lazy-load.js";
@@ -65,6 +65,16 @@ export async function generatePdf(options: PdfOptions): Promise<PdfResult> {
       return await attemptPdf(options);
     } catch (err) {
       lastError = err instanceof Error ? err : new Error(String(err));
+
+      // HTTP/2 protocol errors: retry with HTTP/2 disabled
+      if (lastError.message.includes("ERR_HTTP2_PROTOCOL_ERROR")) {
+        try {
+          return await attemptPdf({ ...options, _disableHttp2: true } as PdfOptions & { _disableHttp2: boolean });
+        } catch {
+          throw lastError;
+        }
+      }
+
       const isTransient =
         lastError.message.includes("Connection closed") ||
         lastError.message.includes("crashed") ||
@@ -80,7 +90,7 @@ export async function generatePdf(options: PdfOptions): Promise<PdfResult> {
   throw lastError;
 }
 
-async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
+async function attemptPdf(options: PdfOptions & { _disableHttp2?: boolean }): Promise<PdfResult> {
   const {
     url,
     html,
@@ -111,8 +121,9 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);
 
+  const http1Browser = options._disableHttp2 ? await launchHttp1Browser() : null;
   const proxyBrowser = proxy ? await launchProxyBrowser(proxy) : null;
-  const browser = proxyBrowser || (antibot ? await getStealthBrowser() : await getBrowser());
+  const browser = http1Browser || proxyBrowser || (antibot ? await getStealthBrowser() : await getBrowser());
   const page = await browser.newPage();
 
   try {
@@ -312,6 +323,9 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
     await page.close();
     if (proxyBrowser) {
       await proxyBrowser.close();
+    }
+    if (http1Browser) {
+      await http1Browser.close();
     }
   }
 }
