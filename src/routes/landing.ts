@@ -154,17 +154,12 @@ const LANDING_HTML = `<!DOCTYPE html>
       <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
         <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;">
           <input type="checkbox" id="trial-clean" checked style="accent-color:var(--brand);width:16px;height:16px;">
-          Remove Overlays <span style="color:#555;font-size:12px;">(cookie banners, popups, chat widgets)</span>
+          Clean Mode <span style="color:#555;font-size:12px;">(remove ads, popups, cookie banners, chat widgets)</span>
         </label>
-        <div style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;">
-          <span>Ad Block:</span>
-          <select id="trial-adblock" style="padding:4px 8px;border-radius:6px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:13px;">
-            <option value="">Off</option>
-            <option value="true">Network</option>
-            <option value="cosmetic">Cosmetic</option>
-          </select>
-        </div>
-        <label class="option"><input type="checkbox" class="checkbox" id="trial-antibot"> Anti-Bot Evasion</label>
+        <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;">
+          <input type="checkbox" id="trial-antibot" style="accent-color:var(--brand);width:16px;height:16px;">
+          Anti-Bot Evasion <span style="color:#555;font-size:12px;">(Cloudflare, DataDome)</span>
+        </label>
       </div>
       <!-- PDF options available via API — keeping demo clean -->
       <div style="display:flex;gap:12px;margin-bottom:20px;">
@@ -206,7 +201,7 @@ const LANDING_HTML = `<!DOCTYPE html>
             style="flex:1;padding:12px 16px;border-radius:8px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:16px;outline:none;">
           <button class="capture-btn" onclick="captureCleanCompare()">Compare</button>
         </div>
-        <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">See how Clean Mode removes cookie banners, popups, and chat widgets. Two captures of the same page — raw vs cleaned.</p>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">See how Clean Mode removes ads, cookie banners, popups, and chat widgets. Same page, before and after.</p>
         <div id="clean-status" style="color:var(--muted);font-size:14px;margin-bottom:12px;"></div>
         <div id="clean-result" style="display:none;">
           <div class="clean-compare">
@@ -215,7 +210,7 @@ const LANDING_HTML = `<!DOCTYPE html>
               <img id="clean-before" style="max-width:100%;border-radius:8px;border:1px solid #2a2a3e;">
             </div>
             <div>
-              <div class="compare-label">After (Clean Mode)</div>
+              <div class="compare-label">After (Clean + Ad Block)</div>
               <img id="clean-after" style="max-width:100%;border-radius:8px;border:1px solid #2a2a3e;">
             </div>
           </div>
@@ -226,12 +221,12 @@ const LANDING_HTML = `<!DOCTYPE html>
         <div style="display:flex;gap:12px;margin-bottom:12px;align-items:end;flex-wrap:wrap;">
           <div style="flex:1;min-width:200px;">
             <label style="color:var(--muted);font-size:12px;font-weight:600;">URL 1</label>
-            <input type="text" id="diff-url1" placeholder="https://example.com" value="https://example.com"
+            <input type="text" id="diff-url1" placeholder="https://example.com" value="https://en.wikipedia.org/wiki/Cat"
               style="width:100%;margin-top:4px;padding:12px 16px;border-radius:8px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:14px;outline:none;">
           </div>
           <div style="flex:1;min-width:200px;">
             <label style="color:var(--muted);font-size:12px;font-weight:600;">URL 2</label>
-            <input type="text" id="diff-url2" placeholder="https://example.org"
+            <input type="text" id="diff-url2" placeholder="https://example.com" value="https://en.wikipedia.org/wiki/Dog"
               style="width:100%;margin-top:4px;padding:12px 16px;border-radius:8px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:14px;outline:none;">
           </div>
           <button class="capture-btn" onclick="runDiff()">Compare</button>
@@ -688,7 +683,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         var url = document.getElementById('trial-url').value.trim();
         if (!url) return;
         var clean = document.getElementById('trial-clean').checked;
-        var adblock = document.getElementById('trial-adblock').value;
         var antibot = document.getElementById('trial-antibot').checked;
         var status = document.getElementById('trial-status');
         var result = document.getElementById('trial-result');
@@ -717,8 +711,7 @@ const LANDING_HTML = `<!DOCTYPE html>
         var fullUrl = url.match(/^https?:\\/\\//) ? url : 'https://' + url;
         capturedUrl = fullUrl;
         var params = 'url=' + encodeURIComponent(fullUrl);
-        if (clean) params += '&clean=true';
-        if (adblock) params += '&block_ads=' + adblock;
+        if (clean) params += '&clean=true&block_ads=true';
         if (antibot) params += '&antibot=true';
 
         try {
@@ -822,11 +815,11 @@ const LANDING_HTML = `<!DOCTYPE html>
         result.style.display = 'none';
         try {
           var params = 'url=' + encodeURIComponent(fullUrl);
-          // Before: raw page (no cleanup, no ad blocking — shows everything including ads/popups)
-          // After: clean mode removes overlays AND ad containers, collapsing white space
+          // Before: raw page (no cleanup, no ad blocking)
+          // After: clean mode + ad blocking removes all junk
           var results = await Promise.all([
             fetch('/trial/screenshot?' + params),
-            fetch('/trial/screenshot?' + params + '&clean=true')
+            fetch('/trial/screenshot?' + params + '&clean=true&block_ads=true')
           ]);
           if (!results[0].ok || !results[1].ok) {
             var errResp = results[0].ok ? results[1] : results[0];
@@ -839,7 +832,7 @@ const LANDING_HTML = `<!DOCTYPE html>
           beforeImg.src = URL.createObjectURL(rawBlob);
           afterImg.src = URL.createObjectURL(cleanBlob);
           result.style.display = 'block';
-          status.textContent = 'Clean mode removed overlays, banners, and popups.';
+          status.textContent = 'Clean mode removed ads, overlays, banners, and popups.';
         } catch(e) { showError(status, 'Error: ' + e.message); }
         finally { btns.forEach(function(b) { b.disabled = false; b.textContent = 'Compare'; }); }
       }
