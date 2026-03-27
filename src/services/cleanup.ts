@@ -139,13 +139,23 @@ export async function cleanPage(page: Page): Promise<void> {
 
   // Use string-based script to avoid __name decorator issues in tsx dev mode
   const script = `(function(selectors) {
+    // Helper: fully collapse an element so it leaves no white space
+    function collapseElement(el) {
+      el.style.setProperty("display", "none", "important");
+      el.style.setProperty("visibility", "hidden", "important");
+      el.style.setProperty("height", "0", "important");
+      el.style.setProperty("max-height", "0", "important");
+      el.style.setProperty("padding", "0", "important");
+      el.style.setProperty("margin", "0", "important");
+      el.style.setProperty("overflow", "hidden", "important");
+    }
+
     // Phase 1: Hide elements matching known selectors
     for (var i = 0; i < selectors.length; i++) {
       try {
         var elements = document.querySelectorAll(selectors[i]);
         elements.forEach(function(el) {
-          el.style.setProperty("display", "none", "important");
-          el.style.setProperty("visibility", "hidden", "important");
+          collapseElement(el);
         });
       } catch(e) {
         // Invalid selector, skip
@@ -180,7 +190,7 @@ export async function cleanPage(page: Page): Promise<void> {
         text.length < 500;
 
       if (hasCookieText || hasFundraisingText) {
-        el.style.setProperty("display", "none", "important");
+        collapseElement(el);
       }
     }
 
@@ -205,7 +215,7 @@ export async function cleanPage(page: Page): Promise<void> {
           rect.width > window.innerWidth * 0.9 && rect.height > 40;
 
         if ((coversWidth && coversHeight) || isFullWidthBanner) {
-          el2.style.setProperty("display", "none", "important");
+          collapseElement(el2);
         }
       }
     }
@@ -225,7 +235,7 @@ export async function cleanPage(page: Page): Promise<void> {
         var bg = style3.backgroundColor;
         var opacity = parseFloat(style3.opacity);
         if (bg.includes("rgba") || (opacity > 0 && opacity < 1)) {
-          el3.style.setProperty("display", "none", "important");
+          collapseElement(el3);
         }
       }
     }

@@ -254,6 +254,13 @@ async function attemptScreenshot(
       await hideAdsStealthily(page);
     }
 
+    // Freeze all CSS animations and transitions for a consistent static capture
+    await page.evaluate(`(function() {
+      var style = document.createElement('style');
+      style.textContent = '*, *::before, *::after { animation-play-state: paused !important; transition: none !important; }';
+      document.head.appendChild(style);
+    })()`);
+
     const renderFormat = effectiveFormat || "png";
     const effectiveQuality =
       (renderFormat === "jpeg" || renderFormat === "webp") && quality !== undefined

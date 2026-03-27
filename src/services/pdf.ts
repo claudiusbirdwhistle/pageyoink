@@ -254,6 +254,13 @@ async function attemptPdf(options: PdfOptions): Promise<PdfResult> {
       })()`);
     }
 
+    // Freeze all CSS animations and transitions for consistent static capture
+    await page.evaluate(`(function() {
+      var style = document.createElement('style');
+      style.textContent = '*, *::before, *::after { animation-play-state: paused !important; transition: none !important; }';
+      document.head.appendChild(style);
+    })()`);
+
     // Apply print-mode CSS fixes (carousel overflow, flex-wrap, etc.)
     await applyPrintFixes(page);
 
