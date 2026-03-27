@@ -70,8 +70,8 @@ export async function generatePdf(options: PdfOptions): Promise<PdfResult> {
       if (lastError.message.includes("ERR_HTTP2_PROTOCOL_ERROR")) {
         try {
           return await attemptPdf({ ...options, _disableHttp2: true } as PdfOptions & { _disableHttp2: boolean });
-        } catch {
-          throw lastError;
+        } catch (retryErr) {
+          throw retryErr instanceof Error ? retryErr : lastError;
         }
       }
 

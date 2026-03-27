@@ -64,8 +64,8 @@ export async function takeScreenshot(
       if (lastError.message.includes("ERR_HTTP2_PROTOCOL_ERROR")) {
         try {
           return await attemptScreenshot({ ...options, _disableHttp2: true } as ScreenshotOptions & { _disableHttp2: boolean });
-        } catch {
-          throw lastError;
+        } catch (retryErr) {
+          throw retryErr instanceof Error ? retryErr : lastError;
         }
       }
 

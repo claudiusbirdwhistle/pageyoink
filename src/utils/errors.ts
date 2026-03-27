@@ -53,7 +53,7 @@ export function classifyNavigationError(err: unknown): {
   if (msg.includes("ERR_HTTP2_PROTOCOL_ERROR")) {
     return {
       statusCode: 502,
-      message: "HTTP/2 protocol error from the target site. Retrying with HTTP/1.1.",
+      message: "The target site has an HTTP/2 protocol error. It may be incompatible with automated browsers.",
     };
   }
 
