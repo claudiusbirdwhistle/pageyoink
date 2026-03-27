@@ -18,7 +18,29 @@ import sharp from "sharp";
 const trialUsage = new Map<string, { urls: Set<string>; date: string }>();
 const TRIAL_LIMIT_PER_DAY = 5;
 
+// Sandbox URLs: unlimited requests, no trial limit. Lets people experiment
+// with the API via Swagger docs without burning their daily trial quota.
+const SANDBOX_URLS = new Set([
+  "https://example.com",
+  "https://example.com/",
+  "https://news.ycombinator.com",
+  "https://news.ycombinator.com/",
+]);
+
+function isSandboxUrl(url: string): boolean {
+  try {
+    const parsed = new URL(url);
+    const normalized = parsed.origin + parsed.pathname;
+    return SANDBOX_URLS.has(normalized) || SANDBOX_URLS.has(normalized + "/");
+  } catch {
+    return false;
+  }
+}
+
 function checkTrialLimit(ip: string, url: string): boolean {
+  // Sandbox URLs are always allowed, don't count against limit
+  if (isSandboxUrl(url)) return true;
+
   const today = new Date().toISOString().split("T")[0];
   const usage = trialUsage.get(ip);
 

@@ -921,34 +921,11 @@ const LANDING_HTML = `<!DOCTYPE html>
       }
     </script>
 
-    <section>
-      <h2>Endpoints</h2>
-      <div class="endpoints">
-        <div class="endpoint" style="border-color:var(--brand);">
-          <h3><span class="method post">POST</span> <span class="path">/v1/page</span> <span style="color:var(--brand);font-size:12px;font-weight:400;">UNIFIED</span></h3>
-          <p>One URL, any combination of outputs: screenshot, PDF, markdown, text, HTML, metadata. All from a single page load.</p>
-        </div>
-        <div class="endpoint">
-          <h3><span class="method">GET</span> <span class="path">/v1/extract</span></h3>
-          <p>Extract clean content as Markdown, plain text, or HTML. Powered by Mozilla Readability.</p>
-        </div>
-        <div class="endpoint">
-          <h3><span class="method">GET</span> <span class="path">/v1/metadata</span></h3>
-          <p>Page metadata: title, OG tags, Twitter Cards, favicon, JSON-LD, word count, link count.</p>
-        </div>
-        <div class="endpoint">
-          <h3><span class="method">GET</span> <span class="path">/v1/screenshot</span></h3>
-          <p>Capture any URL as PNG or JPEG. Viewport, full-page, retina, clean mode, ad blocking.</p>
-        </div>
-        <div class="endpoint">
-          <h3><span class="method">GET</span> <span class="path">/v1/pdf</span></h3>
-          <p>Convert any URL to PDF. Page size, landscape, margins, headers/footers, watermarks.</p>
-        </div>
-        <div class="endpoint">
-          <h3><span class="method post">POST</span> <span class="path">/v1/batch</span></h3>
-          <p>Process up to 50 URLs at once with webhook delivery when complete.</p>
-        </div>
-      </div>
+    <section style="text-align:center;">
+      <h2>Explore the API</h2>
+      <p style="color:var(--muted);margin-bottom:24px;">Full interactive API documentation with every endpoint, parameter, and response format. Try requests directly from your browser.</p>
+      <a href="/docs" style="display:inline-block;padding:16px 40px;border-radius:10px;background:var(--brand);color:white;font-weight:700;font-size:16px;text-decoration:none;letter-spacing:0.3px;">Open API Docs</a>
+      <p style="color:var(--muted);font-size:13px;margin-top:16px;">Free sandbox URLs: <code style="background:#12121f;padding:2px 6px;border-radius:4px;">https://example.com</code> and <code style="background:#12121f;padding:2px 6px;border-radius:4px;">https://news.ycombinator.com</code> — unlimited requests, no API key needed.</p>
     </section>
 
     <section>
