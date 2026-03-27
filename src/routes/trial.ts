@@ -93,12 +93,13 @@ export async function trialRoute(app: FastifyInstance) {
           clean?: string;
           smart_wait?: string;
           block_ads?: string;
+          antibot?: string;
         };
       }>,
       reply,
     ) => {
       const ip = request.ip;
-      const { url: rawUrl, clean, smart_wait, block_ads } = request.query;
+      const { url: rawUrl, clean, smart_wait, block_ads, antibot } = request.query;
 
       if (!checkTrialLimit(ip, rawUrl)) {
         return reply.status(429).send({
@@ -130,6 +131,7 @@ export async function trialRoute(app: FastifyInstance) {
               ? ("cosmetic" as const)
               : false,
           timeout: 30000,
+          antibot: antibot === "true",
           onProgress: (stage) => progressUpdate(reqId, stage as "navigating"),
         });
 

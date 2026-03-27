@@ -169,6 +169,7 @@ const LANDING_HTML = `<!DOCTYPE html>
             <option value="cosmetic">Cosmetic</option>
           </select>
         </div>
+        <label class="option"><input type="checkbox" class="checkbox" id="trial-antibot"> Anti-Bot Evasion</label>
       </div>
       <!-- PDF options available via API — keeping demo clean -->
       <div style="display:flex;gap:12px;margin-bottom:20px;">
@@ -709,6 +710,7 @@ const LANDING_HTML = `<!DOCTYPE html>
         if (!url) return;
         var clean = document.getElementById('trial-clean').checked;
         var adblock = document.getElementById('trial-adblock').value;
+        var antibot = document.getElementById('trial-antibot').checked;
         var status = document.getElementById('trial-status');
         var result = document.getElementById('trial-result');
         var img = document.getElementById('trial-image');
@@ -738,6 +740,7 @@ const LANDING_HTML = `<!DOCTYPE html>
         var params = 'url=' + encodeURIComponent(fullUrl);
         if (clean) params += '&clean=true';
         if (adblock) params += '&block_ads=' + adblock;
+        if (antibot) params += '&antibot=true';
 
         try {
           // Generate request ID for progress tracking
