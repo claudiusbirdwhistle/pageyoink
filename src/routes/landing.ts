@@ -218,30 +218,22 @@ const LANDING_HTML = `<!DOCTYPE html>
       </div><!-- end demo-clean -->
 
       <div class="demo-panel" id="demo-diff">
-        <div style="display:flex;gap:12px;margin-bottom:12px;align-items:end;flex-wrap:wrap;">
-          <div style="flex:1;min-width:200px;">
-            <label style="color:var(--muted);font-size:12px;font-weight:600;">URL 1</label>
-            <input type="text" id="diff-url1" placeholder="https://example.com" value="https://en.wikipedia.org/wiki/Cat"
-              style="width:100%;margin-top:4px;padding:12px 16px;border-radius:8px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:14px;outline:none;">
-          </div>
-          <div style="flex:1;min-width:200px;">
-            <label style="color:var(--muted);font-size:12px;font-weight:600;">URL 2</label>
-            <input type="text" id="diff-url2" placeholder="https://example.com" value="https://en.wikipedia.org/wiki/Dog"
-              style="width:100%;margin-top:4px;padding:12px 16px;border-radius:8px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:14px;outline:none;">
-          </div>
-          <button class="capture-btn" onclick="runDiff()">Compare</button>
+        <div style="display:flex;gap:12px;margin-bottom:12px;">
+          <input type="text" id="diff-url" placeholder="https://example.com" value="https://www.hubspot.com"
+            style="flex:1;padding:12px 16px;border-radius:8px;border:1px solid #2a2a3e;background:var(--surface);color:var(--text);font-size:16px;outline:none;">
+          <button class="capture-btn" onclick="runDiff()">Run Diff</button>
         </div>
-        <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Pixel-level visual comparison between two URLs. Changed pixels highlighted in red.</p>
+        <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Captures the same page twice — raw and with Clean Mode — then diffs them pixel by pixel. Red areas show exactly what Clean Mode removed.</p>
         <div id="diff-status" style="color:var(--muted);font-size:14px;margin-bottom:12px;"></div>
         <div id="diff-result" style="display:none;">
           <div id="diff-stats" class="diff-stats"></div>
           <div class="diff-layout" style="margin-top:16px;">
             <div>
-              <div class="compare-label">URL 1</div>
+              <div class="compare-label">Raw Capture</div>
               <img id="diff-img1" style="max-width:100%;border-radius:8px;border:1px solid #2a2a3e;">
             </div>
             <div>
-              <div class="compare-label">Diff Overlay</div>
+              <div class="compare-label">Diff (removed pixels in red)</div>
               <img id="diff-overlay" style="max-width:100%;border-radius:8px;border:1px solid #ef4444;">
             </div>
           </div>
@@ -840,58 +832,92 @@ const LANDING_HTML = `<!DOCTYPE html>
 
       // === VISUAL DIFF ===
       async function runDiff() {
-        var url1 = document.getElementById('diff-url1').value.trim();
-        var url2 = document.getElementById('diff-url2').value.trim();
-        if (!url1 || !url2) return;
-        url1 = url1.match(/^https?:\\/\\//) ? url1 : 'https://' + url1;
-        url2 = url2.match(/^https?:\\/\\//) ? url2 : 'https://' + url2;
+        var url = document.getElementById('diff-url').value.trim();
+        if (!url) return;
+        var fullUrl = url.match(/^https?:\\/\\//) ? url : 'https://' + url;
         var status = document.getElementById('diff-status');
         var result = document.getElementById('diff-result');
         var btns = document.querySelectorAll('#demo-diff .capture-btn');
-        btns.forEach(function(b) { b.disabled = true; b.textContent = 'Comparing...'; });
-        showSpinner(status, 'Capturing and comparing...');
+        btns.forEach(function(b) { b.disabled = true; b.textContent = 'Diffing...'; });
+        showSpinner(status, 'Capturing raw and clean versions...');
         result.style.display = 'none';
         try {
-          var resp = await fetch('/v1/diff', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url1: url1, url2: url2, clean: true })
-          });
-          if (!resp.ok) {
-            var err = await resp.json().catch(function() { return {}; });
-            showError(status, 'Diff failed' + (err.error ? ': ' + err.error : ''));
+          var params = 'url=' + encodeURIComponent(fullUrl);
+          // Capture same URL: raw vs clean
+          var responses = await Promise.all([
+            fetch('/trial/screenshot?' + params),
+            fetch('/trial/screenshot?' + params + '&clean=true')
+          ]);
+          if (!responses[0].ok || !responses[1].ok) {
+            var errResp = responses[0].ok ? responses[1] : responses[0];
+            var err = await errResp.json().catch(function() { return {}; });
+            showError(status, 'Capture failed' + (err.error ? ': ' + err.error : ''));
             return;
           }
-          var data = await resp.json();
+          status.textContent = '';
+          showSpinner(status, 'Computing pixel diff...');
+          var rawBlob = await responses[0].blob();
+          var cleanBlob = await responses[1].blob();
+          // Load both images onto canvases for pixel comparison
+          var rawImg = new Image();
+          var cleanImg = new Image();
+          var rawUrl = URL.createObjectURL(rawBlob);
+          var cleanUrl = URL.createObjectURL(cleanBlob);
+          await Promise.all([
+            new Promise(function(res) { rawImg.onload = res; rawImg.src = rawUrl; }),
+            new Promise(function(res) { cleanImg.onload = res; cleanImg.src = cleanUrl; })
+          ]);
+          var w = Math.min(rawImg.width, cleanImg.width);
+          var h = Math.min(rawImg.height, cleanImg.height);
+          var c1 = document.createElement('canvas'); c1.width = w; c1.height = h;
+          var c2 = document.createElement('canvas'); c2.width = w; c2.height = h;
+          var diffCanvas = document.createElement('canvas'); diffCanvas.width = w; diffCanvas.height = h;
+          var ctx1 = c1.getContext('2d'); ctx1.drawImage(rawImg, 0, 0);
+          var ctx2 = c2.getContext('2d'); ctx2.drawImage(cleanImg, 0, 0);
+          var d1 = ctx1.getImageData(0, 0, w, h);
+          var d2 = ctx2.getImageData(0, 0, w, h);
+          var diffCtx = diffCanvas.getContext('2d');
+          var diffData = diffCtx.createImageData(w, h);
+          var diffPixels = 0;
+          var totalPixels = w * h;
+          for (var i = 0; i < d1.data.length; i += 4) {
+            var dr = Math.abs(d1.data[i] - d2.data[i]);
+            var dg = Math.abs(d1.data[i+1] - d2.data[i+1]);
+            var db = Math.abs(d1.data[i+2] - d2.data[i+2]);
+            if (dr + dg + db > 30) {
+              diffData.data[i] = 255;     // red
+              diffData.data[i+1] = 0;
+              diffData.data[i+2] = 0;
+              diffData.data[i+3] = 200;
+              diffPixels++;
+            } else {
+              // Show original but dimmed
+              diffData.data[i] = Math.round(d1.data[i] * 0.3);
+              diffData.data[i+1] = Math.round(d1.data[i+1] * 0.3);
+              diffData.data[i+2] = Math.round(d1.data[i+2] * 0.3);
+              diffData.data[i+3] = 255;
+            }
+          }
+          diffCtx.putImageData(diffData, 0, 0);
+          // Show results
+          document.getElementById('diff-img1').src = rawUrl;
+          document.getElementById('diff-overlay').src = diffCanvas.toDataURL('image/png');
+          var pctChanged = ((diffPixels / totalPixels) * 100);
           var statsEl = document.getElementById('diff-stats');
           statsEl.textContent = '';
           var pct = document.createElement('span');
           pct.style.cssText = 'font-size:28px;font-weight:800;color:var(--brand);';
-          pct.textContent = data.diffPercentage.toFixed(1) + '%';
+          pct.textContent = pctChanged.toFixed(1) + '%';
           statsEl.appendChild(pct);
-          statsEl.appendChild(document.createTextNode(' pixels changed '));
+          statsEl.appendChild(document.createTextNode(' of pixels changed by Clean Mode '));
           var detail = document.createElement('span');
           detail.style.cssText = 'color:var(--muted);font-size:14px;';
-          detail.textContent = '(' + data.diffPixels.toLocaleString() + ' of ' + data.totalPixels.toLocaleString() + ' total)';
+          detail.textContent = '(' + diffPixels.toLocaleString() + ' of ' + totalPixels.toLocaleString() + ' pixels)';
           statsEl.appendChild(detail);
-          if (data.identical) {
-            var badge = document.createElement('span');
-            badge.style.cssText = 'display:inline-block;margin-left:12px;background:#10b981;color:white;padding:2px 10px;border-radius:4px;font-size:13px;font-weight:600;';
-            badge.textContent = 'Identical';
-            statsEl.appendChild(badge);
-          }
-          var overlay = document.getElementById('diff-overlay');
-          overlay.src = 'data:image/png;base64,' + data.diffImage;
-          // Fetch URL1 screenshot for side-by-side
-          var img1Resp = await fetch('/trial/screenshot?url=' + encodeURIComponent(url1) + '&clean=true');
-          if (img1Resp.ok) {
-            var blob1 = await img1Resp.blob();
-            document.getElementById('diff-img1').src = URL.createObjectURL(blob1);
-          }
           result.style.display = 'block';
           status.textContent = '';
         } catch(e) { showError(status, 'Error: ' + e.message); }
-        finally { btns.forEach(function(b) { b.disabled = false; b.textContent = 'Compare'; }); }
+        finally { btns.forEach(function(b) { b.disabled = false; b.textContent = 'Run Diff'; }); }
       }
     </script>
 
