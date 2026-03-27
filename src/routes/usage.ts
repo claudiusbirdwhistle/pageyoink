@@ -10,6 +10,7 @@ export async function usageRoute(app: FastifyInstance) {
     "/v1/usage",
     {
       schema: {
+        hide: true,
         querystring: {
           type: "object",
           properties: {

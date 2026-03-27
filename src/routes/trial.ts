@@ -85,7 +85,7 @@ async function addTrialWatermark(imageBuffer: Buffer): Promise<Buffer> {
 
 export async function trialRoute(app: FastifyInstance) {
   // Dev/test only: reset trial limits. Disabled in production.
-  app.delete("/trial/reset", async (_request, reply) => {
+  app.delete("/trial/reset", { schema: { hide: true } }, async (_request, reply) => {
     if (process.env.NODE_ENV === "production" || process.env.API_KEYS) {
       return reply.status(404).send({ error: "Not found" });
     }
@@ -99,6 +99,7 @@ export async function trialRoute(app: FastifyInstance) {
       schema: {
         description: "Free trial screenshot. Limited to 5 per IP per day. No API key required.",
         tags: ["Trial"],
+        hide: true,
         querystring: {
           type: "object",
           required: ["url"],
@@ -182,6 +183,7 @@ export async function trialRoute(app: FastifyInstance) {
       schema: {
         description: "Free trial PDF. Limited to 5 per IP per day. No API key required.",
         tags: ["Trial"],
+        hide: true,
         querystring: {
           type: "object",
           required: ["url"],
@@ -325,6 +327,7 @@ export async function trialRoute(app: FastifyInstance) {
       schema: {
         description: "Free trial content extraction. Limited to 5 per IP per day.",
         tags: ["Trial"],
+        hide: true,
       },
     },
     async (
@@ -376,6 +379,7 @@ export async function trialRoute(app: FastifyInstance) {
       schema: {
         description: "Free trial metadata extraction. Limited to 5 per IP per day.",
         tags: ["Trial"],
+        hide: true,
       },
     },
     async (

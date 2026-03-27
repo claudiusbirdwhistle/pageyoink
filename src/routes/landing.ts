@@ -1091,7 +1091,7 @@ const LANDING_HTML = `<!DOCTYPE html>
 </html>`;
 
 export async function landingRoute(app: FastifyInstance) {
-  app.get("/", async (_request, reply) => {
+  app.get("/", { schema: { hide: true } }, async (_request, reply) => {
     return reply.header("Content-Type", "text/html").send(LANDING_HTML);
   });
 }

@@ -19,7 +19,7 @@ function formatUptime(ms: number): string {
 }
 
 export async function healthRoute(app: FastifyInstance) {
-  app.get("/internal/health", async () => {
+  app.get("/internal/health", { schema: { hide: true } }, async () => {
     const stats = await getUsageStats();
     return {
       status: "ok",
@@ -31,6 +31,7 @@ export async function healthRoute(app: FastifyInstance) {
 
   app.get<{ Params: { requestId: string } }>(
     "/internal/status/:requestId",
+    { schema: { hide: true } },
     async (request, reply) => {
       const entry = progressGet(request.params.requestId);
       if (!entry) {
