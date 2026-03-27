@@ -162,6 +162,16 @@ async function attemptScreenshot(
       deviceScaleFactor,
     });
 
+    // Pre-navigation: inject cosmetic ad hiding CSS before page renders.
+    // This prevents ad containers from ever sizing, like uBlock Origin does.
+    if (clean) {
+      await page.evaluateOnNewDocument(`(function() {
+        var style = document.createElement('style');
+        style.textContent = '.ad, .ads, [class*="dfp-ad"], [class*="ad-wrapper"], [class*="ad-container"], [class*="ad-slot"], [class*="ad-unit"], [id*="dfp-ad"], [id*="google_ads"], div[class*="place-ad"], ins.adsbygoogle, [id^="div-gpt-ad"], [data-google-query-id], [class*="cookie-banner"], [class*="cookie-consent"], [class*="cookie-notice"], #onetrust-banner-sdk, #onetrust-consent-sdk, #CybotCookiebotDialog, [class*="consent-manager"], [id*="cookie-banner"], [id*="cookie-consent"] { display: none !important; height: 0 !important; max-height: 0 !important; overflow: hidden !important; padding: 0 !important; margin: 0 !important; }';
+        (document.head || document.documentElement).appendChild(style);
+      })()`);
+    }
+
     notify("navigating");
     await page.goto(url, {
       waitUntil: "load",
