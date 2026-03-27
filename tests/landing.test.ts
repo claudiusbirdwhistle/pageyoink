@@ -61,7 +61,7 @@ describe("Landing page", () => {
     expect(response.body).toContain("/docs");
   });
 
-  it("contains all 4 demo tabs", async () => {
+  it("contains all 3 demo tabs", async () => {
     const response = await app.inject({
       method: "GET",
       url: "/",
@@ -69,7 +69,6 @@ describe("Landing page", () => {
     const body = response.body;
     expect(body).toContain('data-demo="capture"');
     expect(body).toContain('data-demo="clean"');
-    expect(body).toContain('data-demo="annotate"');
     expect(body).toContain('data-demo="diff"');
   });
 
@@ -81,7 +80,6 @@ describe("Landing page", () => {
     const body = response.body;
     expect(body).toContain('id="demo-capture"');
     expect(body).toContain('id="demo-clean"');
-    expect(body).toContain('id="demo-annotate"');
     expect(body).toContain('id="demo-diff"');
   });
 });

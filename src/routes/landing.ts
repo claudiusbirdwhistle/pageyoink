@@ -72,10 +72,6 @@ const LANDING_HTML = `<!DOCTYPE html>
     .demo-panel.active { display:block; animation: fadeIn 0.2s ease-in; }
     .clean-compare, .diff-layout { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
     .compare-label { color:var(--muted); font-size:13px; font-weight:600; margin-bottom:8px; text-align:center; }
-    .ann-toolbar { display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap; }
-    .ann-btn { padding:8px 16px; border-radius:8px; border:none; color:white; font-weight:600; font-size:14px; cursor:pointer; transition:opacity 0.2s; }
-    .ann-btn:hover { opacity:0.85; }
-    .ann-reset { padding:8px 16px; border-radius:8px; border:1px solid #2a2a3e; background:transparent; color:var(--muted); font-size:14px; cursor:pointer; }
     .diff-stats { text-align:center; margin-bottom:16px; padding:16px; background:var(--surface); border-radius:8px; border:1px solid #2a2a3e; }
 
     /* C15: Mobile responsive */
@@ -148,7 +144,6 @@ const LANDING_HTML = `<!DOCTYPE html>
       <div class="demo-tabs">
         <button class="demo-tab active" data-demo="capture">Capture</button>
         <button class="demo-tab" data-demo="clean">Clean Mode</button>
-        <button class="demo-tab" data-demo="annotate">Annotate</button>
         <button class="demo-tab" data-demo="diff">Visual Diff</button>
       </div>
       <div class="demo-panel active" id="demo-capture">
@@ -226,22 +221,6 @@ const LANDING_HTML = `<!DOCTYPE html>
           </div>
         </div>
       </div><!-- end demo-clean -->
-
-      <div class="demo-panel" id="demo-annotate">
-        <p style="color:var(--muted);font-size:13px;margin-bottom:16px;">Click a tool to add an annotation to the screenshot. Each click calls the annotation API and re-renders.</p>
-        <div class="ann-toolbar">
-          <button class="ann-btn" style="background:#ef4444;" data-annotation="box">Box</button>
-          <button class="ann-btn" style="background:#22c55e;" data-annotation="arrow">Arrow</button>
-          <button class="ann-btn" style="background:#eab308;" data-annotation="highlight">Highlight</button>
-          <button class="ann-btn" style="background:#6366f1;" data-annotation="text">Text</button>
-          <button class="ann-btn" style="background:#6b7280;" data-annotation="blur">Blur</button>
-          <button class="ann-reset" onclick="resetAnnotations()">Reset</button>
-        </div>
-        <div id="annotate-status" style="color:var(--muted);font-size:14px;margin-bottom:12px;"></div>
-        <div id="annotate-result" style="text-align:center;">
-          <img id="annotate-image" style="max-width:100%;border-radius:8px;display:none;">
-        </div>
-      </div><!-- end demo-annotate -->
 
       <div class="demo-panel" id="demo-diff">
         <div style="display:flex;gap:12px;margin-bottom:12px;align-items:end;flex-wrap:wrap;">
@@ -821,7 +800,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         if (tab) tab.classList.add('active');
         var panel = document.getElementById('demo-' + name);
         if (panel) { panel.classList.add('active'); panel.style.display = 'block'; }
-        if (name === 'annotate') loadAnnotateBase();
       }
       document.addEventListener('click', function(e) {
         if (e.target.classList && e.target.classList.contains('demo-tab')) {
@@ -865,72 +843,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         } catch(e) { showError(status, 'Error: ' + e.message); }
         finally { btns.forEach(function(b) { b.disabled = false; b.textContent = 'Compare'; }); }
       }
-
-      // === ANNOTATION DEMO ===
-      var annotateUrl = 'https://example.com';
-      var annotateAnnotations = [];
-      var annotatePresets = {
-        box:       { type:'box', x:100, y:80, width:300, height:150, color:'#ef4444', thickness:3 },
-        arrow:     { type:'arrow', x:500, y:100, toX:350, toY:180, color:'#22c55e', thickness:3 },
-        highlight: { type:'highlight', x:50, y:300, width:400, height:40, color:'#eab308' },
-        text:      { type:'text', x:420, y:60, text:'Look here!', color:'#ffffff', fontSize:24 },
-        blur:      { type:'blur', x:500, y:250, width:200, height:100, blurRadius:10 }
-      };
-
-      async function loadAnnotateBase() {
-        var img = document.getElementById('annotate-image');
-        var status = document.getElementById('annotate-status');
-        if (img.src && img.style.display !== 'none') return;
-        showSpinner(status, 'Loading base screenshot...');
-        try {
-          var resp = await fetch('/trial/screenshot?url=' + encodeURIComponent(annotateUrl));
-          if (!resp.ok) { showError(status, 'Failed to load screenshot'); return; }
-          var blob = await resp.blob();
-          img.src = URL.createObjectURL(blob);
-          img.style.display = 'block';
-          status.textContent = 'Click a tool above to add an annotation.';
-        } catch(e) { showError(status, 'Error: ' + e.message); }
-      }
-
-      async function addAnnotation(type) {
-        var preset = annotatePresets[type];
-        if (!preset) return;
-        var copy = JSON.parse(JSON.stringify(preset));
-        var offset = annotateAnnotations.filter(function(a) { return a.type === type; }).length * 40;
-        copy.x = (copy.x + offset) % 800;
-        copy.y = (copy.y + offset) % 500;
-        if (copy.toX) { copy.toX = (copy.toX + offset) % 800; copy.toY = (copy.toY + offset) % 500; }
-        annotateAnnotations.push(copy);
-        var img = document.getElementById('annotate-image');
-        var status = document.getElementById('annotate-status');
-        showSpinner(status, 'Applying ' + annotateAnnotations.length + ' annotation(s)...');
-        try {
-          var resp = await fetch('/v1/screenshot/annotate', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: annotateUrl, annotations: annotateAnnotations })
-          });
-          if (!resp.ok) { showError(status, 'Annotation failed'); return; }
-          var blob = await resp.blob();
-          img.src = URL.createObjectURL(blob);
-          status.textContent = annotateAnnotations.length + ' annotation(s) applied. Click more tools or Reset.';
-        } catch(e) { showError(status, 'Error: ' + e.message); }
-      }
-
-      function resetAnnotations() {
-        annotateAnnotations = [];
-        var img = document.getElementById('annotate-image');
-        img.style.display = 'none';
-        img.removeAttribute('src');
-        document.getElementById('annotate-status').textContent = '';
-        loadAnnotateBase();
-      }
-
-      document.addEventListener('click', function(e) {
-        if (e.target.dataset && e.target.dataset.annotation) {
-          addAnnotation(e.target.dataset.annotation);
-        }
-      });
 
       // === VISUAL DIFF ===
       async function runDiff() {

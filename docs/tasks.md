@@ -7,7 +7,6 @@ Active and pending tasks only. Completed tasks archived in docs/completed-tasks.
 ## Pending — Can Be Done Autonomously
 
 ### Features
-- [x] Screenshot annotation API (arrows, boxes, blur regions, highlights, text labels)
 - [x] Anti-bot stealth mode (puppeteer-extra stealth plugin)
 - [ ] PDF table of contents auto-generation from heading structure
 - [x] PDF/A archival format support (pdfa=true parameter, Ghostscript conversion)
