@@ -154,7 +154,7 @@ const LANDING_HTML = `<!DOCTYPE html>
       <div style="display:flex;gap:16px;align-items:center;margin-bottom:16px;flex-wrap:wrap;">
         <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;">
           <input type="checkbox" id="trial-clean" checked style="accent-color:var(--brand);width:16px;height:16px;">
-          Clean Mode <span style="color:#555;font-size:12px;">(remove ads, popups, cookie banners, chat widgets)</span>
+          Clean Mode <span style="color:#555;font-size:12px;">(remove popups, cookie banners, ads, chat widgets)</span>
         </label>
         <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;">
           <input type="checkbox" id="trial-antibot" style="accent-color:var(--brand);width:16px;height:16px;">
@@ -711,7 +711,7 @@ const LANDING_HTML = `<!DOCTYPE html>
         var fullUrl = url.match(/^https?:\\/\\//) ? url : 'https://' + url;
         capturedUrl = fullUrl;
         var params = 'url=' + encodeURIComponent(fullUrl);
-        if (clean) params += '&clean=true&block_ads=true';
+        if (clean) params += '&clean=true';
         if (antibot) params += '&antibot=true';
 
         try {
@@ -815,11 +815,12 @@ const LANDING_HTML = `<!DOCTYPE html>
         result.style.display = 'none';
         try {
           var params = 'url=' + encodeURIComponent(fullUrl);
-          // Before: raw page (no cleanup, no ad blocking)
-          // After: clean mode + ad blocking removes all junk
+          // Before: raw page, After: clean mode (CSS-based ad/overlay removal)
+          // Note: not using network ad blocking here — it can break sites
+          // that serve content from ad/tracking domains (like HubSpot)
           var results = await Promise.all([
             fetch('/trial/screenshot?' + params),
-            fetch('/trial/screenshot?' + params + '&clean=true&block_ads=true')
+            fetch('/trial/screenshot?' + params + '&clean=true')
           ]);
           if (!results[0].ok || !results[1].ok) {
             var errResp = results[0].ok ? results[1] : results[0];
