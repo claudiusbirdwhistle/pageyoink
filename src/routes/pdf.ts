@@ -126,7 +126,7 @@ export async function pdfRoute(app: FastifyInstance) {
             },
             block_ads: {
               type: "string",
-              description: "Block ads and trackers (Ghostery/uBlock engine). Pass 'true' to enable.",
+              description: "Block ads. 'true' = network blocking (Ghostery), 'cosmetic' = visual hiding (evades anti-adblock).",
             },
             css: {
               type: "string",
@@ -155,6 +155,18 @@ export async function pdfRoute(app: FastifyInstance) {
             fresh: {
               type: "string",
               description: "Bypass cache and force new PDF generation. Pass 'true' to enable.",
+            },
+            optimize: {
+              type: "string",
+              description: "Auto-optimize PDF format, orientation, scale, and margins based on page content. Pass 'true' to enable.",
+            },
+            pdfa: {
+              type: "string",
+              description: "Convert to PDF/A archival format via Ghostscript. Pass 'true' for PDF/A-2b, or '1b'/'3b' for other levels.",
+            },
+            antibot: {
+              type: "string",
+              description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc. Pass 'true' to enable.",
             },
           },
         },
@@ -321,8 +333,7 @@ export async function pdfRoute(app: FastifyInstance) {
               description: "Max viewport heights to scroll for lazy loading. Default: 10.",
             },
             blockAds: {
-              type: "boolean",
-              description: "Block ads and trackers (Ghostery/uBlock engine).",
+              description: "Block ads. true = network blocking (Ghostery), 'cosmetic' = visual hiding.",
             },
             headerTemplate: {
               type: "string",
@@ -396,6 +407,18 @@ export async function pdfRoute(app: FastifyInstance) {
                 },
               },
               required: ["text"],
+            },
+            optimize: {
+              type: "boolean",
+              description: "Auto-optimize PDF format, orientation, scale, and margins based on page content.",
+            },
+            pdfa: {
+              type: "boolean",
+              description: "Convert to PDF/A archival format via Ghostscript.",
+            },
+            antibot: {
+              type: "boolean",
+              description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc.",
             },
           },
         },

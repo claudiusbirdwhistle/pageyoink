@@ -96,6 +96,14 @@ export async function pageRoute(app: FastifyInstance) {
               enum: ["markdown", "text", "html"],
               description: "Format for text extraction outputs. Default: markdown.",
             },
+            antibot: {
+              type: "boolean",
+              description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc.",
+            },
+            optimize: {
+              type: "boolean",
+              description: "Auto-optimize capture parameters based on page content analysis.",
+            },
           },
         },
         response: {

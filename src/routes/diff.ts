@@ -12,6 +12,7 @@ interface DiffBody {
   fullPage?: boolean;
   clean?: boolean;
   blockAds?: boolean | "cosmetic";
+  antibot?: boolean;
   threshold?: number;
   format?: "json" | "image";
 }
@@ -33,7 +34,8 @@ export async function diffRoute(app: FastifyInstance) {
             height: { type: "number", description: "Viewport height for both captures. Default: 720." },
             fullPage: { type: "boolean", description: "Capture full scrollable page for both URLs. Default: false." },
             clean: { type: "boolean", description: "Remove cookie banners/popups before capture." },
-            blockAds: { type: "boolean", description: "Block ads before capture." },
+            blockAds: { description: "Block ads. true = network blocking (Ghostery), 'cosmetic' = visual hiding (evades anti-adblock)." },
+            antibot: { type: "boolean", description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc. Default: false." },
             threshold: { type: "number", description: "Color difference sensitivity from 0 (exact) to 1 (lenient). Lower = more sensitive to small color changes. Default: 0.1." },
             format: {
               type: "string",
@@ -53,6 +55,7 @@ export async function diffRoute(app: FastifyInstance) {
         fullPage = false,
         clean = false,
         blockAds = false,
+        antibot = false,
         threshold = 0.1,
         format = "json",
       } = request.body;
@@ -73,6 +76,7 @@ export async function diffRoute(app: FastifyInstance) {
             fullPage,
             clean,
             blockAds,
+            antibot,
           }),
           takeScreenshot({
             url: n2.url!,
@@ -82,6 +86,7 @@ export async function diffRoute(app: FastifyInstance) {
             fullPage,
             clean,
             blockAds,
+            antibot,
           }),
         ]);
 
