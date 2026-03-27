@@ -255,6 +255,32 @@ export async function cleanPage(page: Page): Promise<void> {
       }
     }
 
+    // Phase 5: Collapse empty parent containers
+    // After hiding elements, their wrapper divs may still reserve space.
+    // Walk up from each hidden element and collapse parents whose children are all hidden.
+    var allDivs = document.querySelectorAll("div, section, aside");
+    for (var p = 0; p < allDivs.length; p++) {
+      var container = allDivs[p];
+      var cs = window.getComputedStyle(container);
+      if (cs.display === "none") continue;
+      var containerRect = container.getBoundingClientRect();
+      if (containerRect.height < 20) continue;
+      // Check if all children are hidden/collapsed
+      var visibleChild = false;
+      for (var q = 0; q < container.children.length; q++) {
+        var child = container.children[q];
+        var childStyle = window.getComputedStyle(child);
+        var childRect = child.getBoundingClientRect();
+        if (childStyle.display !== "none" && childRect.height > 2) {
+          visibleChild = true;
+          break;
+        }
+      }
+      if (!visibleChild && container.children.length > 0) {
+        collapseElement(container);
+      }
+    }
+
     // Remove overflow:hidden on body (often set by modals)
     if (window.getComputedStyle(document.body).overflow === "hidden") {
       document.body.style.overflow = "auto";

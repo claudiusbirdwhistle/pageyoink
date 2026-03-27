@@ -841,8 +841,10 @@ const LANDING_HTML = `<!DOCTYPE html>
         result.style.display = 'none';
         try {
           var params = 'url=' + encodeURIComponent(fullUrl);
+          // Before: raw page (no cleanup, no ad blocking — shows everything including ads/popups)
+          // After: clean mode removes overlays AND ad containers, collapsing white space
           var results = await Promise.all([
-            fetch('/trial/screenshot?' + params + '&clean=false'),
+            fetch('/trial/screenshot?' + params),
             fetch('/trial/screenshot?' + params + '&clean=true')
           ]);
           if (!results[0].ok || !results[1].ok) {
