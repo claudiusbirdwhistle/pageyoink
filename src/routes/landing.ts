@@ -884,7 +884,7 @@ const LANDING_HTML = `<!DOCTYPE html>
             var dr = Math.abs(d1.data[i] - d2.data[i]);
             var dg = Math.abs(d1.data[i+1] - d2.data[i+1]);
             var db = Math.abs(d1.data[i+2] - d2.data[i+2]);
-            if (dr + dg + db > 80) {
+            if (dr + dg + db > 85) {
               diffData.data[i] = 255;     // red
               diffData.data[i+1] = 0;
               diffData.data[i+2] = 0;
