@@ -79,6 +79,21 @@ const COOKIE_BANNER_SELECTORS = [
   '[class*="top-banner"]',
   '[class*="site-banner"]',
   '[class*="marketing-banner"]',
+
+  // Display ad containers (commonly left behind even after network ad blocking)
+  '.ad',
+  '.ads',
+  '[class*="dfp-ad"]',
+  '[class*="ad-wrapper"]',
+  '[class*="ad-container"]',
+  '[class*="ad-slot"]',
+  '[class*="ad-unit"]',
+  '[id*="dfp-ad"]',
+  '[id*="google_ads"]',
+  'div[class*="place-ad"]',
+  'ins.adsbygoogle',
+  '[id^="div-gpt-ad"]',
+  '[data-google-query-id]',
 ];
 
 // Common popup/modal/overlay selectors
