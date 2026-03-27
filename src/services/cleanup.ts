@@ -255,28 +255,46 @@ export async function cleanPage(page: Page): Promise<void> {
       }
     }
 
-    // Phase 5: Collapse empty parent containers
-    // After hiding elements, their wrapper divs may still reserve space.
-    // Walk up from each hidden element and collapse parents whose children are all hidden.
+    // Phase 5: Collapse ad wrapper chains
+    // After hiding ad elements, walk UP from each hidden element and collapse
+    // ancestors whose only text content is ad-related (e.g., "SKIP ADVERTISEMENT",
+    // "Advertisement", empty). This handles sites like NYTimes where wrapper divs
+    // have explicit CSS heights that don't shrink when children are hidden.
+    var adTexts = ["advertisement", "skip advertisement", "skip ad", "ad", "sponsored", ""];
+    var hiddenEls = document.querySelectorAll('[style*="display: none"]');
+    for (var p = 0; p < hiddenEls.length; p++) {
+      var ancestor = hiddenEls[p].parentElement;
+      while (ancestor && ancestor !== document.body) {
+        var ancestorText = (ancestor.innerText || "").trim().toLowerCase();
+        // Collapse if the ancestor only contains ad-related text
+        if (adTexts.indexOf(ancestorText) !== -1) {
+          collapseElement(ancestor);
+          ancestor = ancestor.parentElement;
+        } else {
+          break;
+        }
+      }
+    }
+
+    // Also collapse any container whose children are ALL hidden/zero-height
     var allDivs = document.querySelectorAll("div, section, aside");
-    for (var p = 0; p < allDivs.length; p++) {
-      var container = allDivs[p];
+    for (var q = 0; q < allDivs.length; q++) {
+      var container = allDivs[q];
       var cs = window.getComputedStyle(container);
       if (cs.display === "none") continue;
       var containerRect = container.getBoundingClientRect();
       if (containerRect.height < 20) continue;
-      // Check if all children are hidden/collapsed
-      var visibleChild = false;
-      for (var q = 0; q < container.children.length; q++) {
-        var child = container.children[q];
+      var hasVisibleChild = false;
+      for (var r = 0; r < container.children.length; r++) {
+        var child = container.children[r];
         var childStyle = window.getComputedStyle(child);
         var childRect = child.getBoundingClientRect();
         if (childStyle.display !== "none" && childRect.height > 2) {
-          visibleChild = true;
+          hasVisibleChild = true;
           break;
         }
       }
-      if (!visibleChild && container.children.length > 0) {
+      if (!hasVisibleChild && container.children.length > 0) {
         collapseElement(container);
       }
     }
