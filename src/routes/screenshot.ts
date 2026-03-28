@@ -157,7 +157,7 @@ const screenshotQuerySchema = {
     },
     antibot: {
       type: "string" as const,
-      description: "Anti-bot evasion mode to bypass Cloudflare, DataDome, etc. Pass 'true' to enable. Slightly slower than default mode.",
+      description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc. Default: true. Pass 'false' to disable.",
     },
   },
 };

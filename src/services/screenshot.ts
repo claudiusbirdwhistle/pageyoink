@@ -116,7 +116,7 @@ async function attemptScreenshot(
     fonts,
     onProgress,
     optimize = false,
-    antibot = false,
+    antibot = true,
   } = options;
 
   const notify = onProgress || (() => {});

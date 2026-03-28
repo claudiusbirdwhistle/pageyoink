@@ -156,10 +156,6 @@ const LANDING_HTML = `<!DOCTYPE html>
           <input type="checkbox" id="trial-clean" checked style="accent-color:var(--brand);width:16px;height:16px;">
           Clean Mode <span style="color:#555;font-size:12px;">(remove popups, cookie banners, ads, chat widgets)</span>
         </label>
-        <label style="display:flex;align-items:center;gap:6px;color:var(--muted);font-size:14px;cursor:pointer;">
-          <input type="checkbox" id="trial-antibot" style="accent-color:var(--brand);width:16px;height:16px;">
-          Anti-Bot Evasion <span style="color:#555;font-size:12px;">(Cloudflare, DataDome)</span>
-        </label>
       </div>
       <!-- PDF options available via API — keeping demo clean -->
       <div style="display:flex;gap:12px;margin-bottom:20px;">
@@ -675,7 +671,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         var url = document.getElementById('trial-url').value.trim();
         if (!url) return;
         var clean = document.getElementById('trial-clean').checked;
-        var antibot = document.getElementById('trial-antibot').checked;
         var status = document.getElementById('trial-status');
         var result = document.getElementById('trial-result');
         var img = document.getElementById('trial-image');
@@ -704,7 +699,6 @@ const LANDING_HTML = `<!DOCTYPE html>
         capturedUrl = fullUrl;
         var params = 'url=' + encodeURIComponent(fullUrl);
         if (clean) params += '&clean=true';
-        if (antibot) params += '&antibot=true';
 
         try {
           // Generate request ID for progress tracking
@@ -960,6 +954,10 @@ const LANDING_HTML = `<!DOCTYPE html>
         <div class="feature">
           <h3>All Outputs Included</h3>
           <p>Every pricing tier includes every output type. No credit multipliers, no per-feature surcharges.</p>
+        </div>
+        <div class="feature">
+          <h3>Anti-Bot Evasion</h3>
+          <p>Built-in stealth mode bypasses Cloudflare, DataDome, and other bot detection. Enabled by default on every capture.</p>
         </div>
         <div class="feature">
           <h3>Developer First</h3>

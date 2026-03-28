@@ -98,7 +98,7 @@ export async function pageRoute(app: FastifyInstance) {
             },
             antibot: {
               type: "boolean",
-              description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc.",
+              description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc. Default: true.",
             },
             optimize: {
               type: "boolean",

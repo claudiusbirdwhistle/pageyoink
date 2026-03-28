@@ -116,7 +116,7 @@ async function attemptPdf(options: PdfOptions & { _disableHttp2?: boolean }): Pr
     scale,
     maxPages,
     optimize = false,
-    antibot = false,
+    antibot = true,
   } = options;
 
   const effectiveTimeout = Math.min(timeout, MAX_TIMEOUT);

@@ -35,7 +35,7 @@ export async function diffRoute(app: FastifyInstance) {
             fullPage: { type: "boolean", description: "Capture full scrollable page for both URLs. Default: false." },
             clean: { type: "boolean", description: "Remove cookie banners/popups before capture." },
             blockAds: { description: "Block ads. true = network blocking (Ghostery), 'cosmetic' = visual hiding (evades anti-adblock)." },
-            antibot: { type: "boolean", description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc. Default: false." },
+            antibot: { type: "boolean", description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc. Default: true." },
             threshold: { type: "number", description: "Color difference sensitivity from 0 (exact) to 1 (lenient). Lower = more sensitive to small color changes. Default: 0.1." },
             format: {
               type: "string",

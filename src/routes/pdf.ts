@@ -166,7 +166,7 @@ export async function pdfRoute(app: FastifyInstance) {
             },
             antibot: {
               type: "string",
-              description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc. Pass 'true' to enable.",
+              description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc. Default: true. Pass 'false' to disable.",
             },
           },
         },
@@ -418,7 +418,7 @@ export async function pdfRoute(app: FastifyInstance) {
             },
             antibot: {
               type: "boolean",
-              description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc.",
+              description: "Anti-bot evasion to bypass Cloudflare, DataDome, etc. Default: true.",
             },
           },
         },
